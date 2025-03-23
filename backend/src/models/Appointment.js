@@ -12,22 +12,22 @@ const Appointment = sequelize.define('Appointment', {
     pet_id: {
         type: DataTypes.INTEGER,
         references: {
-            model: Pet,
+            model: Pet, // Tên model Pet
             key: 'id',
         },
     },
     owner_id: {
         type: DataTypes.INTEGER,
         references: {
-            model: User,
+            model: User, // Tên model User
             key: 'id',
         },
     },
     staff_id: {
         type: DataTypes.INTEGER,
         references: {
-            model: User,
-            key: 'id',
+            model: User, // Tên model User
+            key: 'id',   // Khóa chính của bảng User
         },
     },
     type: {
