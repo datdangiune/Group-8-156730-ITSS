@@ -1,48 +1,42 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../database');
-const Pet = require('./Pet');
-const User = require('./User');
 
-const Appointment = sequelize.define('Appointment', {
+const Pet = sequelize.define('Pet', {
     id: {
         type: DataTypes.INTEGER,
         primaryKey: true,
         autoIncrement: true,
     },
-    pet_id: {
-        type: DataTypes.INTEGER,
-        references: {
-            model: Pet, // Tên model Pet
-            key: 'id',
-        },
-    },
     owner_id: {
         type: DataTypes.INTEGER,
-        references: {
-            model: User, // Tên model User
-            key: 'id',
-        },
     },
-    staff_id: {
+    name: {
+        type: DataTypes.STRING,
+        allowNull: false,
+    },
+    age: {
         type: DataTypes.INTEGER,
-        references: {
-            model: User, // Tên model User
-            key: 'id',   // Khóa chính của bảng User
-        },
     },
-    type: {
-        type: DataTypes.ENUM('general_checkup', 'vaccination', 'testing', 'grooming', 'boarding'),
+    gender: {
+        type: DataTypes.ENUM('Male', 'Female'),
         allowNull: false,
     },
-    appointment_date: {
-        type: DataTypes.DATE,
-        allowNull: false,
+    breed: {
+        type: DataTypes.STRING,
     },
-    status: {
-        type: DataTypes.ENUM('pending', 'confirmed', 'completed', 'canceled'),
-        defaultValue: 'pending',
+    fur_color: {
+        type: DataTypes.STRING,
     },
-    notes: {
+    health_status: {
+        type: DataTypes.TEXT,
+    },
+    diet_plan: {
+        type: DataTypes.TEXT,
+    },
+    medical_history: {
+        type: DataTypes.TEXT,
+    },
+    vaccination_history: {
         type: DataTypes.TEXT,
     },
     created_at: {
@@ -50,8 +44,8 @@ const Appointment = sequelize.define('Appointment', {
         defaultValue: DataTypes.NOW,
     },
 }, {
-    tableName: 'appointments',
+    tableName: 'pets',
     timestamps: false,
 });
 
-module.exports = Appointment;
+module.exports = Pet;

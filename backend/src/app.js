@@ -1,7 +1,13 @@
 const express = require('express');
 require('dotenv').config();
 const sequelize = require('./database');
-const router = require('./routes/route');
+
+// Import routes
+const authRoutes = require('./routes/auth');
+const userRoutes = require('./routes/user');
+const adminRoutes = require('./routes/admin');
+const vetRoutes = require('./routes/vet');
+const staffRoutes = require('./routes/staff');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -11,25 +17,18 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Routes
-router(app);
+app.use('/api/v1/auth', authRoutes);
+app.use('/api/v1/user', userRoutes);
+app.use('/api/v1/admin', adminRoutes);
+app.use('/api/v1/vet', vetRoutes);
+app.use('/api/v1/staff', staffRoutes);
 
-// Route mặc định
+// Default route
 app.get('/', (req, res) => {
     res.send('Welcome to the Pet Care API!');
 });
 
-// Xử lý route không tồn tại
-app.use((req, res) => {
-    res.status(404).json({ message: 'Route not found' });
-});
-
-// Xử lý lỗi
-app.use((err, req, res, next) => {
-    console.error(err.stack);
-    res.status(500).json({ message: 'Internal Server Error' });
-});
-
-// Kết nối cơ sở dữ liệu và khởi động server
+// Sync database and start server
 sequelize.sync({ force: false })
     .then(() => {
         console.log('Database synced successfully.');

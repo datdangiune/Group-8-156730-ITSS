@@ -1,9 +1,7 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../database');
-const Pet = require('./Pet');
-const User = require('./User');
 
-const MedicalRecord = sequelize.define('MedicalRecord', {
+const Boarding = sequelize.define('Boarding', {
     id: {
         type: DataTypes.INTEGER,
         primaryKey: true,
@@ -11,37 +9,35 @@ const MedicalRecord = sequelize.define('MedicalRecord', {
     },
     pet_id: {
         type: DataTypes.INTEGER,
-        references: {
-            model: Pet,
-            key: 'id',
-        },
     },
-    vet_id: {
+    owner_id: {
         type: DataTypes.INTEGER,
-        references: {
-            model: User,
-            key: 'id',
-        },
     },
-    diagnosis: {
-        type: DataTypes.TEXT,
+    room_id: {
+        type: DataTypes.INTEGER,
     },
-    treatment: {
-        type: DataTypes.TEXT,
-    },
-    medication: {
-        type: DataTypes.TEXT,
-    },
-    follow_up_date: {
+    start_date: {
         type: DataTypes.DATE,
+        allowNull: false,
+    },
+    end_date: {
+        type: DataTypes.DATE,
+        allowNull: false,
+    },
+    special_care_instructions: {
+        type: DataTypes.TEXT,
+    },
+    status: {
+        type: DataTypes.ENUM('ongoing', 'completed'),
+        defaultValue: 'ongoing',
     },
     created_at: {
         type: DataTypes.DATE,
         defaultValue: DataTypes.NOW,
     },
 }, {
-    tableName: 'medical_records',
+    tableName: 'boarding',
     timestamps: false,
 });
 
-module.exports = MedicalRecord;
+module.exports = Boarding;

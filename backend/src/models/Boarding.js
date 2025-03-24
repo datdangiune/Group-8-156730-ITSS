@@ -1,8 +1,5 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../database');
-const Pet = require('./Pet');
-const User = require('./User');
-const Room = require('./Room');
 
 const Boarding = sequelize.define('Boarding', {
     id: {
@@ -12,24 +9,12 @@ const Boarding = sequelize.define('Boarding', {
     },
     pet_id: {
         type: DataTypes.INTEGER,
-        references: {
-            model: Pet,
-            key: 'id',
-        },
     },
     owner_id: {
         type: DataTypes.INTEGER,
-        references: {
-            model: User,
-            key: 'id',
-        },
     },
     room_id: {
         type: DataTypes.INTEGER,
-        references: {
-            model: Room,
-            key: 'id',
-        },
     },
     start_date: {
         type: DataTypes.DATE,

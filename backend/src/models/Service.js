@@ -22,6 +22,9 @@ const Service = sequelize.define('Service', {
         type: DataTypes.ENUM('grooming', 'medical', 'boarding'),
         allowNull: false,
     },
+    notes: {
+        type: DataTypes.TEXT, // Thêm trường notes để lưu ghi chú chi tiết
+    },
     created_at: {
         type: DataTypes.DATE,
         defaultValue: DataTypes.NOW,

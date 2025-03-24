@@ -1,6 +1,5 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../database');
-const User = require('./User'); // Import model User để tạo quan hệ
 
 const Pet = sequelize.define('Pet', {
     id: {
@@ -10,10 +9,6 @@ const Pet = sequelize.define('Pet', {
     },
     owner_id: {
         type: DataTypes.INTEGER,
-        references: {
-            model: User, // Tên model liên kết
-            key: 'id',   // Khóa chính của bảng User
-        },
     },
     name: {
         type: DataTypes.STRING,
