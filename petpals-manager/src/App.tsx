@@ -13,6 +13,7 @@ import History from "./pages/History";
 import NotFound from "./pages/NotFound";
 import LoginPage from "./pages/Login";
 import Register from "./pages/Register";
+import AddPet from "./pages/addPet";
 const queryClient = new QueryClient();
 
 const MainLayout = () => (
@@ -39,6 +40,7 @@ const App = () => (
           <Route element={<MainLayout />}>
             <Route path="/" element={<Index />} />
             <Route path="/pets" element={<Pets />} />
+            <Route path="/pets/add" element={<AddPet />} />
             <Route path="/appointments" element={<Appointments />} />
             <Route path="/services" element={<Services />} />
             <Route path="/history" element={<History />} />
