@@ -1,51 +1,51 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../database');
 
-const Pet = sequelize.define('Pet', {
+const Appointment = sequelize.define('Appointment', {
     id: {
         type: DataTypes.INTEGER,
         primaryKey: true,
         autoIncrement: true,
     },
+    pet_id: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        references: {
+            model: 'pets',
+            key: 'id',
+        },
+    },
     owner_id: {
         type: DataTypes.INTEGER,
-    },
-    name: {
-        type: DataTypes.STRING,
         allowNull: false,
+        references: {
+            model: 'users', // Tên bảng người dùng
+            key: 'id',
+        },
     },
-    age: {
+    staff_id: {
         type: DataTypes.INTEGER,
+        allowNull: true,
+        references: {
+            model: 'users', // Tên bảng nhân viên
+            key: 'id',
+        },
     },
-    gender: {
-        type: DataTypes.ENUM('Male', 'Female'),
+    appointment_date: {
+        type: DataTypes.DATE,
         allowNull: false,
     },
-    breed: {
-        type: DataTypes.STRING,
-    },
-    fur_color: {
-        type: DataTypes.STRING,
-    },
-    health_status: {
+    reason: {
         type: DataTypes.TEXT,
-    },
-    diet_plan: {
-        type: DataTypes.TEXT,
-    },
-    medical_history: {
-        type: DataTypes.TEXT,
-    },
-    vaccination_history: {
-        type: DataTypes.TEXT,
+        allowNull: true,
     },
     created_at: {
         type: DataTypes.DATE,
         defaultValue: DataTypes.NOW,
     },
 }, {
-    tableName: 'pets',
+    tableName: 'appointments',
     timestamps: false,
 });
 
-module.exports = Pet;
+module.exports = Appointment;

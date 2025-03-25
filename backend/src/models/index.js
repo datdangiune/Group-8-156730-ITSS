@@ -8,7 +8,7 @@ const Notification = require('./Notification');
 const Payment = require('./Payment');
 const Room = require('./Room');
 
-// Định nghĩa quan hệ giữa các model
+
 Pet.belongsTo(User, { foreignKey: 'owner_id', as: 'owner' });
 Pet.hasMany(Service, { foreignKey: 'pet_id', as: 'services' });
 Pet.hasMany(Boarding, { foreignKey: 'pet_id', as: 'boarding' });

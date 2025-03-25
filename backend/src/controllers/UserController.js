@@ -1,12 +1,19 @@
 const { Pet, Appointment, Payment, Service } = require('../models');
 
-const UserController = {
-    // Quản lý thú cưng
+const UserController  = { 
     async createPet(req, res) {
+        const {name, age, gender, breed, fur_color} = req.body
+        if(!name || !age || !gender || !breed || !fur_color ){
+            return res.status(400).json({message: 'Please fill in all fields.'})
+        }
         try {
             const petData = {
-                ...req.body,
-                owner_id: req.user.id, // Lấy owner_id từ token
+                name,
+                age,
+                gender,
+                breed,
+                fur_color,
+                owner_id: req.user.id, 
             };
             const pet = await Pet.create(petData);
             res.status(201).json({ message: 'Pet registered successfully', pet });
@@ -17,7 +24,7 @@ const UserController = {
 
     async getAllPets(req, res) {
         try {
-            const ownerId = req.user.id; // Lấy owner_id từ token
+            const ownerId = req.user.id; 
             const pets = await Pet.findAll({ where: { owner_id: ownerId } });
             res.status(200).json({ success: true, message: 'Pets fetched successfully', data: pets });
         } catch (err) {
@@ -29,15 +36,7 @@ const UserController = {
         try {
             const pet = await Pet.findOne({
                 where: { id: req.params.id, owner_id: req.user.id },
-                include: [
-                    {
-                        model: Service,
-                        as: 'services',
-                        attributes: ['id', 'name', 'type', 'price', 'created_at'],
-                    },
-                ],
             });
-
             if (!pet) {
                 return res.status(404).json({ message: 'Pet not found' });
             }
@@ -210,6 +209,9 @@ const UserController = {
             });
         }
     },
-};
+}
 
-module.exports = UserController;
+module.exports =  UserController;
+
+
+

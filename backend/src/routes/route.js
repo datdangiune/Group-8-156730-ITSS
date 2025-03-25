@@ -1,16 +1,15 @@
 const auth = require('./auth');
-const pets = require('./pets');
-const appointments = require('./appointments');
-const payments = require('./payments');
-const notifications = require('./notifications');
-
+const admin = require('./admin');
+const staff = require('./staff');
+const user = require('./user');
+const vet = require('./vet')
 function router(app) {
     const apiVersion = process.env.DEFAULT_VERSION || '/api/v1';
     app.use(`${apiVersion}/auth`, auth);
-    app.use(`${apiVersion}/pets`, pets);
-    app.use(`${apiVersion}/appointments`, appointments);
-    app.use(`${apiVersion}/payments`, payments);
-    app.use(`${apiVersion}/notifications`, notifications);
+    app.use(`${apiVersion}/admin`, admin);
+    app.use(`${apiVersion}/staff`, staff);
+    app.use(`${apiVersion}/user`, user);
+    app.use(`${apiVersion}/vet`, vet);
 }
 
 module.exports = router;

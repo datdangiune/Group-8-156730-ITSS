@@ -23,7 +23,7 @@ const Service = sequelize.define('Service', {
         allowNull: false,
     },
     notes: {
-        type: DataTypes.TEXT, // Thêm trường notes để lưu ghi chú chi tiết
+        type: DataTypes.TEXT, 
     },
     created_at: {
         type: DataTypes.DATE,

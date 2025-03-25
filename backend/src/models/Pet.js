@@ -43,6 +43,9 @@ const Pet = sequelize.define('Pet', {
         type: DataTypes.DATE,
         defaultValue: DataTypes.NOW,
     },
+    image: {
+        type: DataTypes.STRING,
+    }
 }, {
     tableName: 'pets',
     timestamps: false,
