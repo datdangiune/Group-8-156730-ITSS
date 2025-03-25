@@ -1,72 +1,48 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect} from 'react';
 import { Link } from 'react-router-dom';
 import { PlusCircle, Search, Filter } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import PetCard, { Pet } from '@/components/ui/pet-card';
-
-// Mock data
-const mockPets: Pet[] = [
-  {
-    id: '1',
-    name: 'Buddy',
-    type: 'dog',
-    breed: 'Golden Retriever',
-    age: 3,
-    weight: 32,
-    color: 'Golden',
-    lastCheckup: 'Jan 15, 2024',
-  },
-  {
-    id: '2',
-    name: 'Whiskers',
-    type: 'cat',
-    breed: 'Maine Coon',
-    age: 2,
-    weight: 5,
-    color: 'Gray Tabby',
-    lastCheckup: 'Mar 3, 2024',
-  },
-  {
-    id: '3',
-    name: 'Tweety',
-    type: 'bird',
-    breed: 'Canary',
-    age: 1,
-    weight: 0.2,
-    color: 'Yellow',
-    lastCheckup: 'Feb 20, 2024',
-  },
-  {
-    id: '4',
-    name: 'Rex',
-    type: 'dog',
-    breed: 'German Shepherd',
-    age: 4,
-    weight: 38,
-    color: 'Black and Tan',
-    lastCheckup: 'Dec 5, 2023',
-  },
-  {
-    id: '5',
-    name: 'Mittens',
-    type: 'cat',
-    breed: 'Siamese',
-    age: 2,
-    weight: 4,
-    color: 'Cream with Brown Points',
-    lastCheckup: 'Feb 12, 2024',
-  },
-];
-
-const petTypes = ['all', 'dog', 'cat', 'bird', 'rabbit', 'fish', 'other'];
+import { getPets } from '@/service/pet';
+import { getTokenFromCookies } from '@/service/auth';
+import { useNavigate } from 'react-router-dom';
+type PetType = "dog" | "cat" | "bird" | "rabbit" | "fish" | "other";
 
 const Pets = () => {
+  const petType = ["dog" , "cat" , "bird" , "rabbit" , "fish" , "other"]
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState('all');
-
-  const filteredPets = mockPets.filter(pet => {
+  const [pets, setPets] = useState<Pet[]>([]);  
+  const navigate = useNavigate();
+  const token = getTokenFromCookies();
+  useEffect(() => {
+      if(!token){
+        navigate('/login')
+      }
+  }, []);
+    useEffect(() => {
+      async function fetchPets() {
+        if (!token) return;
+    
+        const data = await getPets(token);
+        const validTypes: PetType[] = ["dog", "cat", "bird", "rabbit", "fish", "other"];
+    
+        const formattedPets: Pet[] = data.map(pet => ({
+          ...pet,
+          id: Number(pet.id), // Đảm bảo id là số
+          type: validTypes.includes(pet.type as PetType) ? (pet.type as PetType) : "other",
+          gender: pet.gender === "Male" || pet.gender === "Female" ? pet.gender : "Male", // Đảm bảo gender hợp lệ
+          image: pet.image || null, // Đảm bảo image có thể là null
+        }));
+    
+        setPets(formattedPets);
+      }
+    
+      fetchPets();
+    }, [token]);
+  const filteredPets = pets.filter(pet => {
     const matchesSearch = pet.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
                          (pet.breed && pet.breed.toLowerCase().includes(searchQuery.toLowerCase()));
     const matchesFilter = activeFilter === 'all' || pet.type === activeFilter;
@@ -111,7 +87,7 @@ const Pets = () => {
               <span className="text-sm text-gray-600 dark:text-gray-400">Filter:</span>
             </div>
             
-            {petTypes.map(type => (
+            {petType.map(type => (
               <Button
                 key={type}
                 variant={activeFilter === type ? "default" : "outline"}

@@ -1,45 +1,17 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect} from 'react';
 import { Link } from 'react-router-dom';
 import { PlusCircle, Calendar, Scissors, BedDouble, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import PetCard, { Pet } from '@/components/ui/pet-card';
 import AppointmentCard, { Appointment } from '@/components/ui/appointment-card';
 import ServiceCard, { Service } from '@/components/ui/service-card';
+import { getTokenFromCookies } from '@/service/auth';
+import { useNavigate } from 'react-router-dom';
+import { getPets } from '@/service/pet';
 
-// Mock data
-const mockPets: Pet[] = [
-  {
-    id: '1',
-    name: 'Buddy',
-    type: 'dog',
-    breed: 'Golden Retriever',
-    age: 3,
-    weight: 32,
-    color: 'Golden',
-    lastCheckup: 'Jan 15, 2024',
-  },
-  {
-    id: '2',
-    name: 'Whiskers',
-    type: 'cat',
-    breed: 'Maine Coon',
-    age: 2,
-    weight: 5,
-    color: 'Gray Tabby',
-    lastCheckup: 'Mar 3, 2024',
-  },
-  {
-    id: '3',
-    name: 'Tweety',
-    type: 'bird',
-    breed: 'Canary',
-    age: 1,
-    weight: 0.2,
-    color: 'Yellow',
-    lastCheckup: 'Feb 20, 2024',
-  },
-];
+type PetType = "dog" | "cat" | "bird" | "rabbit" | "fish" | "other";
+
 
 const mockAppointments: Appointment[] = [
   {
@@ -103,6 +75,35 @@ const Dashboard = () => {
     if (hour < 18) return 'Good afternoon';
     return 'Good evening';
   });
+  const [pets, setPets] = useState<Pet[]>([]);  
+  const navigate = useNavigate();
+  const token = getTokenFromCookies();
+  useEffect(() => {
+    if(!token){
+      navigate('/login')
+    }
+  }, []);
+  useEffect(() => {
+    async function fetchPets() {
+      if (!token) return;
+  
+      const data = await getPets(token);
+      const validTypes: PetType[] = ["dog", "cat", "bird", "rabbit", "fish", "other"];
+  
+      const formattedPets: Pet[] = data.map(pet => ({
+        ...pet,
+        id: Number(pet.id), // Đảm bảo id là số
+        type: validTypes.includes(pet.type as PetType) ? (pet.type as PetType) : "other",
+        gender: pet.gender === "Male" || pet.gender === "Female" ? pet.gender : "Male", // Đảm bảo gender hợp lệ
+        image: pet.image || null, // Đảm bảo image có thể là null
+      }));
+  
+      setPets(formattedPets);
+    }
+  
+    fetchPets();
+  }, [token]);
+  
 
   return (
     <div className="container mx-auto px-4 animate-fade-in">
@@ -149,7 +150,7 @@ const Dashboard = () => {
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {mockPets.map(pet => (
+          {pets.map(pet => (
             <PetCard key={pet.id} pet={pet} />
           ))}
           

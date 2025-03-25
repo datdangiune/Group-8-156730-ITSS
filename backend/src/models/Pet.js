@@ -17,6 +17,10 @@ const Pet = sequelize.define('Pet', {
     age: {
         type: DataTypes.INTEGER,
     },
+    type: {
+        type: DataTypes.ENUM('dog' ,'cat' , 'bird' , 'rabbit' , 'fish' , 'other'),
+        allowNull: false,
+    },
     gender: {
         type: DataTypes.ENUM('Male', 'Female'),
         allowNull: false,

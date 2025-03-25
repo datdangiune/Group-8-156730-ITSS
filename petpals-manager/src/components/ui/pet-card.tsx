@@ -7,15 +7,20 @@ import { cn } from '@/lib/utils';
 type PetType = 'dog' | 'cat' | 'bird' | 'rabbit' | 'fish' | 'other';
 
 export interface Pet {
-  id: string;
+  id: number;
+  owner_id: number;
   name: string;
+  age: number;
   type: PetType;
+  gender: 'Male' | 'Female';
   breed?: string;
-  age?: number;
-  weight?: number;
-  image?: string;
-  color?: string;
-  lastCheckup?: string;
+  fur_color?: string;
+  health_status?: string;
+  diet_plan?: string;
+  medical_history?: string;
+  vaccination_history?: string;
+  created_at: string;
+  image?: string | null;
 }
 
 interface PetCardProps {
@@ -78,21 +83,21 @@ const PetCard: React.FC<PetCardProps> = ({ pet, className }) => {
             </div>
           )}
           
-          {pet.weight !== undefined && (
+          {pet.fur_color !== undefined && (
             <div className="text-gray-600 dark:text-gray-400">
-              <span className="font-medium">Weight:</span> {pet.weight} kg
+              <span className="font-medium">Color:</span> {pet.fur_color} 
             </div>
           )}
           
-          {pet.color && (
+          {pet.gender && (
             <div className="text-gray-600 dark:text-gray-400">
-              <span className="font-medium">Color:</span> {pet.color}
+              <span className="font-medium">Gender:</span> {pet.gender}
             </div>
           )}
           
-          {pet.lastCheckup && (
+          {pet.health_status && (
             <div className="text-gray-600 dark:text-gray-400">
-              <span className="font-medium">Last visit:</span> {pet.lastCheckup}
+              <span className="font-medium">Health:</span> {pet.health_status}
             </div>
           )}
         </div>
