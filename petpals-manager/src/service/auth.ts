@@ -137,3 +137,10 @@ export const fetchWithAuth = async (url: string, options: RequestInit = {}) => {
 
   return response;
 };
+
+
+// utils/auth.js
+export const isAuthenticated = () => {
+  const token = Cookies.get("token") // Hoặc lấy từ cookie
+  return !!token; // Trả về true nếu có token, ngược lại false
+};

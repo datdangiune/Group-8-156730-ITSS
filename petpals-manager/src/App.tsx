@@ -13,10 +13,11 @@ import History from "./pages/History";
 import NotFound from "./pages/NotFound";
 import LoginPage from "./pages/Login";
 import Register from "./pages/Register";
-import AddPet from "./pages/addPet";
+import AppointmentBooking from "./pages/AppointmentsBooking";
 import PetDetail from "./pages/PetDetail";
 import PetRegistration from "./pages/PetRegister";
 import PetSetup from "./pages/PetSetup";
+import ProtectedRoute from "./components/ProtectedRoute";
 const queryClient = new QueryClient();
 
 const MainLayout = () => (
@@ -41,15 +42,18 @@ const App = () => (
           <Route path="/register" element={<Register />} />
           {/* Các trang có Header & Footer */}
           <Route element={<MainLayout />}>
-            <Route path="/" element={<Index />} />
-            <Route path="/pets" element={<Pets />} />
-            <Route path="/pets/:id" element={<PetDetail />} />
-            <Route path="/pets/:id/edit" element={<PetSetup/>} />
-            <Route path="/pets/add" element={<PetRegistration />} />
-            <Route path="/appointments" element={<Appointments />} />
-            <Route path="/services" element={<Services />} />
-            <Route path="/history" element={<History />} />
-            <Route path="*" element={<NotFound />} />
+            <Route element={<ProtectedRoute />}>
+                <Route path="/" element={<Index />} />
+                <Route path="/pets" element={<Pets />} />
+                <Route path="/pets/:id" element={<PetDetail />} />
+                <Route path="/pets/:id/edit" element={<PetSetup/>} />
+                <Route path="/pets/add" element={<PetRegistration />} />
+                <Route path="/appointments" element={<Appointments />} />
+                <Route path="/appointments/book" element={<AppointmentBooking />} />
+                <Route path="/services" element={<Services />} />
+                <Route path="/history" element={<History />} />
+                <Route path="*" element={<NotFound />} />
+              </Route>
           </Route>
         </Routes>
       </BrowserRouter>

@@ -7,6 +7,10 @@ const Appointment = sequelize.define('Appointment', {
         primaryKey: true,
         autoIncrement: true,
     },
+    name_appointment:{
+        type: DataTypes.STRING,
+        allowNull: false
+    },
     pet_id: {
         type: DataTypes.INTEGER,
         allowNull: false,
@@ -34,6 +38,14 @@ const Appointment = sequelize.define('Appointment', {
     appointment_date: {
         type: DataTypes.DATE,
         allowNull: false,
+    },
+    appointment_hour: {
+        type: DataTypes.TIME,  // Lưu giờ dạng HH:MM:SS
+        allowNull: false,
+    },
+    appointment_location: {
+        type: DataTypes.STRING,
+        allowNull: false
     },
     reason: {
         type: DataTypes.TEXT,
