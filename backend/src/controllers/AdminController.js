@@ -1,4 +1,4 @@
-const { User, Service, Boarding, Report, Pet, Appointment } = require('../models'); // Add Appointment to the imports
+const { User, Service, Boarding, Report, Pet, Appointment, MedicalRecord } = require('../models'); // Add MedicalRecord to the imports
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const Admin = require('../models/Admin'); // Assuming Admin model exists
@@ -324,7 +324,7 @@ const AdminController = {
         try {
             const appointments = await Appointment.findAll({
                 include: [
-                    { model: Pet, as: 'pet', attributes: ['name'] },
+                    { model: Pet, as: 'appointmentPet', attributes: ['name'] }, // Use the correct alias
                     { model: User, as: 'owner', attributes: ['name'] },
                     { model: User, as: 'staff', attributes: ['name'] },
                 ],
