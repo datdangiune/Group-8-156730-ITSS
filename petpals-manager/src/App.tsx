@@ -14,6 +14,9 @@ import NotFound from "./pages/NotFound";
 import LoginPage from "./pages/Login";
 import Register from "./pages/Register";
 import AddPet from "./pages/addPet";
+import PetDetail from "./pages/PetDetail";
+import PetRegistration from "./pages/PetRegister";
+import PetSetup from "./pages/PetSetup";
 const queryClient = new QueryClient();
 
 const MainLayout = () => (
@@ -40,7 +43,9 @@ const App = () => (
           <Route element={<MainLayout />}>
             <Route path="/" element={<Index />} />
             <Route path="/pets" element={<Pets />} />
-            <Route path="/pets/add" element={<AddPet />} />
+            <Route path="/pets/:id" element={<PetDetail />} />
+            <Route path="/pets/:id/edit" element={<PetSetup/>} />
+            <Route path="/pets/add" element={<PetRegistration />} />
             <Route path="/appointments" element={<Appointments />} />
             <Route path="/services" element={<Services />} />
             <Route path="/history" element={<History />} />

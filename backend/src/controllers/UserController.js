@@ -214,6 +214,18 @@ const UserController  = {
             });
         }
     },
+    async uploadImage(req, res){
+        try {
+            if(!req.file){
+                return res.status(400).json({ success: false, message: 'No file uploaded'})
+            }
+            res.status(200).json({
+                url: req.file.path
+            })
+        } catch (error) {
+            
+        }
+    }
 }
 
 module.exports =  UserController;

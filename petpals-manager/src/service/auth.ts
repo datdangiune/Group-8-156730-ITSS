@@ -102,3 +102,38 @@ export async function checkUser(){
     return null;
   }
 }
+const getToken = () => {
+  return Cookies.get('token')
+
+};
+
+// 🔴 Xóa token khỏi cookie
+const removeToken = () => {
+  Cookies.remove('token')
+};
+export const fetchWithAuth = async (url: string, options: RequestInit = {}) => {
+  const token = getToken();
+  if (!token) {
+    console.warn("No token found. Redirecting to login...");
+    window.location.href = "/login";
+    return;
+  }
+  const API_BASE_URL = "http://localhost:3000/api/v1";
+  const response = await fetch(`${API_BASE_URL}${url}`, {
+    ...options,
+    headers: {
+      ...options.headers,
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+  });
+
+  if (response.status === 401) {
+    console.warn("Token expired. Removing token and redirecting to login...");
+    removeToken(); // Xóa token khi hết hạn
+    window.location.href = "/login";
+    return;
+  }
+
+  return response;
+};

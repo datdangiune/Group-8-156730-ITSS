@@ -1,12 +1,13 @@
 const express = require('express');
 const UserController = require('../controllers/UserController');
 const { verifyToken } = require('../middleware/veritify');
+const fileUploader = require('../config/uploadImage')
 const router = express.Router();
 
 // Quản lý thú cưng
 router.post('/pets', verifyToken, UserController.createPet); // Đăng ký thú cưng
 router.get('/pets', verifyToken, UserController.getAllPets); // Xem danh sách thú cưng
-router.get('/pets/:id', verifyToken, UserController.getPet); // Xem chi tiết thú cưng
+router.get('/get-pet/:id', verifyToken, UserController.getPet); // Xem chi tiết thú cưng
 router.patch('/pets/:id/health', verifyToken, UserController.updateHealthAndDiet); // Cập nhật sức khỏe và dinh dưỡng
 
 // Quản lý lịch khám bệnh
@@ -22,4 +23,7 @@ router.get('/payments', verifyToken, UserController.getPaymentHistory); // Xem l
 
 // Đặt phòng lưu trú
 router.post('/boarding', verifyToken, UserController.createBoarding);
+
+
+router.post('/image', verifyToken, fileUploader.single('file'), UserController.uploadImage)
 module.exports = router;
