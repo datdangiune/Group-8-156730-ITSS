@@ -2,7 +2,8 @@ const { Pet, Appointment, Payment, Service } = require('../models');
 
 const UserController  = { 
     async createPet(req, res) {
-        const {name, age, gender, breed, fur_color, health_status,  diet_plan, medical_history, vaccination_history, type} = req.body
+        console.log("Received pet data:", req.body);
+        const {name, age, gender, breed, fur_color, health_status,  diet_plan, medical_history, vaccination_history, type, image} = req.body
         if(!name || !age || !gender || !breed || !fur_color ){
             return res.status(400).json({message: 'Please fill in all fields.'})
         }
@@ -18,8 +19,10 @@ const UserController  = {
                 diet_plan,
                 medical_history,
                 vaccination_history,
+                image,
                 owner_id: req.user.id, 
             };
+            console.log("Pet data to be saved:", petData);
             const pet = await Pet.create(petData);
             res.status(201).json({ message: 'Pet registered successfully', pet });
         } catch (err) {

@@ -22,7 +22,7 @@ const Pet = sequelize.define('Pet', {
         allowNull: false,
     },
     gender: {
-        type: DataTypes.ENUM('Male', 'Female'),
+        type: DataTypes.ENUM('male', 'female'),
         allowNull: false,
     },
     breed: {

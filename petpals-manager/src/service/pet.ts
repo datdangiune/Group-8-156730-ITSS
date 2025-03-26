@@ -1,5 +1,5 @@
 import Cookies from "js-cookie";
-
+import { PetFormValues } from "@/types/petFormValue";
 interface Pet {
     id: number; 
     owner_id: number;
@@ -80,3 +80,56 @@ export async function getPet(token: string, id: number): Promise<Pet | null> {
     return null;
   }
 }
+
+
+export const uploadFile = async (file: File, token: string): Promise<string | null> => {
+  if (!file) return null;
+
+  const formData = new FormData();
+  formData.append("file", file); // 🔹 Đúng với key "file" mà backend yêu cầu
+
+  try {
+    const response = await fetch("http://localhost:3000/api/v1/user/image", {
+      method: "POST",
+      body: formData,
+      headers: {
+        // ❌ KHÔNG thêm "Content-Type", trình duyệt sẽ tự động tạo boundary
+        Authorization: `Bearer ${token}`, // Nếu backend yêu cầu xác thực
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error("Upload thất bại!");
+    }
+
+    const data = await response.json();
+    return data.url || null;
+  } catch (error) {
+    console.error("Lỗi khi upload ảnh:", error);
+    return null;
+  }
+};
+
+export const registerPet = async (petData: PetFormValues, imageUrl: string | null, token:string): Promise<void> => {
+  try {
+    const payload = { ...petData, image: imageUrl }; // Thêm URL ảnh nếu có
+
+    const response = await fetch("http://localhost:3000/api/v1/user/pets", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`, // Token nếu cần
+      },
+      body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to register pet");
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("Error registering pet:", error);
+    throw error;
+  }
+};

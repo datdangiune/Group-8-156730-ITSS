@@ -34,17 +34,9 @@ import { PlusCircle, ArrowLeft, Upload } from 'lucide-react';
 
 import { PetFormValues } from '@/types/petFormValue';
 import { getTokenFromCookies } from '@/service/auth';
-const uploadImage = async (file: File): Promise<string> => {
-  return new Promise((resolve) => {
-    // Simulate API delay
-    setTimeout(() => {
-      // In a real app, this would be a URL from the server
-      resolve(URL.createObjectURL(file));
-    }, 1000);
-  });
-};
+import { uploadFile } from '@/service/pet';
 
-
+import { registerPet } from '@/service/pet';
 const PetRegistration = () => {
     const { id } = useParams();
     const navigate = useNavigate();
@@ -69,35 +61,40 @@ const PetRegistration = () => {
       });
       
 
-  // Handle image upload
-    const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (file) {
-        try {
-            setIsUploading(true);
-            const imageUrl = await uploadImage(file);
-            setSelectedImage(imageUrl);
-            toast.success("Image uploaded successfully!");
-        } catch (error) {
-            console.error("Failed to upload image:", error);
-            toast.error("Failed to upload image. Please try again.");
-        } finally {
-            setIsUploading(false);
-        }
-        }
-    };
 
   // Handle form submission
-    const onSubmit = async (data: PetFormValues) => {
+  const onSubmit = async (data: PetFormValues) => {
+    try {
+      console.log("Submitting pet data:", { ...data, image: selectedImage });
+  
+      // 🔹 Gửi dữ liệu thú cưng lên server
+      await registerPet(data, selectedImage, token);
+  
+      toast.success("Pet registered successfully!");
+      navigate("/pets");
+    } catch (error) {
+      console.error("Failed to submit pet data:", error);
+      toast.error("Failed to submit pet data. Please try again.");
+    }
+  };
+  
+    const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (!file) return;
+    
+        setIsUploading(true);
+    
         try {
-        console.log("Submitting pet data:", { ...data, image: selectedImage });
-        toast.success(isEditMode ? "Pet updated successfully!" : "Pet registered successfully!");
-        navigate("/pets");
+          const imageUrl = await uploadFile(file, token); // Gọi API upload ảnh
+          if (imageUrl) {
+            setSelectedImage(imageUrl);
+          }
         } catch (error) {
-        console.error("Failed to submit pet data:", error);
-        toast.error("Failed to submit pet data. Please try again.");
+          alert(error.message);
+        } finally {
+          setIsUploading(false);
         }
-    };
+      };
     useEffect(() => {
         if(!token){
           navigate('/login')
@@ -215,6 +212,19 @@ const PetRegistration = () => {
                         </FormItem>
                     )}
                     />
+                                        <FormField
+                    control={form.control}
+                    name="fur_color"
+                    render={({ field }) => (
+                        <FormItem>
+                        <FormLabel>Color</FormLabel>
+                        <FormControl>
+                            <Input placeholder="Enter color" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                        </FormItem>
+                    )}
+                    />
 
                     <FormField
                     control={form.control}
@@ -228,25 +238,6 @@ const PetRegistration = () => {
                             placeholder="Enter age" 
                             {...field} 
                             onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : '')}
-                            />
-                        </FormControl>
-                        <FormMessage />
-                        </FormItem>
-                    )}
-                    />
-
-                    <FormField
-                    control={form.control}
-                    name="fur_color"
-                    render={({ field }) => (
-                        <FormItem>
-                        <FormLabel>Weight (kg)</FormLabel>
-                        <FormControl>
-                            <Input 
-                            type="string" 
-                            placeholder="Enter color" 
-                            {...field} 
-                            onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : '')}
                             />
                         </FormControl>
                         <FormMessage />
@@ -278,6 +269,7 @@ const PetRegistration = () => {
                         </FormItem>
                     )}
                     />
+                    
                 </div>
 
                 {/* Image Upload */}
