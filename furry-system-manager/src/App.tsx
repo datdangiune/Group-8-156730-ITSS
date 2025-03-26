@@ -12,6 +12,9 @@ import AdminLogin from './pages/AdminLogin';
 import AdminRegister from './pages/AdminRegister';
 import Boarding from './pages/Boarding';
 import Reports from './pages/Reports';
+import Appointments from './pages/Appointments';
+import MedicalRecords from './pages/MedicalRecords';
+import Analytics from './pages/Analytics'; // Ensure the file './pages/Analytics.tsx' exists or correct the path
 
 // PrivateRoute component to protect admin pages
 const PrivateRoute = ({ children }: { children: JSX.Element }) => {
@@ -68,6 +71,38 @@ const App = () => (
             element={
               <PrivateRoute>
                 <Reports />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/appointments"
+            element={
+              <PrivateRoute>
+                <Appointments />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/medical-records"
+            element={
+              <PrivateRoute>
+                <MedicalRecords />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/records"
+            element={
+              <PrivateRoute>
+                <MedicalRecords />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/analytics"
+            element={
+              <PrivateRoute>
+                <Analytics />
               </PrivateRoute>
             }
           />

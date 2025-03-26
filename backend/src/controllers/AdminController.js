@@ -1,4 +1,4 @@
-const { User, Service, Boarding, Report } = require('../models');
+const { User, Service, Boarding, Report, Pet, Appointment } = require('../models'); // Add Appointment to the imports
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const Admin = require('../models/Admin'); // Assuming Admin model exists
@@ -109,9 +109,15 @@ const AdminController = {
     // Quản lý lưu trú
     async getAllBoarding(req, res) {
         try {
-            const boardingList = await Boarding.findAll();
+            const boardingList = await Boarding.findAll({
+                include: [
+                    { model: Pet, as: 'pet', attributes: ['name'] },
+                    { model: User, as: 'owner', attributes: ['name'] },
+                ],
+            });
             res.status(200).json({ success: true, message: 'Boarding data fetched successfully', data: boardingList });
         } catch (err) {
+            console.error('Error fetching boarding data:', err);
             res.status(500).json({ success: false, message: 'Error fetching boarding data', error: err.message });
         }
     },
@@ -119,9 +125,25 @@ const AdminController = {
     // Báo cáo và thống kê
     async getDashboard(req, res) {
         try {
-            const report = await Report.generateDashboard(); // Giả định có hàm generateDashboard
-            res.status(200).json({ success: true, message: 'Dashboard data fetched successfully', data: report });
+            const totalPets = await Pet.count(); // Count total pets
+            const totalAppointments = await Appointment.count(); // Count total appointments
+            const ongoingServices = await Service.count({ where: { status: 'ongoing' } }); // Count ongoing services
+            const totalUsers = await User.count(); // Count total users
+            const totalServices = await Service.count(); // Count total services
+
+            res.status(200).json({
+                success: true,
+                message: 'Dashboard data fetched successfully',
+                data: {
+                    pets: totalPets,
+                    appointments: totalAppointments,
+                    ongoingServices: ongoingServices,
+                    users: totalUsers,
+                    services: totalServices,
+                },
+            });
         } catch (err) {
+            console.error('Error fetching dashboard data:', err);
             res.status(500).json({ success: false, message: 'Error fetching dashboard data', error: err.message });
         }
     },
@@ -295,6 +317,88 @@ const AdminController = {
         } catch (error) {
             console.error('Error during login:', error); // Debugging log
             res.status(500).json({ message: 'Error logging in', error: error.message || error });
+        }
+    },
+
+    async getAllAppointments(req, res) {
+        try {
+            const appointments = await Appointment.findAll({
+                include: [
+                    { model: Pet, as: 'pet', attributes: ['name'] },
+                    { model: User, as: 'owner', attributes: ['name'] },
+                    { model: User, as: 'staff', attributes: ['name'] },
+                ],
+            });
+            res.status(200).json({ success: true, message: 'Appointments fetched successfully', data: appointments });
+        } catch (err) {
+            console.error('Error fetching appointments:', err);
+            res.status(500).json({ success: false, message: 'Error fetching appointments', error: err.message });
+        }
+    },
+
+    async deleteAppointment(req, res) {
+        try {
+            const { id } = req.params;
+            const deleted = await Appointment.destroy({ where: { id } });
+            if (!deleted) {
+                return res.status(404).json({ success: false, message: 'Appointment not found' });
+            }
+            res.status(200).json({ success: true, message: 'Appointment deleted successfully' });
+        } catch (err) {
+            console.error('Error deleting appointment:', err);
+            res.status(500).json({ success: false, message: 'Error deleting appointment', error: err.message });
+        }
+    },
+
+    async getAllMedicalRecords(req, res) {
+        try {
+            const medicalRecords = await MedicalRecord.findAll({
+                include: [
+                    { model: Pet, as: 'pet', attributes: ['name'] },
+                    { model: User, as: 'owner', attributes: ['name'] },
+                ],
+            });
+            res.status(200).json({ success: true, message: 'Medical records fetched successfully', data: medicalRecords });
+        } catch (err) {
+            console.error('Error fetching medical records:', err);
+            res.status(500).json({ success: false, message: 'Error fetching medical records', error: err.message });
+        }
+    },
+
+    async deleteMedicalRecord(req, res) {
+        try {
+            const { id } = req.params;
+            const deleted = await MedicalRecord.destroy({ where: { id } });
+            if (!deleted) {
+                return res.status(404).json({ success: false, message: 'Medical record not found' });
+            }
+            res.status(200).json({ success: true, message: 'Medical record deleted successfully' });
+        } catch (err) {
+            console.error('Error deleting medical record:', err);
+            res.status(500).json({ success: false, message: 'Error deleting medical record', error: err.message });
+        }
+    },
+
+    async getAnalyticsData(req, res) {
+        try {
+            const totalUsers = await User.count();
+            const totalPets = await Pet.count();
+            const totalAppointments = await Appointment.count();
+            const totalRevenue = await Payment.sum('amount') || 0;
+
+            res.status(200).json({
+                success: true,
+                message: 'Analytics data fetched successfully',
+                data: {
+                    totalUsers,
+                    totalPets,
+                    totalAppointments,
+                    totalRevenue,
+                },
+            });
+        } catch (err) {
+            console.error('Error fetching analytics data:', err);
+            res.status(500).json({ success: false, message: 'Error fetching analytics data', error: err.message });
         }
     },
 };

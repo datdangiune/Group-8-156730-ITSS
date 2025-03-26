@@ -25,6 +25,11 @@ const Service = sequelize.define('Service', {
     notes: {
         type: DataTypes.TEXT, 
     },
+    status: {
+        type: DataTypes.ENUM('active', 'inactive', 'ongoing'),
+        allowNull: false,
+        defaultValue: 'inactive', // Default status
+    },
     created_at: {
         type: DataTypes.DATE,
         defaultValue: DataTypes.NOW,

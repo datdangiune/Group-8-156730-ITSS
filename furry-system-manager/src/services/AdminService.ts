@@ -93,31 +93,39 @@ export const getRevenueReport = async () => {
 };
 
 export async function getDashboardMetrics(): Promise<any> {
-  const response = await fetch('http://localhost:3000/api/admin/dashboard', {
-    headers: {
-      Authorization: `Bearer ${Cookies.get('adminToken')}`,
-    },
-  });
+    try {
+        const response = await fetch('http://localhost:3000/api/admin/dashboard', {
+            headers: {
+                Authorization: `Bearer ${Cookies.get('adminToken')}`,
+            },
+        });
 
-  if (!response.ok) {
-    throw new Error('Failed to fetch dashboard metrics');
-  }
+        if (!response.ok) {
+            throw new Error('Failed to fetch dashboard metrics');
+        }
 
-  return response.json();
+        const data = await response.json();
+        console.log('Fetched Dashboard Metrics:', data); // Debugging log
+        return data;
+    } catch (err) {
+        console.error('Error fetching dashboard metrics:', err.message);
+        throw err;
+    }
 }
 
 export async function getBoardingData(): Promise<any> {
-  const response = await fetch('http://localhost:3000/api/admin/boarding', {
-    headers: {
-      Authorization: `Bearer ${Cookies.get('adminToken')}`,
-    },
-  });
+    const response = await fetch('http://localhost:3000/api/admin/boarding', {
+        headers: {
+            Authorization: `Bearer ${Cookies.get('adminToken')}`,
+        },
+    });
 
-  if (!response.ok) {
-    throw new Error('Failed to fetch boarding data');
-  }
+    if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to fetch boarding data');
+    }
 
-  return response.json();
+    return response.json();
 }
 
 export async function getReports(reportType: string): Promise<any> {
@@ -133,3 +141,63 @@ export async function getReports(reportType: string): Promise<any> {
 
   return response.json();
 }
+
+export const getAllAppointments = async () => {
+    try {
+        const response = await axios.get(`${API_URL}/appointments`, {
+            headers: { Authorization: `Bearer ${Cookies.get('adminToken')}` },
+        });
+        return response.data.data;
+    } catch (err) {
+        console.error('Error fetching appointments:', err.response?.data || err.message);
+        throw new Error(err.response?.data?.message || 'Failed to fetch appointments');
+    }
+};
+
+export const deleteAppointment = async (id: string) => {
+    try {
+        const response = await axios.delete(`${API_URL}/appointments/${id}`, {
+            headers: { Authorization: `Bearer ${Cookies.get('adminToken')}` },
+        });
+        return response.data;
+    } catch (err) {
+        console.error('Error deleting appointment:', err.response?.data || err.message);
+        throw new Error(err.response?.data?.message || 'Failed to delete appointment');
+    }
+};
+
+export const getAllMedicalRecords = async () => {
+    try {
+        const response = await axios.get(`${API_URL}/medical-records`, {
+            headers: { Authorization: `Bearer ${Cookies.get('adminToken')}` },
+        });
+        return response.data.data;
+    } catch (err) {
+        console.error('Error fetching medical records:', err.response?.data || err.message);
+        throw new Error(err.response?.data?.message || 'Failed to fetch medical records');
+    }
+};
+
+export const deleteMedicalRecord = async (id: string) => {
+    try {
+        const response = await axios.delete(`${API_URL}/medical-records/${id}`, {
+            headers: { Authorization: `Bearer ${Cookies.get('adminToken')}` },
+        });
+        return response.data;
+    } catch (err) {
+        console.error('Error deleting medical record:', err.response?.data || err.message);
+        throw new Error(err.response?.data?.message || 'Failed to delete medical record');
+    }
+};
+
+export const getAnalyticsData = async () => {
+    try {
+        const response = await axios.get(`${API_URL}/analytics`, {
+            headers: { Authorization: `Bearer ${Cookies.get('adminToken')}` },
+        });
+        return response.data.data;
+    } catch (err) {
+        console.error('Error fetching analytics data:', err.response?.data || err.message);
+        throw new Error(err.response?.data?.message || 'Failed to fetch analytics data');
+    }
+};
