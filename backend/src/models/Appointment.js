@@ -7,8 +7,8 @@ const Appointment = sequelize.define('Appointment', {
         primaryKey: true,
         autoIncrement: true,
     },
-    name_appointment:{
-        type: DataTypes.STRING,
+    appointment_type:{
+        type: DataTypes.ENUM('Annual Checkup', 'Vaccination'),
         allowNull: false
     },
     pet_id: {
@@ -27,20 +27,12 @@ const Appointment = sequelize.define('Appointment', {
             key: 'id',
         },
     },
-    staff_id: {
-        type: DataTypes.INTEGER,
-        allowNull: true,
-        references: {
-            model: 'users', // Tên bảng nhân viên
-            key: 'id',
-        },
-    },
     appointment_date: {
         type: DataTypes.DATE,
         allowNull: false,
     },
     appointment_hour: {
-        type: DataTypes.TIME,  // Lưu giờ dạng HH:MM:SS
+        type: DataTypes.TIME,  
         allowNull: false,
     },
     appointment_location: {
