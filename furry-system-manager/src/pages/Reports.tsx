@@ -2,12 +2,20 @@ import React, { useEffect, useState } from 'react';
 import Layout from '@/components/Layout';
 import { getReports } from '@/services/AdminService';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-
+import { getTokenFromCookies } from '@/services/AdminAuthService';
+import { useNavigate } from 'react-router-dom';
 const Reports: React.FC = () => {
     const [revenueReport, setRevenueReport] = useState(null);
     const [petRegistrationStats, setPetRegistrationStats] = useState(null);
     const [healthTrends, setHealthTrends] = useState(null);
+    const token = getTokenFromCookies()
+    const navigate = useNavigate()
+    useEffect(() => {
 
+        if (!token) {
+            navigate('/login');
+        }
+    }, [token])
     useEffect(() => {
         getReports('revenue').then(setRevenueReport).catch(console.error);
         getReports('pet-registration').then(setPetRegistrationStats).catch(console.error);

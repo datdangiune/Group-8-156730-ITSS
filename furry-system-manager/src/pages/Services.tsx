@@ -5,7 +5,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { toast } from '@/hooks/use-toast';
-
+import { getTokenFromCookies } from '@/services/AdminAuthService';
+import { useNavigate } from 'react-router-dom';
 const Services: React.FC = () => {
     const [services, setServices] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -15,7 +16,14 @@ const Services: React.FC = () => {
     useEffect(() => {
         fetchServices();
     }, []);
-
+        const token = getTokenFromCookies()
+        const navigate = useNavigate()
+        useEffect(() => {
+    
+            if (!token) {
+                navigate('/login');
+            }
+        }, [token])
     const fetchServices = async () => {
         try {
             const data = await getAllServices();

@@ -2,7 +2,8 @@ import React, { useEffect, useState } from 'react';
 import Layout from '@/components/Layout';
 import { getDashboardMetrics } from '@/services/AdminService';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-
+import { getTokenFromCookies } from '@/services/AdminAuthService';
+import { useNavigate } from 'react-router-dom';
 const Dashboard: React.FC = () => {
     const [metrics, setMetrics] = useState({
         pets: 0,
@@ -10,7 +11,14 @@ const Dashboard: React.FC = () => {
         appointments: 0,
         ongoingServices: 0,
     });
+    const token = getTokenFromCookies()
+    const navigate = useNavigate()
+    useEffect(() => {
 
+        if (!token) {
+            navigate('/login');
+        }
+    }, [token])
     useEffect(() => {
         getDashboardMetrics()
             .then((data) => setMetrics(data))

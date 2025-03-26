@@ -5,11 +5,19 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from '@/hooks/use-toast';
-
+import { getTokenFromCookies } from '@/services/AdminAuthService';
+import { useNavigate } from 'react-router-dom';
 const Users: React.FC = () => {
     const [users, setUsers] = useState([]);
     const [loading, setLoading] = useState(true);
+    const token = getTokenFromCookies()
+    const navigate = useNavigate()
+    useEffect(() => {
 
+        if (!token) {
+            navigate('/login');
+        }
+    }, [token])
     useEffect(() => {
         getAllUsers()
             .then((data) => {

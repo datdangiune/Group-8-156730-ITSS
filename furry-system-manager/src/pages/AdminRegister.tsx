@@ -1,14 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect} from 'react';
 import { useNavigate } from 'react-router-dom';
 import { adminRegister } from '@/services/AdminAuthService';
-
+import { getTokenFromCookies } from '@/services/AdminAuthService';
 const AdminRegister: React.FC = () => {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
     const navigate = useNavigate();
-
+    const token = getTokenFromCookies()
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
@@ -19,7 +19,11 @@ const AdminRegister: React.FC = () => {
             setError(err.message || 'Registration failed');
         }
     };
-
+    useEffect(()=>{
+        if(token){
+            navigate('/dashboard')
+        }
+    }, [token])
     return (
         <div className="min-h-screen flex items-center justify-center bg-gray-100">
             <div className="bg-white p-8 rounded shadow-md w-96">

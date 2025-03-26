@@ -1,5 +1,7 @@
 import Cookies from 'js-cookie';
-
+export async function getTokenFromCookies() {
+    Cookies.get("adminToken")
+}
 export async function adminLogin(username: string, password: string): Promise<{ token: string }> {
     const response = await fetch('http://localhost:3000/api/admin/auth/login', {
         method: 'POST',
