@@ -133,3 +133,29 @@ export const registerPet = async (petData: PetFormValues, imageUrl: string | nul
     throw error;
   }
 };
+
+
+
+export const updatePet = async (petData: PetFormValues, imageUrl: string | null, token:string, petId: number): Promise<void> => {
+  try {
+    const payload = { ...petData, image: imageUrl }; // Thêm URL ảnh nếu có
+
+    const response = await fetch(`http://localhost:3000/api/v1/user/pets/${petId}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`, // Token nếu cần
+      },
+      body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to register pet");
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("Error registering pet:", error);
+    throw error;
+  }
+};

@@ -75,7 +75,42 @@ const UserController  = {
             res.status(500).json({ success: false, message: 'Error updating health and diet', error: err.message });
         }
     },
-
+    async updatePetInfo(req, res) {
+        console.log("Received pet update data:", req.body);
+    
+        const { id } = req.params; // Lấy pet_id từ URL
+        const { name, age, gender, breed, fur_color, health_status, diet_plan, medical_history, vaccination_history, type, image } = req.body;
+    
+        try {
+            // Tìm thú cưng theo ID
+            const pet = await Pet.findOne({ where: { id: id, owner_id: req.user.id } });
+    
+            if (!pet) {
+                return res.status(404).json({ message: 'Pet not found or unauthorized' });
+            }
+    
+            // Cập nhật các trường có trong req.body
+            await pet.update({
+                name: name || pet.name,
+                age: age || pet.age,
+                gender: gender || pet.gender,
+                type: type || pet.type,
+                breed: breed || pet.breed,
+                fur_color: fur_color || pet.fur_color,
+                health_status: health_status || pet.health_status,
+                diet_plan: diet_plan || pet.diet_plan,
+                medical_history: medical_history || pet.medical_history,
+                vaccination_history: vaccination_history || pet.vaccination_history,
+                image: image || pet.image,
+            });
+    
+            res.status(200).json({ message: 'Pet updated successfully', pet });
+        } catch (err) {
+            console.error('Error updating pet:', err);
+            res.status(500).json({ message: 'Error updating pet', error: err.message });
+        }
+    },
+    
     // Quản lý lịch khám bệnh
     async createAppointment(req, res) {
         try {

@@ -9,7 +9,7 @@ router.post('/pets', verifyToken, UserController.createPet); // Đăng ký thú 
 router.get('/pets', verifyToken, UserController.getAllPets); // Xem danh sách thú cưng
 router.get('/get-pet/:id', verifyToken, UserController.getPet); // Xem chi tiết thú cưng
 router.patch('/pets/:id/health', verifyToken, UserController.updateHealthAndDiet); // Cập nhật sức khỏe và dinh dưỡng
-
+router.put('/pets/:id', verifyToken, UserController.updatePetInfo)
 // Quản lý lịch khám bệnh
 router.post('/appointments', verifyToken, UserController.createAppointment); // Đặt lịch khám
 router.get('/appointments', verifyToken, UserController.getUserAppointments); // Xem danh sách lịch hẹn

@@ -36,18 +36,8 @@ import { Pet} from '@/types/pets';
 import { getPet } from '@/service/pet';
 import { getTokenFromCookies } from '@/service/auth';
 import { PetFormValues } from '@/types/petFormValue';
-const uploadImage = async (file: File): Promise<string> => {
-  return new Promise((resolve) => {
-    // Simulate API delay
-    setTimeout(() => {
-      // In a real app, this would be a URL from the server
-      resolve(URL.createObjectURL(file));
-    }, 1000);
-  });
-};
-
-
-
+import { updatePet } from '@/service/pet';
+import { uploadFile } from '@/service/pet';
 const PetSetup = () => {
     const { id } = useParams();
     console.log(id)
@@ -82,20 +72,21 @@ const PetSetup = () => {
       }, []);
     
   // Handle image upload
-    const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (file) {
+    const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (!file) return;
+    
+        setIsUploading(true);
+    
         try {
-            setIsUploading(true);
-            const imageUrl = await uploadImage(file);
+          const imageUrl = await uploadFile(file, token); // Gọi API upload ảnh
+          if (imageUrl) {
             setSelectedImage(imageUrl);
-            toast.success("Image uploaded successfully!");
+          }
         } catch (error) {
-            console.error("Failed to upload image:", error);
-            toast.error("Failed to upload image. Please try again.");
+          alert(error.message);
         } finally {
-            setIsUploading(false);
-        }
+          setIsUploading(false);
         }
     };
 
@@ -103,7 +94,11 @@ const PetSetup = () => {
     const onSubmit = async (data: PetFormValues) => {
         try {
         console.log("Submitting pet data:", { ...data, image: selectedImage });
-        toast.success(isEditMode ? "Pet updated successfully!" : "Pet registered successfully!");
+        const petId = Number(id)
+        // 🔹 Gửi dữ liệu thú cưng lên server
+        await updatePet(data, selectedImage, token, petId);
+    
+        toast.success("Pet registered successfully!");
         navigate("/pets");
         } catch (error) {
         console.error("Failed to submit pet data:", error);
@@ -173,7 +168,7 @@ const PetSetup = () => {
                         <FormItem>
                         <FormLabel>Pet Name *</FormLabel>
                         <FormControl>
-                            <Input placeholder={`${pet?.name}  || ""`} {...field} />
+                            <Input placeholder={`${pet?.name}`} {...field} />
                         </FormControl>
                         <FormMessage />
                         </FormItem>
@@ -221,7 +216,7 @@ const PetSetup = () => {
                         >
                             <FormControl>
                             <SelectTrigger>
-                                <SelectValue placeholder={`${pet?.gender}  || ""`}  />
+                                <SelectValue placeholder={`${pet?.gender}`}  />
                             </SelectTrigger>
                             </FormControl>
                             <SelectContent>
@@ -241,7 +236,7 @@ const PetSetup = () => {
                         <FormItem>
                         <FormLabel>Breed</FormLabel>
                         <FormControl>
-                            <Input placeholder={`${pet?.breed} || ""` }  {...field} />
+                            <Input placeholder={`${pet?.breed}`}  {...field} />
                         </FormControl>
                         <FormMessage />
                         </FormItem>
@@ -257,9 +252,13 @@ const PetSetup = () => {
                         <FormControl>
                             <Input 
                             type="number" 
-                            placeholder={`${pet?.age} || ""`} 
+                            placeholder={`Nhập tuổi`} 
+                            defaultValue={pet?.age || ""}
                             {...field} 
-                            onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : '')}
+                            onChange={(e) => {
+                                const value = e.target.value;
+                                field.onChange(value === '' ? null : parseInt(value)); // Trả về `null` nếu rỗng
+                            }}
                             />
                         </FormControl>
                         <FormMessage />

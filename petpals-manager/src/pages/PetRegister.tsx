@@ -62,21 +62,21 @@ const PetRegistration = () => {
       
 
 
-  // Handle form submission
-  const onSubmit = async (data: PetFormValues) => {
-    try {
-      console.log("Submitting pet data:", { ...data, image: selectedImage });
-  
-      // 🔹 Gửi dữ liệu thú cưng lên server
-      await registerPet(data, selectedImage, token);
-  
-      toast.success("Pet registered successfully!");
-      navigate("/pets");
-    } catch (error) {
-      console.error("Failed to submit pet data:", error);
-      toast.error("Failed to submit pet data. Please try again.");
-    }
-  };
+    // Handle form submission
+    const onSubmit = async (data: PetFormValues) => {
+        try {
+        console.log("Submitting pet data:", { ...data, image: selectedImage });
+    
+        // 🔹 Gửi dữ liệu thú cưng lên server
+        await registerPet(data, selectedImage, token);
+    
+        toast.success("Pet registered successfully!");
+        navigate("/pets");
+        } catch (error) {
+        console.error("Failed to submit pet data:", error);
+        toast.error("Failed to submit pet data. Please try again.");
+        }
+    };
   
     const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
@@ -94,7 +94,7 @@ const PetRegistration = () => {
         } finally {
           setIsUploading(false);
         }
-      };
+    };
     useEffect(() => {
         if(!token){
           navigate('/login')
@@ -212,7 +212,7 @@ const PetRegistration = () => {
                         </FormItem>
                     )}
                     />
-                                        <FormField
+                    <FormField
                     control={form.control}
                     name="fur_color"
                     render={({ field }) => (
