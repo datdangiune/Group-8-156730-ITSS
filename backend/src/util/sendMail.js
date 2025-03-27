@@ -11,9 +11,9 @@ const sendMail = async ({email, html})=>{
         }
       })
       let info = await transporter.sendMail({
-        from: '"Shop của Hà" <ShopHa@shopha.com>', // sender address
+        from: '"PetPal" <PetPal@petpal.com>', // sender address
         to: email, // list of receivers
-        subject: "Change Password", // Subject line
+        subject: "Appointment", // Subject line
         html: html, // html body
       })
       return info

@@ -116,7 +116,7 @@ const UserController  = {
     async createAppointment(req, res) {
         try {
             const { appointment_type, pet_id, appointment_date, appointment_hour, reason } = req.body;
-            const { id, email } = req.user; // Include user's email
+            const { id, email , username } = req.user; // Include user's email
 
             if (!appointment_type || !pet_id || !appointment_date || !appointment_hour) {
                 return res.status(400).json({ message: 'Missing required fields.' });
@@ -144,20 +144,45 @@ const UserController  = {
                 reason
             });
 
-            // Send email notification
-            const emailContent = `
-                <h3>Appointment Confirmation</h3>
-                <p>Dear User,</p>
-                <p>Your appointment has been successfully created with the following details:</p>
-                <ul>
-                    <li>Type: ${appointment_type}</li>
-                    <li>Date: ${appointment_date}</li>
-                    <li>Time: ${appointment_hour}</li>
-                    <li>Reason: ${reason || 'N/A'}</li>
-                </ul>
-                <p>Thank you for choosing our service!</p>
-            `;
-            await sendMail({ email, html: emailContent });
+// Send email notification
+const emailContent = `
+    <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+        <div style="text-align: center; padding: 20px; background-color: #f4f4f4; border-bottom: 1px solid #ddd;">
+            <h2 style="color: #4CAF50; margin: 0;">Appointment Confirmation</h2>
+        </div>
+        <div style="padding: 20px;">
+            <p style="font-size: 16px; margin-bottom: 20px;">Dear <strong>${username}</strong>,</p>
+            <p style="margin-bottom: 20px;">
+                We are pleased to confirm your appointment has been successfully scheduled. Here are the details:
+            </p>
+            <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+                <tr>
+                    <td style="padding: 8px; border: 1px solid #ddd; background-color: #f9f9f9; font-weight: bold;">Appointment Type</td>
+                    <td style="padding: 8px; border: 1px solid #ddd;">${appointment_type}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 8px; border: 1px solid #ddd; background-color: #f9f9f9; font-weight: bold;">Date</td>
+                    <td style="padding: 8px; border: 1px solid #ddd;">${appointment_date}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 8px; border: 1px solid #ddd; background-color: #f9f9f9; font-weight: bold;">Time</td>
+                    <td style="padding: 8px; border: 1px solid #ddd;">${appointment_hour}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 8px; border: 1px solid #ddd; background-color: #f9f9f9; font-weight: bold;">Reason</td>
+                    <td style="padding: 8px; border: 1px solid #ddd;">${reason || 'N/A'}</td>
+                </tr>
+            </table>
+            <p style="margin-bottom: 20px;">If you have any questions or need to reschedule, please don't hesitate to contact us.</p>
+            <p style="margin-bottom: 20px; color: #555;">Thank you for choosing our service. We look forward to serving you!</p>
+        </div>
+        <div style="text-align: center; padding: 10px; background-color: #f4f4f4; border-top: 1px solid #ddd; font-size: 12px; color: #777;">
+            <p style="margin: 0;">This is an automated message, please do not reply.</p>
+        </div>
+    </div>
+`;
+await sendMail({ email, html: emailContent });
+
 
             return res.status(201).json({
                 message: 'Appointment created successfully!',
