@@ -1,3 +1,4 @@
+
 import * as React from "react"
 import { ChevronLeft, ChevronRight, MoreHorizontal } from "lucide-react"
 
@@ -106,6 +107,100 @@ const PaginationEllipsis = ({
 )
 PaginationEllipsis.displayName = "PaginationEllipsis"
 
+// New component for advanced pagination with ellipsis
+const PaginationPageAction = ({
+  currentPage,
+  totalPages,
+  onPageChange,
+  siblingsCount = 1,
+}: {
+  currentPage: number;
+  totalPages: number;
+  onPageChange: (page: number) => void;
+  siblingsCount?: number;
+}) => {
+  // Generate page numbers logic
+  const generatePages = () => {
+    // Always show first page
+    const firstPage = [1];
+    
+    // Calculate the start and end of the current group
+    const startPage = Math.max(2, currentPage - siblingsCount);
+    const endPage = Math.min(totalPages - 1, currentPage + siblingsCount);
+    
+    // Create arrays for different sections
+    const middlePages = Array.from(
+      { length: endPage - startPage + 1 },
+      (_, i) => startPage + i
+    );
+    
+    // Always show last page if it exists
+    const lastPage = totalPages > 1 ? [totalPages] : [];
+    
+    // Calculate if we need ellipsis
+    const needsLeftEllipsis = startPage > 2;
+    const needsRightEllipsis = endPage < totalPages - 1;
+    
+    const items = [
+      ...firstPage,
+      ...(needsLeftEllipsis ? ["ellipsis-left"] : []),
+      ...middlePages,
+      ...(needsRightEllipsis ? ["ellipsis-right"] : []),
+      ...lastPage,
+    ];
+    
+    return items;
+  };
+  
+  const pages = generatePages();
+  
+  // Don't render if only one page
+  if (totalPages <= 1) return null;
+  
+  return (
+    <PaginationContent>
+      <PaginationItem>
+        <PaginationPrevious 
+          onClick={() => onPageChange(Math.max(currentPage - 1, 1))}
+          aria-disabled={currentPage === 1}
+          className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+        />
+      </PaginationItem>
+      
+      {pages.map((page, index) => {
+        if (page === "ellipsis-left" || page === "ellipsis-right") {
+          return (
+            <PaginationItem key={`ellipsis-${index}`}>
+              <PaginationEllipsis />
+            </PaginationItem>
+          );
+        }
+        
+        return (
+          <PaginationItem key={index}>
+            <PaginationLink 
+              isActive={currentPage === page}
+              onClick={() => onPageChange(page as number)}
+              className="cursor-pointer"
+            >
+              {page}
+            </PaginationLink>
+          </PaginationItem>
+        );
+      })}
+      
+      <PaginationItem>
+        <PaginationNext
+          onClick={() => onPageChange(Math.min(currentPage + 1, totalPages))}
+          aria-disabled={currentPage === totalPages}
+          className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+        />
+      </PaginationItem>
+    </PaginationContent>
+  );
+};
+PaginationPageAction.displayName = "PaginationPageAction";
+
 export {
   Pagination,
   PaginationContent,
@@ -114,4 +209,5 @@ export {
   PaginationLink,
   PaginationNext,
   PaginationPrevious,
+  PaginationPageAction,
 }

@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { ArrowLeft, ArrowRight, Clock, File, FileText, Folder, Plus, Search } from "lucide-react";
 import PageTransition from "@/components/animations/PageTransition";
@@ -9,6 +8,7 @@ import { medicalRecords } from "@/lib/data";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import MedicalRecordForm from "@/components/medical-records/MedicalRecordForm";
+import MultiStepMedicalRecordForm from "@/components/medical-records/MultiStepMedicalRecordForm";
 import { toast } from "sonner";
 
 const MedicalRecords = () => {
@@ -162,7 +162,8 @@ const MedicalRecords = () => {
           )}
         </div>
         
-        <MedicalRecordForm 
+        {/* Use the new multi-step medical record form */}
+        <MultiStepMedicalRecordForm 
           open={isFormOpen}
           onClose={() => setIsFormOpen(false)}
           onSubmit={handleCreateMedicalRecord}

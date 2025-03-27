@@ -1,6 +1,6 @@
 
 import React, { useState } from "react";
-import { ArrowLeft, ArrowRight, Clock, Plus, Search, Stethoscope } from "lucide-react";
+import { ArrowLeft, ArrowRight, Clock, Edit, Plus, Search, Stethoscope } from "lucide-react";
 import PageTransition from "@/components/animations/PageTransition";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,13 +10,28 @@ import StatusBadge from "@/components/dashboard/StatusBadge";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Progress } from "@/components/ui/progress";
 import ServiceForm from "@/components/services/ServiceForm";
+import EditServiceForm from "@/components/services/EditServiceForm";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { 
+  Pagination, 
+  PaginationContent, 
+  PaginationItem, 
+  PaginationLink, 
+  PaginationNext, 
+  PaginationPrevious
+} from "@/components/ui/pagination";
 
 const Services = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("all");
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [isEditFormOpen, setIsEditFormOpen] = useState(false);
+  const [selectedService, setSelectedService] = useState(null);
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
   
   // Filter services based on search query and active tab
   const filteredServices = services.filter(service => {
@@ -37,6 +52,13 @@ const Services = () => {
     
     return true;
   });
+  
+  // Calculate pagination
+  const totalPages = Math.ceil(filteredServices.length / itemsPerPage);
+  const paginatedServices = filteredServices.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
   
   // Calculate service progress
   const getServiceProgress = (status: string): number => {
@@ -73,6 +95,19 @@ const Services = () => {
     setIsFormOpen(false);
   };
   
+  const handleEditService = (service: any) => {
+    setSelectedService(service);
+    setIsEditFormOpen(true);
+  };
+  
+  const handleSaveEditedService = (data: any) => {
+    // In a real app, you would update this data to your backend
+    console.log("Edited service:", data);
+    toast.success("Service updated successfully!");
+    setIsEditFormOpen(false);
+    setSelectedService(null);
+  };
+
   return (
     <PageTransition>
       <div className="container px-4 py-6 max-w-7xl mx-auto">
@@ -109,7 +144,7 @@ const Services = () => {
             </Tabs>
           </div>
           
-          {filteredServices.length > 0 ? (
+          {paginatedServices.length > 0 ? (
             <>
               <div className="min-w-full overflow-hidden">
                 <table className="min-w-full divide-y divide-border">
@@ -136,7 +171,7 @@ const Services = () => {
                     </tr>
                   </thead>
                   <tbody className="bg-card divide-y divide-gray-200">
-                    {filteredServices.map((service) => (
+                    {paginatedServices.map((service) => (
                       <tr key={service.id} className="hover:bg-muted/20 transition-colors">
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center">
@@ -178,7 +213,10 @@ const Services = () => {
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
                               <DropdownMenuItem>View Details</DropdownMenuItem>
-                              <DropdownMenuItem>Update Status</DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleEditService(service)}>
+                                <Edit className="h-4 w-4 mr-2" />
+                                Edit Service
+                              </DropdownMenuItem>
                               <DropdownMenuItem>Send Notification</DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
@@ -191,18 +229,40 @@ const Services = () => {
               
               <div className="px-6 py-4 flex items-center justify-between border-t mt-4">
                 <div className="text-sm text-muted-foreground">
-                  Showing <span className="font-medium">{filteredServices.length}</span> of{" "}
-                  <span className="font-medium">{services.length}</span> services
+                  Showing <span className="font-medium">{paginatedServices.length}</span> of{" "}
+                  <span className="font-medium">{filteredServices.length}</span> services
                 </div>
                 
-                <div className="flex items-center space-x-2">
-                  <Button variant="outline" size="icon" disabled>
-                    <ArrowLeft className="h-4 w-4" />
-                  </Button>
-                  <Button variant="outline" size="icon">
-                    <ArrowRight className="h-4 w-4" />
-                  </Button>
-                </div>
+                <Pagination>
+                  <PaginationContent>
+                    <PaginationItem>
+                      <PaginationPrevious 
+                        onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                        aria-disabled={currentPage === 1}
+                        className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
+                      />
+                    </PaginationItem>
+                    
+                    {Array.from({ length: totalPages }, (_, i) => (
+                      <PaginationItem key={i + 1}>
+                        <PaginationLink
+                          isActive={currentPage === i + 1}
+                          onClick={() => setCurrentPage(i + 1)}
+                        >
+                          {i + 1}
+                        </PaginationLink>
+                      </PaginationItem>
+                    ))}
+                    
+                    <PaginationItem>
+                      <PaginationNext
+                        onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                        aria-disabled={currentPage === totalPages}
+                        className={currentPage === totalPages ? "pointer-events-none opacity-50" : ""}
+                      />
+                    </PaginationItem>
+                  </PaginationContent>
+                </Pagination>
               </div>
             </>
           ) : (
@@ -220,6 +280,16 @@ const Services = () => {
           open={isFormOpen}
           onClose={() => setIsFormOpen(false)}
           onSubmit={handleCreateService}
+        />
+        
+        <EditServiceForm
+          open={isEditFormOpen}
+          onClose={() => {
+            setIsEditFormOpen(false);
+            setSelectedService(null);
+          }}
+          service={selectedService}
+          onSubmit={handleSaveEditedService}
         />
       </div>
     </PageTransition>

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { ArrowLeft, ArrowRight, Calendar, ChevronDown, Filter, Plus, Search } from "lucide-react";
 import PageTransition from "@/components/animations/PageTransition";
@@ -9,12 +8,21 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import AppointmentForm from "@/components/appointments/AppointmentForm";
 import { Badge } from "@/components/ui/badge";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "@/components/ui/use-toast";
+import MultiStepAppointmentForm from "@/components/appointments/MultiStepAppointmentForm";
+import { 
+  Pagination, 
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+  PaginationPageAction
+} from "@/components/ui/pagination";
 
 // Define the appointment type to avoid readonly issues
 type AppointmentType = {
@@ -127,6 +135,20 @@ const Appointments = () => {
     
     return true;
   });
+  
+  // Calculate pagination
+  const totalPages = Math.ceil(filteredAppointments.length / 10); // Using 10 items per page
+  const [currentPage, setCurrentPage] = useState(1);
+  
+  // Paginate the appointments
+  const paginatedAppointments = filteredAppointments.slice(
+    (currentPage - 1) * 10,
+    currentPage * 10
+  );
+  
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
   
   return (
     <PageTransition>
@@ -254,8 +276,8 @@ const Appointments = () => {
                       </tr>
                     </thead>
                     <tbody className="bg-card divide-y divide-gray-200">
-                      {filteredAppointments.length > 0 ? (
-                        filteredAppointments.map((appointment) => (
+                      {paginatedAppointments.length > 0 ? (
+                        paginatedAppointments.map((appointment) => (
                           <tr key={appointment.id} className="hover:bg-muted/20 transition-colors">
                             <td className="px-6 py-4 whitespace-nowrap">
                               <div className="flex items-center">
@@ -323,18 +345,20 @@ const Appointments = () => {
                 
                 <div className="px-6 py-4 flex items-center justify-between border-t">
                   <div className="text-sm text-muted-foreground">
-                    Showing <span className="font-medium">{filteredAppointments.length}</span> of{" "}
-                    <span className="font-medium">{appointmentList.length}</span> appointments
+                    Showing <span className="font-medium">{paginatedAppointments.length}</span> of{" "}
+                    <span className="font-medium">{filteredAppointments.length}</span> appointments
                   </div>
                   
-                  <div className="flex items-center space-x-2">
-                    <Button variant="outline" size="icon" disabled>
-                      <ArrowLeft className="h-4 w-4" />
-                    </Button>
-                    <Button variant="outline" size="icon">
-                      <ArrowRight className="h-4 w-4" />
-                    </Button>
-                  </div>
+                  {totalPages > 1 && (
+                    <Pagination>
+                      <PaginationPageAction
+                        currentPage={currentPage}
+                        totalPages={totalPages}
+                        onPageChange={handlePageChange}
+                        siblingsCount={1}
+                      />
+                    </Pagination>
+                  )}
                 </div>
               </div>
             </TabsContent>
@@ -351,8 +375,8 @@ const Appointments = () => {
           </Tabs>
         </div>
         
-        {/* Appointment Form Modal */}
-        <AppointmentForm 
+        {/* Use the multi-step appointment form */}
+        <MultiStepAppointmentForm 
           isOpen={isFormOpen} 
           onClose={() => setIsFormOpen(false)} 
           onSave={handleSaveAppointment} 
