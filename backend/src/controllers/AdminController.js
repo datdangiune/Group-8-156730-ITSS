@@ -280,50 +280,55 @@ const AdminController = {
     async registerAdmin(req, res) {
         try {
             const { username, password, name, email } = req.body;
-            if(!username || !password || !name || !email){
+            if (!username || !password || !name || !email) {
                 return res.status(400).json({
                     success: false,
                     message: 'Vui lòng nhập đầy đủ thông tin',
-                })
+                });
             }
-            const hashedPassword = await bcrypt.hash(password, 10);
-            const newAdmin = await User.create({ username, password: hashedPassword, name: name, email: email, role: "admin" });
+
+            // Ensure password is hashed before saving
+            
+            const newAdmin = await User.create({ username, password, name, email, role: "admin" });
             res.status(201).json({ message: 'Admin registered successfully', admin: newAdmin });
         } catch (error) {
             res.status(500).json({ message: 'Error registering admin', error });
         }
     },
 
-    // Đăng nhập admin
-    async loginAdmin(req, res) {
-        try {
-            const { email, password } = req.body;
-            if (!email || !password) {
-                return res.status(400).json({ message: 'Username and password are required' });
-            }
+// Đăng nhập admin
+async loginAdmin(req, res) {
+    try {
+        const { email, password } = req.body;
 
-            console.log('Login attempt:', { email}); 
-            const admin = await User.findOne({ where: { email: email } });
-            if (!admin) {
-                console.log('Admin not found:', email); // Debugging log
-                return res.status(404).json({ message: 'Admin not found' });
-            }
-            if(admin.role !== "admin"){
-                return res.status(403).json({ message: 'Access denied' });
-            }
-            const isPasswordValid = await bcrypt.compare(password, admin.password);
-            if (!isPasswordValid) { // Debugging log
-                return res.status(401).json({ message: 'Invalid credentials' });
-            }
-
-            const token = jwt.sign({ id: admin.id, role: 'admin' }, process.env.JWT_SECRET, { expiresIn: '1d' });
-// Debugging log
-            res.status(200).json({ message: 'Login successful', token });
-        } catch (error) {
-            console.error('Error during login:', error); // Debugging log
-            res.status(500).json({ message: 'Error logging in', error: error.message || error });
+        // Tìm người dùng theo email
+        const user = await User.findOne({ where: { email } });
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
         }
-    },
+
+        // So sánh mật khẩu
+        const isMatch = await bcrypt.compare(password, user.password);
+        if (!isMatch) {
+            return res.status(401).json({ message: 'Invalid credentials' });
+        }
+
+        // Kiểm tra vai trò admin
+        if (user.role !== 'admin') {
+            return res.status(403).json({ message: 'Access denied. Admins only.' });
+        }
+
+        const token = jwt.sign(
+            { id: user.id, role: user.role, username: user.username, email: user.email },
+            process.env.JWT_SECRET,
+            { expiresIn: '1h' }
+        );
+
+        res.status(200).json({ message: 'Login successful', token });
+    } catch (err) {
+        res.status(500).json({ message: 'Error logging in', error: err.message });
+    }
+},
 
     async getAllAppointments(req, res) {
         try {
