@@ -22,14 +22,14 @@ interface UserPayload {
   role?: string;
   username: string; 
 }
-export async function Signup(fullname: string, email: string, password: string): Promise<SignupResponse> {
+export async function Signup(fullname: string, email: string, password: string, name: string): Promise<SignupResponse> {
     try {
     const response = await fetch(`http://localhost:3000/api/v1/auth/register`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ username: fullname, email, password}),
+      body: JSON.stringify({ username: fullname, email, password, name: name}),
     });
     const data: SignupResponse = await response.json();
     if (!response.ok) {

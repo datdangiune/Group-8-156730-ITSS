@@ -14,7 +14,7 @@ import {
   FormMessage,
   FormDescription 
 } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
+
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -40,190 +40,84 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
-
-
- type PetType = 'dog' | 'cat' | 'bird' | 'rabbit' | 'fish' | 'other';
- type PetGender = 'male' | 'female';
- type HealthStatus = 'healthy' | 'under-treatment' | 'requires-attention';
-
-interface Pet {
-  id: string;
-  name: string;
-  type: PetType;
-  breed?: string;
-  age?: number;
-  gender: PetGender;
-  weight?: number;
-  color?: string;
-  image?: string;
-  healthStatus?: HealthStatus;
-  dietPlan?: string;
-  medicalHistory?: string;
-  vaccinationHistory?: string;
-  lastCheckup?: string;
-  ownerId?: string;
-  createdAt?: string;
-  updatedAt?: string;
-}
-// Mock function to get pet list
-const getPets = async (): Promise<Pet[]> => {
-  // Simulate API fetch
-  const mockPets = [
-    {
-      id: '1',
-      name: 'Buddy',
-      type: 'dog' as PetType,
-      breed: 'Golden Retriever',
-      age: 3,
-      gender: 'male' as PetGender,
-      weight: 32,
-      color: 'Golden',
-      healthStatus: 'healthy' as HealthStatus,
-    },
-    {
-      id: '2',
-      name: 'Whiskers',
-      type: 'cat' as PetType,
-      breed: 'Maine Coon',
-      age: 2,
-      gender: 'female' as PetGender,
-      weight: 5,
-      color: 'Gray Tabby',
-      healthStatus: 'healthy' as HealthStatus,
-    },
-    {
-      id: '3',
-      name: 'Tweety',
-      type: 'bird' as PetType,
-      breed: 'Canary',
-      age: 1,
-      gender: 'male' as PetGender,
-      weight: 0.2,
-      color: 'Yellow',
-      healthStatus: 'healthy' as HealthStatus,
-    },
-  ];
-  
-  return mockPets;
-};
-
+import { getPets } from '@/service/pet';
+import { getTokenFromCookies } from '@/service/auth';
+import { Pet } from '@/components/ui/pet-card';
 // Mock appointment types
+import { createAppointment } from '@/service/appointment';
 const appointmentTypes = [
-  { id: 'checkup', name: 'Regular Checkup' },
-  { id: 'vaccination', name: 'Vaccination' },
-  { id: 'illness', name: 'Illness/Injury' },
-  { id: 'dental', name: 'Dental Cleaning' },
-  { id: 'surgery', name: 'Surgery Consultation' },
-  { id: 'followup', name: 'Follow-up Visit' },
+  { appointment_type: 'Annual Checkup' },
+  { appointment_type: 'Vaccination' },
+  { appointment_type: 'Wing Trimming' },
+  { appointment_type: 'Dental Cleaning' },
+  { appointment_type: 'Checkup' },
 ];
 
-// Mock locations
-const locations = [
-  { id: 'main', name: 'Main Pet Clinic', address: '123 Pet St, Petville' },
-  { id: 'north', name: 'North Branch', address: '456 Animal Ave, Northtown' },
-  { id: 'south', name: 'South Branch', address: '789 Furry Rd, Southville' },
-];
-
-// Form schema with Zod
-const appointmentFormSchema = z.object({
-  petId: z.string({
-    required_error: "Please select a pet for the appointment",
-  }),
-  appointmentType: z.string({
-    required_error: "Please select appointment type",
-  }),
-  date: z.date({
-    required_error: "Please select a date",
-  }),
-  time: z.string({
-    required_error: "Please select a time",
-  }),
-  location: z.string({
-    required_error: "Please select a location",
-  }),
-  reason: z.string().min(5, "Please provide a reason with at least 5 characters").max(500),
-  notes: z.string().optional(),
-});
-
-type AppointmentFormValues = z.infer<typeof appointmentFormSchema>;
-
+interface AppointmentFormValues {
+  appointment_type: string;
+  pet_id: number;
+  appointment_date: string; // Dạng "YYYY-MM-DD"
+  appointment_hour: string; // Dạng "HH:mm"
+  reason?: string;
+}
+type PetType = "dog" | "cat" | "bird" | "rabbit" | "fish" | "other";
 const AppointmentBooking = () => {
   const navigate = useNavigate();
-  const location = useLocation();
   const [pets, setPets] = useState<Pet[]>([]);
   const [availableTimes, setAvailableTimes] = useState<string[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-
-  // Get the pet ID from the URL if present
-  const queryParams = new URLSearchParams(location.search);
-  const preSelectedPetId = queryParams.get('petId');
-
+  const token = getTokenFromCookies()
+  const AVAILABLE_TIMES = ["08:00", "09:30", "11:00", "12:30", "14:00", "15:30"];
   // Generate available times
   useEffect(() => {
-    const times = [];
-    for (let hour = 9; hour <= 17; hour++) {
-      for (let minutes of ['00', '30']) {
-        const hourStr = hour.toString().padStart(2, '0');
-        times.push(`${hourStr}:${minutes}`);
-      }
-    }
-    setAvailableTimes(times);
+    setAvailableTimes(AVAILABLE_TIMES);
   }, []);
-
-  // Initialize form with default values
-  const form = useForm<AppointmentFormValues>({
-    resolver: zodResolver(appointmentFormSchema),
-    defaultValues: {
-      petId: preSelectedPetId || "",
-      appointmentType: "",
-      date: undefined,
-      time: "",
-      location: "",
-      reason: "",
-      notes: "",
-    },
-  });
-
-  // Fetch pets
   useEffect(() => {
-    const fetchPets = async () => {
-      try {
-        setIsLoading(true);
-        const petsData = await getPets();
-        setPets(petsData);
-      } catch (error) {
-        console.error('Error fetching pets:', error);
-        toast.error('Failed to load pets. Please try again.');
-      } finally {
-        setIsLoading(false);
-      }
-    };
+    async function fetchPets() {
+          if (!token) return;
+      
+          const data = await getPets(token);
+          const validTypes: PetType[] = ["dog", "cat", "bird", "rabbit", "fish", "other"];
+          console.log(data)
+          const formattedPets: Pet[] = data.map(pet => ({
+            ...pet,
+            id: Number(pet.id), 
+            type: validTypes.includes(pet.type as PetType) ? (pet.type as PetType) : "other",
+            gender: pet.gender === "Male" || pet.gender === "Female" ? pet.gender : "Male",
+            image: pet.image || null, 
+          }));
+      
+          setPets(formattedPets);
+        }
+      
+        fetchPets();
+      }, [token]);
+    const form = useForm<AppointmentFormValues>({
+        defaultValues: {
+            appointment_type: "",
+            pet_id: 0,
+            appointment_date: "",
+            appointment_hour: "",
+            reason: "",
+        },
+    });
 
-    fetchPets();
-  }, []);
+
 
   // Handle form submission
   const onSubmit = async (data: AppointmentFormValues) => {
     try {
-      // In a real app, this would be an API call
-      console.log("Booking appointment:", data);
-      
-      // Get pet name for toast message
-      const pet = pets.find(p => p.id === data.petId);
-      
-      // Format date for display
-      const formattedDate = format(data.date, "MMMM d, yyyy");
-      
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      toast.success(`Appointment booked for ${pet?.name} on ${formattedDate} at ${data.time}`);
-      navigate("/appointments");
+        if (!token) {
+            throw new Error("User is not authenticated.");
+        }
+
+        await createAppointment(data, token);
+        toast.success("Appointment booked successfully!");
+        navigate("/appointments"); // Điều hướng sau khi đặt lịch thành công
     } catch (error) {
-      console.error("Failed to book appointment:", error);
-      toast.error("Failed to book appointment. Please try again.");
+        toast.error(error.message || "Failed to book appointment.");
     }
-  };
+};
+
 
   const formatTimeForDisplay = (time: string) => {
     const [hours, minutes] = time.split(':');
@@ -259,14 +153,13 @@ const AppointmentBooking = () => {
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               <FormField
                 control={form.control}
-                name="petId"
+                name="pet_id"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Select Pet *</FormLabel>
                     <Select
                       onValueChange={field.onChange}
-                      defaultValue={field.value}
-                      disabled={isLoading}
+                      defaultValue={String(field.value)}
                     >
                       <FormControl>
                         <SelectTrigger>
@@ -274,12 +167,13 @@ const AppointmentBooking = () => {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {pets.map(pet => (
-                          <SelectItem key={pet.id} value={pet.id}>
+                        {pets.map((pet) => (
+                          <SelectItem key={pet.id} value={String(pet.id)}>
                             {pet.name} ({pet.type})
                           </SelectItem>
                         ))}
                       </SelectContent>
+
                     </Select>
                     <FormMessage />
                   </FormItem>
@@ -288,7 +182,7 @@ const AppointmentBooking = () => {
 
               <FormField
                 control={form.control}
-                name="appointmentType"
+                name="appointment_type"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Appointment Type *</FormLabel>
@@ -299,9 +193,9 @@ const AppointmentBooking = () => {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {appointmentTypes.map(type => (
-                          <SelectItem key={type.id} value={type.id}>
-                            {type.name}
+                        {appointmentTypes.map((type, id) => (
+                          <SelectItem key={id} value={type.appointment_type}>
+                            {type.appointment_type}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -314,7 +208,7 @@ const AppointmentBooking = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <FormField
                   control={form.control}
-                  name="date"
+                  name="appointment_date"
                   render={({ field }) => (
                     <FormItem className="flex flex-col">
                       <FormLabel>Date *</FormLabel>
@@ -340,15 +234,12 @@ const AppointmentBooking = () => {
                         <PopoverContent className="w-auto p-0" align="start">
                           <Calendar
                             mode="single"
-                            selected={field.value}
-                            onSelect={field.onChange}
-                            disabled={(date) => 
-                              date < new Date() || 
-                              date > new Date(new Date().setMonth(new Date().getMonth() + 3))
-                            }
-                            initialFocus
+                            selected={field.value ? new Date(field.value) : undefined} // Chuyển đổi string → Date
+                            onSelect={(date) => field.onChange(date?.toISOString().split("T")[0] || "")} // Lưu lại thành string "YYYY-MM-DD"
+                            disabled={(date) => date < new Date()} // Không cho chọn ngày trong quá khứ
                           />
                         </PopoverContent>
+
                       </Popover>
                       <FormMessage />
                     </FormItem>
@@ -357,7 +248,7 @@ const AppointmentBooking = () => {
 
                 <FormField
                   control={form.control}
-                  name="time"
+                  name="appointment_hour"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Time *</FormLabel>
@@ -382,33 +273,7 @@ const AppointmentBooking = () => {
                   )}
                 />
               </div>
-
-              <FormField
-                control={form.control}
-                name="location"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Location *</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select location" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {locations.map(location => (
-                          <SelectItem key={location.id} value={location.id}>
-                            {location.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
+                <FormField
                 control={form.control}
                 name="reason"
                 render={({ field }) => (
@@ -423,27 +288,6 @@ const AppointmentBooking = () => {
                     </FormControl>
                     <FormDescription>
                       Please provide details about symptoms, concerns, or the purpose of the visit.
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="notes"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Additional Notes</FormLabel>
-                    <FormControl>
-                      <Textarea 
-                        placeholder="Any additional information for the veterinarian" 
-                        className="min-h-24"
-                        {...field} 
-                      />
-                    </FormControl>
-                    <FormDescription>
-                      Optional: Include any additional information that might be helpful.
                     </FormDescription>
                     <FormMessage />
                   </FormItem>

@@ -8,7 +8,7 @@ const Appointment = sequelize.define('Appointment', {
         autoIncrement: true,
     },
     appointment_type:{
-        type: DataTypes.ENUM('Annual Checkup', 'Vaccination'),
+        type: DataTypes.ENUM('Annual Checkup', 'Vaccination', "Dental Cleaning", "Wing Trimming", "Checkup"),
         allowNull: false
     },
     pet_id: {
@@ -23,7 +23,7 @@ const Appointment = sequelize.define('Appointment', {
         type: DataTypes.INTEGER,
         allowNull: false,
         references: {
-            model: 'users', // Tên bảng người dùng
+            model: 'users', 
             key: 'id',
         },
     },
@@ -32,16 +32,19 @@ const Appointment = sequelize.define('Appointment', {
         allowNull: false,
     },
     appointment_hour: {
-        type: DataTypes.TIME,  
+        type: DataTypes.ENUM(
+            '08:00', '09:30', '11:00', '12:30', '14:00', '15:30'
+        ),  
         allowNull: false,
-    },
-    appointment_location: {
-        type: DataTypes.STRING,
-        allowNull: false
     },
     reason: {
         type: DataTypes.TEXT,
         allowNull: true,
+    },
+    appointment_status: {
+        type: DataTypes.ENUM('Scheduled', 'Done', 'Cancel', 'In progess'),
+        allowNull: false,
+        defaultValue: "In progess",
     },
     created_at: {
         type: DataTypes.DATE,

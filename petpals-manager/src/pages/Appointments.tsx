@@ -1,93 +1,48 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect} from 'react';
 import { Calendar, Filter, Search, PlusCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import AppointmentCard, { Appointment, AppointmentStatus } from '@/components/ui/appointment-card';
-
-// Mock data
-const mockAppointments: Appointment[] = [
-  {
-    id: '1',
-    petId: '1',
-    petName: 'Buddy',
-    date: 'Apr 12, 2024',
-    time: '10:30 AM',
-    type: 'Annual Checkup',
-    reason: 'Routine health examination and vaccinations',
-    veterinarian: 'Dr. Smith',
-    location: 'Main Pet Clinic',
-    status: 'scheduled',
-  },
-  {
-    id: '2',
-    petId: '2',
-    petName: 'Whiskers',
-    date: 'Apr 15, 2024',
-    time: '2:15 PM',
-    type: 'Dental Cleaning',
-    reason: 'Preventative dental care',
-    veterinarian: 'Dr. Johnson',
-    location: 'Main Pet Clinic',
-    status: 'scheduled',
-  },
-  {
-    id: '3',
-    petId: '3',
-    petName: 'Tweety',
-    date: 'Apr 8, 2024',
-    time: '11:00 AM',
-    type: 'Wing Trimming',
-    reason: 'Regular wing maintenance',
-    veterinarian: 'Dr. Wilson',
-    location: 'Avian Specialists',
-    status: 'completed',
-  },
-  {
-    id: '4',
-    petId: '4',
-    petName: 'Rex',
-    date: 'Mar 30, 2024',
-    time: '3:45 PM',
-    type: 'Vaccination',
-    reason: 'Annual rabies vaccine',
-    veterinarian: 'Dr. Davis',
-    location: 'Main Pet Clinic',
-    status: 'completed',
-  },
-  {
-    id: '5',
-    petId: '5',
-    petName: 'Mittens',
-    date: 'Feb 20, 2024',
-    time: '1:30 PM',
-    type: 'Checkup',
-    reason: 'Following up on treatment',
-    veterinarian: 'Dr. Smith',
-    location: 'Main Pet Clinic',
-    status: 'cancelled',
-  },
-];
+import { fetchUserAppointments } from '@/service/appointment';
+import { getTokenFromCookies } from '@/service/auth';
 
 const Appointments = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState<AppointmentStatus | 'all'>('all');
-
+  const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const token = getTokenFromCookies();
   const filterAppointments = (status: AppointmentStatus | 'all') => {
-    return mockAppointments.filter(appointment => {
+    return appointments.filter(appointment => {
       const matchesSearch = 
-        appointment.petName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        appointment.type.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchesFilter = status === 'all' || appointment.status === status;
+        appointment.pet.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        appointment.appointment_type.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesFilter = status === 'all' || appointment.appointment_status === status;
       
       return matchesSearch && matchesFilter;
     });
   };
+  useEffect(() => {
+    const getAppointments = async () => {
+      try {
+        const data = await fetchUserAppointments(token);
+        setAppointments(data);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  const upcomingAppointments = filterAppointments('scheduled');
-  const completedAppointments = filterAppointments('completed');
-  const cancelledAppointments = filterAppointments('cancelled');
+    getAppointments();
+  }, [token]);
+
+  const upcomingAppointments = filterAppointments('Scheduled');
+  const DoneAppointments = filterAppointments('Done');
+  const CancelAppointments = filterAppointments('Cancel');
   const allAppointments = filterAppointments(activeFilter);
 
   return (
@@ -137,36 +92,36 @@ const Appointments = () => {
             </Button>
             
             <Button
-              variant={activeFilter === 'scheduled' ? "default" : "outline"}
+              variant={activeFilter === 'Scheduled' ? "default" : "outline"}
               size="sm"
-              onClick={() => setActiveFilter('scheduled')}
+              onClick={() => setActiveFilter('Scheduled')}
               className="whitespace-nowrap"
             >
               Scheduled
             </Button>
             
             <Button
-              variant={activeFilter === 'completed' ? "default" : "outline"}
+              variant={activeFilter === 'Done' ? "default" : "outline"}
               size="sm"
-              onClick={() => setActiveFilter('completed')}
+              onClick={() => setActiveFilter('Done')}
               className="whitespace-nowrap"
             >
-              Completed
+              Done
             </Button>
             
             <Button
-              variant={activeFilter === 'cancelled' ? "default" : "outline"}
+              variant={activeFilter === 'Cancel' ? "default" : "outline"}
               size="sm"
-              onClick={() => setActiveFilter('cancelled')}
+              onClick={() => setActiveFilter('Cancel')}
               className="whitespace-nowrap"
             >
-              Cancelled
+              Cancel
             </Button>
             
             <Button
-              variant={activeFilter === 'in-progress' ? "default" : "outline"}
+              variant={activeFilter === 'In progess' ? "default" : "outline"}
               size="sm"
-              onClick={() => setActiveFilter('in-progress')}
+              onClick={() => setActiveFilter('In progess')}
               className="whitespace-nowrap"
             >
               In Progress
@@ -203,9 +158,9 @@ const Appointments = () => {
         
         <TabsContent value="past" className="animate-fade-in">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {[...completedAppointments, ...cancelledAppointments].sort((a, b) => {
+            {[...DoneAppointments, ...CancelAppointments].sort((a, b) => {
               // Sort by date in descending order (newest first)
-              return new Date(b.date).getTime() - new Date(a.date).getTime();
+              return new Date(b.appointment_date).getTime() - new Date(a.appointment_date).getTime();
             }).map(appointment => (
               <AppointmentCard key={appointment.id} appointment={appointment} />
             ))}

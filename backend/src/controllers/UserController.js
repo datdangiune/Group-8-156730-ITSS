@@ -114,27 +114,57 @@ const UserController  = {
     // Quản lý lịch khám bệnh
     async createAppointment(req, res) {
         try {
-            const appointmentData = {
-                ...req.body,
-                owner_id: req.user.id, // Lấy owner_id từ token
-            };
-            const appointment = await Appointment.create(appointmentData);
-            res.status(201).json({ message: 'Appointment created successfully', appointment });
-        } catch (err) {
-            res.status(500).json({ message: 'Error creating appointment', error: err.message });
+            const { appointment_type, pet_id, appointment_date, appointment_hour, reason } = req.body;
+            const {id} = req.user
+            // Kiểm tra đầu vào hợp lệ
+            if (!appointment_type || !pet_id  || !appointment_date || !appointment_hour ) {
+                return res.status(400).json({ message: 'Missing required fields.' });
+            }
+            const validHours = ['08:00', '09:30', '11:00', '12:30', '14:00', '15:30'];
+            if (!validHours.includes(appointment_hour)) {
+                return res.status(400).json({ message: 'Invalid appointment hour. Please select from the available slots.' });
+            }
+    
+            // Kiểm tra xem giờ đó đã đầy chỗ chưa (tối đa 2 bản ghi)
+            const existingAppointments = await Appointment.count({
+                where: { appointment_date, appointment_hour }
+            });
+    
+            if (existingAppointments >= 2) {
+                return res.status(400).json({ message: 'This time slot is full. Please choose another time.' });
+            }
+    
+            // Tạo cuộc hẹn mới
+            const newAppointment = await Appointment.create({
+                appointment_type,
+                pet_id,
+                owner_id: id,
+                appointment_date,
+                appointment_hour,
+                reason
+            });
+    
+            return res.status(201).json({
+                message: 'Appointment created successfully!',
+                appointment: newAppointment
+            });
+    
+        } catch (error) {
+            console.error(error);
+            return res.status(500).json({ message: 'Internal Server Error' });
         }
     },
 
     async getUserAppointments(req, res) {
         try {
-            const ownerId = req.user.id; // Lấy owner_id từ token
+            const ownerId = req.user.id;
             const appointments = await Appointment.findAll({
                 where: { owner_id: ownerId },
                 include: [
                     {
                         model: Pet,
                         as: 'pet',
-                        attributes: ['id', 'name', 'breed', 'age'],
+                        attributes: ['id', 'name'],
                     },
                 ],
             });

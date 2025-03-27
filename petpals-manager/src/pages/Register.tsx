@@ -6,6 +6,7 @@ const Register = () => {
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [name, setName] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const navigate = useNavigate();
   const token = Cookies.get('token');
@@ -17,7 +18,7 @@ const Register = () => {
       setError("Passwords do not match");
     }
     try {
-        const data = await Signup(username, email, password);
+        const data = await Signup(username, email, password, name);
         console.log(data)
         navigate('/login');
         
@@ -50,6 +51,16 @@ const Register = () => {
               className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
+            />
+          </div>
+          {/*Fullname*/}
+          <div className="flex items-center space-x-2">
+            <input
+              type="text"
+              placeholder="Fullname"
+              className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
             />
           </div>
 
