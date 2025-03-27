@@ -2,9 +2,11 @@ import React, { useState, useEffect} from 'react';
 import { useNavigate } from 'react-router-dom';
 import { adminRegister } from '@/services/AdminAuthService';
 import { getTokenFromCookies } from '@/services/AdminAuthService';
+import { emit } from 'process';
 const AdminRegister: React.FC = () => {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
+    const [email, setEmail] = useState('');
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
     const navigate = useNavigate();
@@ -12,7 +14,7 @@ const AdminRegister: React.FC = () => {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
-            await adminRegister(username, password);
+            await adminRegister(username, password, email, password);
             setSuccess('Registration successful! Redirecting to login...');
             setTimeout(() => navigate('/login'), 2000); // Redirect to login page
         } catch (err: any) {
@@ -36,6 +38,13 @@ const AdminRegister: React.FC = () => {
                         placeholder="Username"
                         value={username}
                         onChange={(e) => setUsername(e.target.value)}
+                        className="w-full px-4 py-2 border rounded"
+                    />
+                    <input
+                        type="text"
+                        placeholder="Email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
                         className="w-full px-4 py-2 border rounded"
                     />
                     <input
