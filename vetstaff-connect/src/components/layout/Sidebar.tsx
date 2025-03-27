@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { NavLink } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import {
@@ -9,6 +9,7 @@ import {
   Heart,
   Home,
   LayoutDashboard,
+  Menu,
   Stethoscope,
   X,
 } from "lucide-react";
@@ -21,6 +22,36 @@ interface SidebarProps {
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
+  // State to track if sidebar should be auto-hidden on desktop
+  const [isAutoHidden, setIsAutoHidden] = useState(true);
+  
+  // Function to handle sidebar hover
+  const handleMouseEnter = () => {
+    if (window.innerWidth >= 768) { // Only for desktop
+      setIsAutoHidden(false);
+    }
+  };
+
+  const handleMouseLeave = () => {
+    if (window.innerWidth >= 768) { // Only for desktop
+      setIsAutoHidden(true);
+    }
+  };
+
+  // Close sidebar on route change on mobile
+  useEffect(() => {
+    const handleRouteChange = () => {
+      if (window.innerWidth < 768 && isOpen) {
+        onClose();
+      }
+    };
+
+    window.addEventListener('hashchange', handleRouteChange);
+    return () => {
+      window.removeEventListener('hashchange', handleRouteChange);
+    };
+  }, [isOpen, onClose]);
+  
   return (
     <>
       {/* Mobile overlay */}
@@ -31,12 +62,26 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
         />
       )}
       
+      {/* Collapsed sidebar indicator for desktop */}
+      {isAutoHidden && (
+        <div 
+          className="fixed left-0 top-0 bottom-0 z-40 w-12 bg-transparent hidden md:flex items-center justify-center cursor-pointer hover:bg-card/10"
+          onClick={() => setIsAutoHidden(false)}
+          onMouseEnter={handleMouseEnter}
+        >
+          <Menu className="h-5 w-5 text-foreground/60" />
+        </div>
+      )}
+      
       {/* Sidebar */}
       <div
         className={cn(
           "fixed inset-y-0 left-0 z-50 w-64 border-r bg-card transition-transform duration-300 ease-in-out",
-          isOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
+          isOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0",
+          isAutoHidden && "md:-translate-x-[calc(100%-12px)]"
         )}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
       >
         <div className="flex h-16 items-center border-b px-4">
           <div className="flex h-full flex-1 items-center">

@@ -1,6 +1,6 @@
 
 import React, { useState } from "react";
-import { ArrowLeft, ArrowRight, Clock, File, FileText, Folder, Search } from "lucide-react";
+import { ArrowLeft, ArrowRight, Clock, File, FileText, Folder, Plus, Search } from "lucide-react";
 import PageTransition from "@/components/animations/PageTransition";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,9 +8,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { medicalRecords } from "@/lib/data";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import MedicalRecordForm from "@/components/medical-records/MedicalRecordForm";
+import { toast } from "sonner";
 
 const MedicalRecords = () => {
   const [searchQuery, setSearchQuery] = useState("");
+  const [isFormOpen, setIsFormOpen] = useState(false);
   
   // Filter medical records based on search query
   const filteredRecords = medicalRecords.filter(record => {
@@ -25,6 +28,13 @@ const MedicalRecords = () => {
       record.prescriptions.some(prescription => prescription.toLowerCase().includes(query))
     );
   });
+
+  const handleCreateMedicalRecord = (data: any) => {
+    // In a real app, you would save this data to your backend
+    console.log("New medical record:", data);
+    toast.success("Medical record created successfully!");
+    setIsFormOpen(false);
+  };
   
   return (
     <PageTransition>
@@ -33,8 +43,8 @@ const MedicalRecords = () => {
           <h1 className="text-2xl font-medium mb-4 md:mb-0">Medical Records</h1>
           
           <div className="flex flex-col sm:flex-row gap-2">
-            <Button>
-              <FileText className="h-4 w-4 mr-2" />
+            <Button onClick={() => setIsFormOpen(true)}>
+              <Plus className="h-4 w-4 mr-2" />
               New Medical Record
             </Button>
           </div>
@@ -151,6 +161,12 @@ const MedicalRecords = () => {
             </div>
           )}
         </div>
+        
+        <MedicalRecordForm 
+          open={isFormOpen}
+          onClose={() => setIsFormOpen(false)}
+          onSubmit={handleCreateMedicalRecord}
+        />
       </div>
     </PageTransition>
   );

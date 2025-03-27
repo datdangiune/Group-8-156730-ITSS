@@ -29,25 +29,37 @@ const Index = () => {
             title="Today's Appointments"
             value={dashboardStats.todayAppointments}
             icon={<Calendar className="h-5 w-5" />}
-            change={dashboardStats.appointmentsChange}
+            change={{
+              value: dashboardStats.appointmentsChange.value,
+              type: dashboardStats.appointmentsChange.type as "increase" | "decrease"
+            }}
           />
           <MetricsCard
             title="Active Boarders"
             value={dashboardStats.activeBoarders}
             icon={<Home className="h-5 w-5" />}
-            change={dashboardStats.boardersChange}
+            change={{
+              value: dashboardStats.boardersChange.value,
+              type: dashboardStats.boardersChange.type as "increase" | "decrease"
+            }}
           />
           <MetricsCard
             title="Pending Services"
             value={dashboardStats.pendingServices}
             icon={<Stethoscope className="h-5 w-5" />}
-            change={dashboardStats.servicesChange}
+            change={{
+              value: dashboardStats.servicesChange.value,
+              type: dashboardStats.servicesChange.type as "increase" | "decrease"
+            }}
           />
           <MetricsCard
             title="Unread Notifications"
             value={dashboardStats.unreadNotifications}
             icon={<Bell className="h-5 w-5" />}
-            change={dashboardStats.notificationsChange}
+            change={{
+              value: dashboardStats.notificationsChange.value,
+              type: dashboardStats.notificationsChange.type as "increase" | "decrease"
+            }}
           />
         </div>
         

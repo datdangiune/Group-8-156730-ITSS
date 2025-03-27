@@ -5,13 +5,26 @@ import PageTransition from "@/components/animations/PageTransition";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { notifications } from "@/lib/data";
+import { notifications as notificationsData } from "@/lib/data";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+
+// Define notification type to avoid readonly issues
+type NotificationType = {
+  id: string;
+  title: string;
+  description: string;
+  time: string;
+  type: string;
+  read: boolean;
+};
 
 const Notifications = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [filter, setFilter] = useState("all");
+  
+  // Convert readonly array to mutable array for state management
+  const notifications: NotificationType[] = [...notificationsData] as NotificationType[];
   
   // Filter notifications based on search query and type filter
   const filteredNotifications = notifications.filter(notification => {
@@ -33,7 +46,7 @@ const Notifications = () => {
   });
   
   // Group notifications by date
-  const groupedNotifications: Record<string, typeof notifications> = {};
+  const groupedNotifications: Record<string, NotificationType[]> = {};
   
   filteredNotifications.forEach(notification => {
     // Check if the notification time contains "ago", "Yesterday", or another date format

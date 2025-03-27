@@ -1,6 +1,6 @@
 
 import React, { useState } from "react";
-import { ArrowLeft, ArrowRight, Calendar, Clock, Home, MoreHorizontal, Search } from "lucide-react";
+import { ArrowLeft, ArrowRight, Calendar, Clock, Home, MoreHorizontal, Plus, Search } from "lucide-react";
 import PageTransition from "@/components/animations/PageTransition";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,10 +11,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import BoardingForm from "@/components/boarding/BoardingForm";
+import { toast } from "sonner";
 
 const Boarding = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("active");
+  const [isFormOpen, setIsFormOpen] = useState(false);
   
   // Filter boarding pets based on search query and active tab
   const filteredBoardingPets = boardingPets.filter(pet => {
@@ -58,6 +61,13 @@ const Boarding = () => {
     const index = name.charCodeAt(0) % colors.length;
     return colors[index];
   };
+
+  const handleCreateBoarding = (data: any) => {
+    // In a real app, you would save this data to your backend
+    console.log("New boarding:", data);
+    toast.success("Boarding created successfully!");
+    setIsFormOpen(false);
+  };
   
   return (
     <PageTransition>
@@ -66,8 +76,8 @@ const Boarding = () => {
           <h1 className="text-2xl font-medium mb-4 md:mb-0">Boarding</h1>
           
           <div className="flex flex-col sm:flex-row gap-2">
-            <Button>
-              <Home className="h-4 w-4 mr-2" />
+            <Button onClick={() => setIsFormOpen(true)}>
+              <Plus className="h-4 w-4 mr-2" />
               New Boarding
             </Button>
           </div>
@@ -216,6 +226,12 @@ const Boarding = () => {
             </div>
           )}
         </div>
+
+        <BoardingForm 
+          open={isFormOpen}
+          onClose={() => setIsFormOpen(false)}
+          onSubmit={handleCreateBoarding}
+        />
       </div>
     </PageTransition>
   );

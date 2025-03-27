@@ -1,6 +1,6 @@
 
 import React, { useState } from "react";
-import { ArrowLeft, ArrowRight, Clock, Search, Stethoscope } from "lucide-react";
+import { ArrowLeft, ArrowRight, Clock, Plus, Search, Stethoscope } from "lucide-react";
 import PageTransition from "@/components/animations/PageTransition";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,10 +9,14 @@ import { services } from "@/lib/data";
 import StatusBadge from "@/components/dashboard/StatusBadge";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Progress } from "@/components/ui/progress";
+import ServiceForm from "@/components/services/ServiceForm";
+import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 
 const Services = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("all");
+  const [isFormOpen, setIsFormOpen] = useState(false);
   
   // Filter services based on search query and active tab
   const filteredServices = services.filter(service => {
@@ -35,8 +39,8 @@ const Services = () => {
   });
   
   // Calculate service progress
-  const getServiceProgress = (service: typeof services[0]) => {
-    switch (service.status) {
+  const getServiceProgress = (status: string): number => {
+    switch (status) {
       case "completed":
         return 100;
       case "in-progress":
@@ -49,7 +53,7 @@ const Services = () => {
   };
   
   // Get progress color based on status
-  const getProgressColor = (status: string) => {
+  const getProgressColor = (status: string): string => {
     switch (status) {
       case "completed":
         return "bg-success";
@@ -61,6 +65,13 @@ const Services = () => {
         return "bg-muted";
     }
   };
+
+  const handleCreateService = (data: any) => {
+    // In a real app, you would save this data to your backend
+    console.log("New service:", data);
+    toast.success("Service created successfully!");
+    setIsFormOpen(false);
+  };
   
   return (
     <PageTransition>
@@ -69,8 +80,8 @@ const Services = () => {
           <h1 className="text-2xl font-medium mb-4 md:mb-0">Services</h1>
           
           <div className="flex flex-col sm:flex-row gap-2">
-            <Button>
-              <Stethoscope className="h-4 w-4 mr-2" />
+            <Button onClick={() => setIsFormOpen(true)}>
+              <Plus className="h-4 w-4 mr-2" />
               New Service
             </Button>
           </div>
@@ -154,9 +165,8 @@ const Services = () => {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <Progress 
-                            value={getServiceProgress(service)} 
-                            className="h-2 w-full max-w-[200px]"
-                            indicatorClassName={getProgressColor(service.status)}
+                            value={getServiceProgress(service.status)} 
+                            className={`h-2 w-full max-w-[200px] ${getProgressColor(service.status)}`}
                           />
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm">
@@ -205,6 +215,12 @@ const Services = () => {
             </div>
           )}
         </div>
+
+        <ServiceForm 
+          open={isFormOpen}
+          onClose={() => setIsFormOpen(false)}
+          onSubmit={handleCreateService}
+        />
       </div>
     </PageTransition>
   );

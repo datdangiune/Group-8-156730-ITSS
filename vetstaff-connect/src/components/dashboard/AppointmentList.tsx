@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { Calendar, Clock } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
-import { StatusBadge } from "./StatusBadge";
+import StatusBadge from "@/components/dashboard/StatusBadge";
 import { Button } from "@/components/ui/button";
 
 interface AppointmentProps {
@@ -18,6 +18,7 @@ interface AppointmentProps {
   reason: string;
   status: "completed" | "in-progress" | "upcoming" | "canceled";
   avatar?: string;
+  notes?: string;
 }
 
 interface AppointmentListProps {
