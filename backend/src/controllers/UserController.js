@@ -1,4 +1,5 @@
 const { Pet, Appointment, Payment, Service } = require('../models');
+const sendMail = require('../util/sendMail'); // Import sendMail utility
 
 const UserController  = { 
     async createPet(req, res) {
@@ -115,26 +116,25 @@ const UserController  = {
     async createAppointment(req, res) {
         try {
             const { appointment_type, pet_id, appointment_date, appointment_hour, reason } = req.body;
-            const {id} = req.user
-            // Kiểm tra đầu vào hợp lệ
-            if (!appointment_type || !pet_id  || !appointment_date || !appointment_hour ) {
+            const { id, email } = req.user; // Include user's email
+
+            if (!appointment_type || !pet_id || !appointment_date || !appointment_hour) {
                 return res.status(400).json({ message: 'Missing required fields.' });
             }
+
             const validHours = ['08:00', '09:30', '11:00', '12:30', '14:00', '15:30'];
             if (!validHours.includes(appointment_hour)) {
                 return res.status(400).json({ message: 'Invalid appointment hour. Please select from the available slots.' });
             }
-    
-            // Kiểm tra xem giờ đó đã đầy chỗ chưa (tối đa 2 bản ghi)
+
             const existingAppointments = await Appointment.count({
                 where: { appointment_date, appointment_hour }
             });
-    
+
             if (existingAppointments >= 2) {
                 return res.status(400).json({ message: 'This time slot is full. Please choose another time.' });
             }
-    
-            // Tạo cuộc hẹn mới
+
             const newAppointment = await Appointment.create({
                 appointment_type,
                 pet_id,
@@ -143,12 +143,26 @@ const UserController  = {
                 appointment_hour,
                 reason
             });
-    
+
+            // Send email notification
+            const emailContent = `
+                <h3>Appointment Confirmation</h3>
+                <p>Dear User,</p>
+                <p>Your appointment has been successfully created with the following details:</p>
+                <ul>
+                    <li>Type: ${appointment_type}</li>
+                    <li>Date: ${appointment_date}</li>
+                    <li>Time: ${appointment_hour}</li>
+                    <li>Reason: ${reason || 'N/A'}</li>
+                </ul>
+                <p>Thank you for choosing our service!</p>
+            `;
+            await sendMail({ email, html: emailContent });
+
             return res.status(201).json({
                 message: 'Appointment created successfully!',
                 appointment: newAppointment
             });
-    
         } catch (error) {
             console.error(error);
             return res.status(500).json({ message: 'Internal Server Error' });
