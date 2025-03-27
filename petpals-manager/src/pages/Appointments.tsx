@@ -43,6 +43,8 @@ const Appointments = () => {
   const upcomingAppointments = filterAppointments('Scheduled');
   const DoneAppointments = filterAppointments('Done');
   const CancelAppointments = filterAppointments('Cancel');
+
+  
   const allAppointments = filterAppointments(activeFilter);
 
   return (
@@ -130,11 +132,11 @@ const Appointments = () => {
         </div>
       </div>
       
-      <Tabs defaultValue="upcoming" className="w-full">
+      <Tabs defaultValue="all" className="w-full">
         <TabsList className="grid grid-cols-3 mb-8">
+          <TabsTrigger value="all">All Appointments</TabsTrigger>
           <TabsTrigger value="upcoming">Upcoming</TabsTrigger>
           <TabsTrigger value="past">Past</TabsTrigger>
-          <TabsTrigger value="all">All Appointments</TabsTrigger>
         </TabsList>
         
         <TabsContent value="upcoming" className="animate-fade-in">
