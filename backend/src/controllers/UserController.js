@@ -1,6 +1,6 @@
 const { Pet, Appointment, Payment, Service } = require('../models');
 const sendMail = require('../util/sendMail'); // Import sendMail utility
-
+const { Op, fn, col } = require("sequelize");
 const UserController  = { 
     async createPet(req, res) {
         console.log("Received pet data:", req.body);
@@ -126,11 +126,20 @@ const UserController  = {
             if (!validHours.includes(appointment_hour)) {
                 return res.status(400).json({ message: 'Invalid appointment hour. Please select from the available slots.' });
             }
-
+            const formattedDate = new Date(appointment_date);
+            if (isNaN(formattedDate.getTime())) {
+                return res.status(400).json({ message: "Invalid appointment date." });
+            }
+    
             const existingAppointments = await Appointment.count({
-                where: { appointment_date, appointment_hour }
+                where: {
+                    appointment_date: {
+                        [Op.eq]: formattedDate,  
+                    },
+                    appointment_hour: appointment_hour,
+                },
             });
-
+            console.log(existingAppointments)
             if (existingAppointments >= 2) {
                 return res.status(400).json({ message: 'This time slot is full. Please choose another time.' });
             }
@@ -143,45 +152,45 @@ const UserController  = {
                 appointment_hour,
                 reason
             });
-
-// Send email notification
-const emailContent = `
-    <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
-        <div style="text-align: center; padding: 20px; background-color: #f4f4f4; border-bottom: 1px solid #ddd;">
-            <h2 style="color: #4CAF50; margin: 0;">Appointment Confirmation</h2>
-        </div>
-        <div style="padding: 20px;">
-            <p style="font-size: 16px; margin-bottom: 20px;">Dear <strong>${username}</strong>,</p>
-            <p style="margin-bottom: 20px;">
-                We are pleased to confirm your appointment has been successfully scheduled. Here are the details:
-            </p>
-            <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
-                <tr>
-                    <td style="padding: 8px; border: 1px solid #ddd; background-color: #f9f9f9; font-weight: bold;">Appointment Type</td>
-                    <td style="padding: 8px; border: 1px solid #ddd;">${appointment_type}</td>
-                </tr>
-                <tr>
-                    <td style="padding: 8px; border: 1px solid #ddd; background-color: #f9f9f9; font-weight: bold;">Date</td>
-                    <td style="padding: 8px; border: 1px solid #ddd;">${appointment_date}</td>
-                </tr>
-                <tr>
-                    <td style="padding: 8px; border: 1px solid #ddd; background-color: #f9f9f9; font-weight: bold;">Time</td>
-                    <td style="padding: 8px; border: 1px solid #ddd;">${appointment_hour}</td>
-                </tr>
-                <tr>
-                    <td style="padding: 8px; border: 1px solid #ddd; background-color: #f9f9f9; font-weight: bold;">Reason</td>
-                    <td style="padding: 8px; border: 1px solid #ddd;">${reason || 'N/A'}</td>
-                </tr>
-            </table>
-            <p style="margin-bottom: 20px;">If you have any questions or need to reschedule, please don't hesitate to contact us.</p>
-            <p style="margin-bottom: 20px; color: #555;">Thank you for choosing our service. We look forward to serving you!</p>
-        </div>
-        <div style="text-align: center; padding: 10px; background-color: #f4f4f4; border-top: 1px solid #ddd; font-size: 12px; color: #777;">
-            <p style="margin: 0;">This is an automated message, please do not reply.</p>
-        </div>
-    </div>
-`;
-await sendMail({ email, html: emailContent });
+            
+                // Send email notification
+            const emailContent = `
+                    <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+                        <div style="text-align: center; padding: 20px; background-color: #f4f4f4; border-bottom: 1px solid #ddd;">
+                            <h2 style="color: #4CAF50; margin: 0;">Appointment Confirmation</h2>
+                        </div>
+                        <div style="padding: 20px;">
+                            <p style="font-size: 16px; margin-bottom: 20px;">Dear <strong>${username}</strong>,</p>
+                            <p style="margin-bottom: 20px;">
+                                We are pleased to confirm your appointment has been successfully scheduled. Here are the details:
+                            </p>
+                            <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+                                <tr>
+                                    <td style="padding: 8px; border: 1px solid #ddd; background-color: #f9f9f9; font-weight: bold;">Appointment Type</td>
+                                    <td style="padding: 8px; border: 1px solid #ddd;">${appointment_type}</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 8px; border: 1px solid #ddd; background-color: #f9f9f9; font-weight: bold;">Date</td>
+                                    <td style="padding: 8px; border: 1px solid #ddd;">${appointment_date}</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 8px; border: 1px solid #ddd; background-color: #f9f9f9; font-weight: bold;">Time</td>
+                                    <td style="padding: 8px; border: 1px solid #ddd;">${appointment_hour}</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 8px; border: 1px solid #ddd; background-color: #f9f9f9; font-weight: bold;">Reason</td>
+                                    <td style="padding: 8px; border: 1px solid #ddd;">${reason || 'N/A'}</td>
+                                </tr>
+                            </table>
+                            <p style="margin-bottom: 20px;">If you have any questions or need to reschedule, please don't hesitate to contact us.</p>
+                            <p style="margin-bottom: 20px; color: #555;">Thank you for choosing our service. We look forward to serving you!</p>
+                        </div>
+                        <div style="text-align: center; padding: 10px; background-color: #f4f4f4; border-top: 1px solid #ddd; font-size: 12px; color: #777;">
+                            <p style="margin: 0;">This is an automated message, please do not reply.</p>
+                        </div>
+                    </div>
+            `;
+            await sendMail({ email, html: emailContent });
 
 
             return res.status(201).json({
