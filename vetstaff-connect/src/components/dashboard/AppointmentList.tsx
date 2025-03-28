@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { Calendar, Clock } from "lucide-react";
@@ -8,21 +7,27 @@ import StatusBadge from "@/components/dashboard/StatusBadge";
 import { Button } from "@/components/ui/button";
 
 interface AppointmentProps {
-  id: string;
-  petName: string;
-  petType: string;
-  petBreed?: string;
-  ownerName: string;
-  date: string;
-  time: string;
+  id: number;
+  appointment_type: string;
+  appointment_date: string;
+  appointment_hour: string;
   reason: string;
-  status: "completed" | "in-progress" | "upcoming" | "canceled";
-  avatar?: string;
-  notes?: string;
+  appointment_status: string;
+  pet: {
+    id: number;
+    name: string;
+    breed: string;
+    age: number;
+  };
+  owner: {
+    id: number;
+    username: string;
+    email: string;
+  };
 }
 
 interface AppointmentListProps {
-  appointments: AppointmentProps[];
+  appointments: AppointmentProps[] | undefined; // Allow undefined to handle edge cases
   className?: string;
 }
 
@@ -32,7 +37,7 @@ export const AppointmentList: React.FC<AppointmentListProps> = ({
 }) => {
   const navigate = useNavigate();
 
-  const handleAppointmentClick = (appointmentId: string) => {
+  const handleAppointmentClick = (appointmentId: number) => {
     navigate(`/appointments/${appointmentId}`);
   };
 
@@ -42,7 +47,8 @@ export const AppointmentList: React.FC<AppointmentListProps> = ({
   };
 
   // Generate avatar fallback background color based on pet name
-  const getAvatarColor = (name: string) => {
+  const getAvatarColor = (name: string | undefined) => {
+    if (!name) return "bg-gray-100 text-gray-600"; // Fallback color if name is undefined
     const colors = [
       "bg-blue-100 text-blue-600",
       "bg-green-100 text-green-600",
@@ -52,12 +58,12 @@ export const AppointmentList: React.FC<AppointmentListProps> = ({
       "bg-pink-100 text-pink-600",
       "bg-indigo-100 text-indigo-600",
     ];
-    
+
     const index = name.charCodeAt(0) % colors.length;
     return colors[index];
   };
 
-  if (appointments.length === 0) {
+  if (!appointments || !Array.isArray(appointments) || appointments.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center p-8 text-center">
         <Calendar className="h-10 w-10 text-muted-foreground mb-2" />
@@ -79,47 +85,46 @@ export const AppointmentList: React.FC<AppointmentListProps> = ({
         >
           <div className="flex items-center">
             <Avatar className="h-10 w-10 mr-4">
-              <AvatarImage src={appointment.avatar} alt={appointment.petName} />
-              <AvatarFallback className={getAvatarColor(appointment.petName)}>
-                {getInitials(appointment.petName)}
+              <AvatarImage src={null} alt={appointment.pet.name} />
+              <AvatarFallback className={getAvatarColor(appointment.pet.name)}>
+                {getInitials(appointment.pet.name || "N/A")} {/* Fallback to "N/A" if pet name is undefined */}
               </AvatarFallback>
             </Avatar>
-            
+
             <div>
               <div className="flex items-center">
-                <p className="font-medium">{appointment.petName}</p>
+                <p className="font-medium">{appointment.pet.name}</p>
                 <span className="mx-1 text-muted-foreground">•</span>
                 <p className="text-sm text-muted-foreground">
-                  {appointment.petType}
-                  {appointment.petBreed && `, ${appointment.petBreed}`}
+                  {appointment.pet.breed}, {appointment.pet.age} years
                 </p>
               </div>
-              
+
               <div className="flex items-center text-sm text-muted-foreground mt-0.5">
-                <p>{appointment.ownerName}</p>
+                <p>{appointment.owner.username}</p>
                 <span className="mx-1">•</span>
                 <p>{appointment.reason}</p>
               </div>
             </div>
           </div>
-          
+
           <div className="flex items-center gap-3">
             <div className="text-right">
               <div className="flex items-center text-sm font-medium">
                 <Calendar className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
-                {appointment.date}
+                {new Date(appointment.appointment_date).toLocaleDateString()}
               </div>
               <div className="flex items-center text-sm text-muted-foreground mt-0.5">
                 <Clock className="h-3.5 w-3.5 mr-1.5" />
-                {appointment.time}
+                {appointment.appointment_hour}
               </div>
             </div>
-            
-            <StatusBadge status={appointment.status} />
+
+            <StatusBadge status={appointment.appointment_status.toLowerCase()} />
           </div>
         </div>
       ))}
-      
+
       <div className="p-4 text-center">
         <Button variant="outline" onClick={() => navigate("/appointments")}>
           View all appointments

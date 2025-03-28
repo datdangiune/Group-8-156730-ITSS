@@ -23,6 +23,7 @@ import {
   PaginationPrevious,
   PaginationPageAction
 } from "@/components/ui/pagination";
+import { fetchTodayAppointments, fetchAllAppointments, fetchAppointmentById, updateAppointmentStatus, fetchVetAppointments } from "@/service/Appointments";
 
 // Define the appointment type to avoid readonly issues
 type AppointmentType = {
@@ -34,41 +35,121 @@ type AppointmentType = {
   date: string;
   time: string;
   reason: string;
-  status: "completed" | "in-progress" | "upcoming" | "canceled";
+  status: "Done" | "In progess" | "Scheduled" | "Cancel";
   notes?: string;
 };
 
 const Appointments = () => {
+  const [appointments, setAppointments] = useState<AppointmentType[]>([]);
   const [view, setView] = useState("today");
   const [dateFilter, setDateFilter] = useState("today");
   const [statusFilter, setStatusFilter] = useState("all");
   const [petTypeFilter, setPetTypeFilter] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [isFormOpen, setIsFormOpen] = useState(false);
-  // Convert readonly array to mutable array for state management
-  const [appointmentList, setAppointmentList] = useState<AppointmentType[]>(
-    [...appointmentsData] as AppointmentType[]
-  );
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        console.error("No token found");
+        setError("Authentication token is missing. Please log in.");
+        setLoading(false);
+        return;
+      }
+
+      setLoading(true);
+
+      try {
+        let data: AppointmentType[] = [];
+        if (view === "today") {
+          const todayAppointments = await fetchTodayAppointments(token);
+          data = todayAppointments.map((appointment) => ({
+            id: appointment.id.toString(),
+            petName: appointment.pet.name,
+            petType: appointment.pet.breed || "Unknown",
+            petBreed: appointment.pet.breed,
+            ownerName: appointment.owner.username,
+            date: appointment.appointment_date,
+            time: appointment.appointment_hour,
+            reason: appointment.reason,
+            status: appointment.appointment_status as "Done" | "In progess" | "Scheduled" | "Cancel",
+          }));
+        } else if (view === "all") {
+          const allAppointments = await fetchAllAppointments(token);
+          data = allAppointments.map((appointment) => ({
+            id: appointment.id.toString(),
+            petName: appointment.pet.name,
+            petType: appointment.pet.breed || "Unknown",
+            petBreed: appointment.pet.breed,
+            ownerName: appointment.owner.username,
+            date: appointment.appointment_date,
+            time: appointment.appointment_hour,
+            reason: appointment.reason,
+            status: appointment.appointment_status as "Done" | "In progess" | "Scheduled" | "Cancel",
+          }));
+        }
+        setAppointments(data);
+      } catch (err: any) {
+        console.error("Error fetching appointments:", err.message);
+        setError(err.message || "Failed to fetch appointments");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [view]);
+
+  // Use the fetched appointments directly
+  const appointmentList = appointments;
   
   // Handle appointment creation
   const handleSaveAppointment = (newAppointment: AppointmentType) => {
-    setAppointmentList(prevList => [newAppointment, ...prevList]);
+    setAppointments((prevList) => [newAppointment, ...prevList]);
   };
   
   // Handle status update
-  const handleStatusUpdate = (appointmentId: string, newStatus: string) => {
-    setAppointmentList(prevList => 
-      prevList.map(appointment => 
-        appointment.id === appointmentId 
-          ? { ...appointment, status: newStatus as "completed" | "in-progress" | "upcoming" | "canceled" } 
-          : appointment
-      )
-    );
-    
-    toast({
-      title: "Status Updated",
-      description: `Appointment status changed to ${newStatus}`,
-    });
+  const handleStatusUpdate = async (appointmentId: string, newStatus: string) => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      toast({
+        title: "Error",
+        description: "Authentication token is missing. Please log in.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      console.log(`Attempting to update status: ID=${appointmentId}, Status=${newStatus}`); // Debugging log
+
+      // Update the status in the database
+      await updateAppointmentStatus(token, parseInt(appointmentId), newStatus);
+
+      // Update the status in the frontend state
+      setAppointments((prevList) =>
+        prevList.map((appointment) =>
+          appointment.id === appointmentId
+            ? { ...appointment, status: newStatus as "Done" | "In progess" | "Scheduled" | "Cancel" }
+            : appointment
+        )
+      );
+
+      toast({
+        title: "Status Updated",
+        description: `Appointment status changed to ${newStatus}`,
+      });
+    } catch (error: any) {
+      console.error("Error updating appointment status:", error.message);
+      toast({
+        title: "Error",
+        description: "Failed to update appointment status. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
   
   // Get initials from pet name
@@ -196,10 +277,10 @@ const Appointments = () => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All statuses</SelectItem>
-                  <SelectItem value="upcoming">Upcoming</SelectItem>
-                  <SelectItem value="in-progress">In Progress</SelectItem>
-                  <SelectItem value="completed">Completed</SelectItem>
-                  <SelectItem value="canceled">Canceled</SelectItem>
+                  <SelectItem value="Scheduled">Scheduled</SelectItem>
+                  <SelectItem value="In progess">In Progress</SelectItem>
+                  <SelectItem value="Done">Done</SelectItem>
+                  <SelectItem value="Cancel">Cancel</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -309,18 +390,18 @@ const Appointments = () => {
                               <StatusBadge status={appointment.status} />
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-right text-sm">
-                              <Select 
-                                defaultValue={appointment.status}
+                              <Select
+                                value={appointment.status}
                                 onValueChange={(value) => handleStatusUpdate(appointment.id, value)}
                               >
                                 <SelectTrigger className="h-8 w-24">
                                   <SelectValue placeholder="Update" />
                                 </SelectTrigger>
                                 <SelectContent align="end">
-                                  <SelectItem value="upcoming">Upcoming</SelectItem>
-                                  <SelectItem value="in-progress">In Progress</SelectItem>
-                                  <SelectItem value="completed">Completed</SelectItem>
-                                  <SelectItem value="canceled">Canceled</SelectItem>
+                                  <SelectItem value="Scheduled">Scheduled</SelectItem>
+                                  <SelectItem value="In progess">In Progress</SelectItem>
+                                  <SelectItem value="Done">Done</SelectItem>
+                                  <SelectItem value="Cancel">Cancel</SelectItem>
                                 </SelectContent>
                               </Select>
                             </td>
