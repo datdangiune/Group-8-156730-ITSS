@@ -5,7 +5,7 @@ import DashboardCard from "@/components/dashboard/DashboardCard";
 import AppointmentList from "@/components/dashboard/AppointmentList";
 import MetricsCard from "@/components/dashboard/MetricsCard";
 import NotificationPanel from "@/components/dashboard/NotificationPanel";
-import { fetchDashboardStats, fetchAppointments, fetchNotifications, fetchServices, fetchBoardingPets } from "@/service/dashboard";
+import { fetchDashboardStats, fetchAppointments } from "@/service/dashboard";
 
 const Index = () => {
   const [appointments, setAppointments] = useState<any[]>([]);
@@ -28,7 +28,7 @@ const Index = () => {
 
       try {
         // Query backend using service functions
-        const [stats, appointmentsData, notificationsData, servicesData, boardingData] = await Promise.all([
+        const [stats, appointmentsData] = await Promise.all([
           fetchDashboardStats(token), // Fetch dashboard stats
           fetchAppointments(token), // Fetch appointments
           // fetchNotifications(token), // Fetch notifications

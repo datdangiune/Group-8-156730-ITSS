@@ -59,7 +59,7 @@ const verifyTokenStaff = (req, res, next) => {
 
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        if (decoded.role !== 'staff') {
+        if (decoded.role !== 'staff' && decoded.role !== 'vet') {
             return res.status(403).json({ message: 'You are not authorized to access this resource' });
         }
         req.user = decoded;

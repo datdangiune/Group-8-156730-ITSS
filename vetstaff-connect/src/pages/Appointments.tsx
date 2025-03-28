@@ -42,7 +42,7 @@ type AppointmentType = {
 const Appointments = () => {
   const [appointments, setAppointments] = useState<AppointmentType[]>([]);
   const [view, setView] = useState("today");
-  const [dateFilter, setDateFilter] = useState("today");
+  const [dateFilter, setDateFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
   const [petTypeFilter, setPetTypeFilter] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
@@ -153,12 +153,16 @@ const Appointments = () => {
   };
   
   // Get initials from pet name
-  const getInitials = (name: string) => {
+  const getInitials = (name?: string) => {
+    if (!name) return "?"; // Trả về dấu ? nếu name bị undefined hoặc null
     return name.charAt(0).toUpperCase();
   };
   
+  
   // Generate avatar fallback background color based on pet name
-  const getAvatarColor = (name: string) => {
+  const getAvatarColor = (name?: string) => {
+    if (!name) return "bg-gray-100 text-gray-600"; // Màu mặc định nếu name bị undefined/null
+    
     const colors = [
       "bg-blue-100 text-blue-600",
       "bg-green-100 text-green-600",
@@ -172,6 +176,7 @@ const Appointments = () => {
     const index = name.charCodeAt(0) % colors.length;
     return colors[index];
   };
+  
   
   // Extract unique pet types from appointments
   const petTypes = Array.from(new Set(appointmentList.map(app => app.petType)));
@@ -311,8 +316,8 @@ const Appointments = () => {
                 <PopoverContent className="w-56">
                   <div className="space-y-2">
                     <h4 className="font-medium mb-2">Filter by Pet Type</h4>
-                    {petTypes.map((type) => (
-                      <div key={type} className="flex items-center space-x-2">
+                    {petTypes.map((type, index) => (
+                      <div key={index} className="flex items-center space-x-2">
                         <Checkbox 
                           id={`pet-type-${type}`} 
                           checked={petTypeFilter.includes(type)}
@@ -368,8 +373,8 @@ const Appointments = () => {
                     </thead>
                     <tbody className="bg-card divide-y divide-gray-200">
                       {paginatedAppointments.length > 0 ? (
-                        paginatedAppointments.map((appointment) => (
-                          <tr key={appointment.id} className="hover:bg-muted/20 transition-colors">
+                        paginatedAppointments.map((appointment, index) => (
+                          <tr key={index} className="hover:bg-muted/20 transition-colors">
                             <td className="px-6 py-4 whitespace-nowrap">
                               <div className="flex items-center">
                                 <Avatar className="h-8 w-8 mr-3">
@@ -397,15 +402,14 @@ const Appointments = () => {
                               <div className="text-sm text-muted-foreground">{appointment.time}</div>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap">
-                              <StatusBadge 
-                                status={
-                                  appointment.status === "Done" ? "completed" :
-                                  appointment.status === "In progess" ? "in-progress" :
-                                  appointment.status === "Scheduled" ? "upcoming" :
-                                  appointment.status === "Cancel" ? "canceled" :
-                                  undefined
-                                } 
-                              />
+                            <StatusBadge 
+                              status={
+                                ["Done", "In progess", "Scheduled", "Cancel"].includes(appointment.status)
+                                  ? appointment.status
+                                  : undefined
+                              } 
+                            />
+
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-right text-sm">
                               <Select
