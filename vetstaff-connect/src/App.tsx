@@ -10,6 +10,8 @@ import NotFound from "./pages/NotFound";
 import Appointments from "./pages/Appointments";
 import AppointmentDetail from "./pages/AppointmentDetail";
 import MedicalRecords from "./pages/MedicalRecords";
+import Login from "./pages/Login";
+
 import Services from "./pages/Services";
 import Boarding from "./pages/Boarding";
 import Notifications from "./pages/Notifications";
@@ -35,6 +37,7 @@ const App = () => {
               
               <main className="flex-1">
                 <Routes>
+                <Route path="/login" element={<Login />} />
                   <Route path="/" element={<Index />} />
                   <Route path="/appointments" element={<Appointments />} />
                   <Route path="/appointments/:appointmentId" element={<AppointmentDetail />} />

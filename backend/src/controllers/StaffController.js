@@ -1,147 +1,64 @@
-const { Appointment, Service, Boarding } = require('../models');
+const { Appointment, Service, Boarding, Notification } = require('../models');
+const { Op } = require('sequelize');
 
 const StaffController = {
-    async getAllAppointments(req, res) {
+    // Lấy thống kê dashboard
+    async getDashboardStats(req, res) {
         try {
-            const { status } = req.query;
-            const whereClause = status ? { status } : {};
-            const appointments = await Appointment.findAll({ where: whereClause });
-            res.status(200).json({ success: true, message: 'Appointments fetched successfully', data: appointments });
-        } catch (err) {
-            res.status(500).json({ success: false, message: 'Error fetching appointments', error: err.message });
-        }
-    },
+    // Lấy ngày hiện tại
+    const today = new Date();
+    today.setDate(today.getDate() + 2); // Cộng thêm 2 ngày
 
-    async updateAppointmentStatus(req, res) {
-        try {
-            const { id } = req.params;
-            const { status } = req.body;
+    // Lấy khoảng thời gian từ đầu ngày đến cuối ngày
+    const startOfDay = new Date(today.setHours(0, 0, 0, 0)).toISOString(); // 2025-03-30T00:00:00.000Z
+    const endOfDay = new Date(today.setHours(23, 59, 59, 999)).toISOString(); // 2025-03-30T23:59:59.999Z
 
-            const appointment = await Appointment.update({ status }, { where: { id } });
+    console.log('Start of Day:', startOfDay);
+    console.log('End of Day:', endOfDay);
 
-            if (!appointment[0]) {
-                return res.status(404).json({ success: false, message: 'Appointment not found' });
-            }
+    // Truy vấn dựa trên khoảng thời gian
+    const counttodayAppointments = await Appointment.count({
+        where: {
+            appointment_date: {
+                [Op.between]: [startOfDay, endOfDay], // Sử dụng khoảng thời gian
+            },
+        },
+    });
 
-            res.status(200).json({ success: true, message: 'Appointment status updated successfully' });
-        } catch (err) {
-            res.status(500).json({ success: false, message: 'Error updating appointment status', error: err.message });
-        }
-    },
-
-    async updateServiceStatus(req, res) {
-        try {
-            const { id } = req.params;
-            const { status, notes } = req.body;
-
-            const service = await Service.update({ status, notes }, { where: { id } });
-
-            if (!service[0]) {
-                return res.status(404).json({ success: false, message: 'Service not found' });
-            }
-
-            res.status(200).json({ success: true, message: 'Service status updated successfully' });
-        } catch (err) {
-            res.status(500).json({ success: false, message: 'Error updating service status', error: err.message });
-        }
-    },
-
-    async getAllBoarding(req, res) {
-        try {
-            const boardingList = await Boarding.findAll();
-            res.status(200).json({ success: true, message: 'Boarding data fetched successfully', data: boardingList });
-        } catch (err) {
-            res.status(500).json({ success: false, message: 'Error fetching boarding data', error: err.message });
-        }
-    },
-
-    async updateBoardingStatus(req, res) {
-        try {
-            const { id } = req.params;
-            const { status, notes } = req.body;
-
-            const boarding = await Boarding.update({ status, notes }, { where: { id } });
-
-            if (!boarding[0]) {
-                return res.status(404).json({ success: false, message: 'Boarding record not found' });
-            }
-
-            res.status(200).json({ success: true, message: 'Boarding status updated successfully' });
-        } catch (err) {
-            res.status(500).json({ success: false, message: 'Error updating boarding status', error: err.message });
-        }
-    },
-
-    async notifyBoardingStatus(req, res) {
-        try {
-            const { id } = req.params; // Boarding ID
-            const { message, image_url } = req.body;
-
-            // Kiểm tra bản ghi lưu trú
-            const boarding = await Boarding.findOne({ where: { id } });
-            if (!boarding) {
-                return res.status(404).json({ success: false, message: 'Boarding record not found' });
-            }
-
-            // Tạo thông báo
-            const notification = await Notification.create({
-                user_id: boarding.owner_id,
-                title: 'Boarding Update',
-                message,
+            // Lấy số lượng thú cưng đang lưu trú
+            const activeBoarders = await Boarding.count({
+                where: { status: 'ongoing' },
             });
 
-            // Cập nhật trạng thái (nếu cần)
-            if (image_url) {
-                // Lưu hình ảnh hoặc xử lý thêm nếu cần
-            }
+            // Lấy số lượng dịch vụ đang chờ xử lý
+            const pendingServices = await Service.count({
+                where: { status: 'inactive' },
+            });
 
-            res.status(201).json({
+            // Lấy số lượng thông báo chưa đọc
+            const unreadNotifications = await Notification.count({
+                where: { is_read: false },
+            });
+
+            // Trả về kết quả
+            res.status(200).json({
                 success: true,
-                message: 'Notification sent successfully',
-                data: notification,
+                message: 'Dashboard stats fetched successfully',
+                data: {
+                    counttodayAppointments,
+                    activeBoarders,
+                    pendingServices,
+                    unreadNotifications,
+                },
             });
         } catch (err) {
             res.status(500).json({
                 success: false,
-                message: 'Error sending notification',
+                message: 'Error fetching dashboard stats',
                 error: err.message,
             });
         }
-    },
-
-        // Gửi nhắc nhở lịch đón thú cưng
-        async sendPickupReminder(req, res) {
-            try {
-                const { id } = req.params; // Boarding ID
-                const { message } = req.body;
-    
-                // Kiểm tra bản ghi lưu trú
-                const boarding = await Boarding.findOne({ where: { id } });
-                if (!boarding) {
-                    return res.status(404).json({ success: false, message: 'Boarding record not found' });
-                }
-    
-                // Tạo thông báo
-                const notification = await Notification.create({
-                    user_id: boarding.owner_id,
-                    title: 'Pickup Reminder',
-                    message: message || 'Please pick up your pet from the boarding center.',
-                });
-    
-                res.status(201).json({
-                    success: true,
-                    message: 'Pickup reminder sent successfully',
-                    data: notification,
-                });
-            } catch (err) {
-                res.status(500).json({
-                    success: false,
-                    message: 'Error sending pickup reminder',
-                    error: err.message,
-                });
-            }
-        },
-
+    },    
 };
 
 module.exports = StaffController;
