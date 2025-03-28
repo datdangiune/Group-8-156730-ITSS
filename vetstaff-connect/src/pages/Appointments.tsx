@@ -65,7 +65,7 @@ const Appointments = () => {
       try {
         let data: AppointmentType[] = [];
         if (view === "today") {
-          const todayAppointments = await fetchTodayAppointments(token);
+          const todayAppointments = await fetchTodayAppointments();
           data = todayAppointments.map((appointment) => ({
             id: appointment.id.toString(),
             petName: appointment.pet.name,
@@ -186,34 +186,44 @@ const Appointments = () => {
   };
   
   // Filter appointments based on date, status, pet type, and search query
-  const filteredAppointments = appointmentList.filter(appointment => {
+  const filteredAppointments = appointmentList.filter((appointment) => {
     // Filter by date
-    if (dateFilter !== "all" && appointment.date.toLowerCase() !== dateFilter.toLowerCase()) {
+    if (dateFilter !== "all" && appointment.date?.toLowerCase() !== dateFilter.toLowerCase()) {
       return false;
     }
-    
+
     // Filter by status
     if (statusFilter !== "all" && appointment.status !== statusFilter) {
       return false;
     }
-    
+
     // Filter by pet type
     if (petTypeFilter.length > 0 && !petTypeFilter.includes(appointment.petType)) {
       return false;
     }
-    
+
     // Filter by search query
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
       return (
-        appointment.petName.toLowerCase().includes(query) ||
-        appointment.ownerName.toLowerCase().includes(query) ||
-        appointment.reason.toLowerCase().includes(query) ||
-        appointment.petType.toLowerCase().includes(query) ||
-        (appointment.petBreed && appointment.petBreed.toLowerCase().includes(query))
+        appointment.petName?.toLowerCase().includes(query) || // Check if petName exists before calling toLowerCase
+        appointment.ownerName?.toLowerCase().includes(query) || // Check if ownerName exists before calling toLowerCase
+        appointment.reason?.toLowerCase().includes(query) || // Check if reason exists before calling toLowerCase
+        appointment.petType?.toLowerCase().includes(query) || // Check if petType exists before calling toLowerCase
+        (appointment.petBreed && appointment.petBreed.toLowerCase().includes(query)) // Check if petBreed exists before calling toLowerCase
       );
     }
+
+
+
+
+
+
+
+
+
     
+
     return true;
   });
   
@@ -387,7 +397,15 @@ const Appointments = () => {
                               <div className="text-sm text-muted-foreground">{appointment.time}</div>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap">
-                              <StatusBadge status={appointment.status} />
+                              <StatusBadge 
+                                status={
+                                  appointment.status === "Done" ? "completed" :
+                                  appointment.status === "In progess" ? "in-progress" :
+                                  appointment.status === "Scheduled" ? "upcoming" :
+                                  appointment.status === "Cancel" ? "canceled" :
+                                  undefined
+                                } 
+                              />
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-right text-sm">
                               <Select

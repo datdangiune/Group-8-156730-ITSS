@@ -2,6 +2,16 @@ import axios from "axios";
 
 const API_BASE_URL = "http://localhost:3000/api/v1";
 
+// Utility function to retrieve the token
+const getAuthToken = (): string | null => {
+  const token = localStorage.getItem("token");
+  if (!token) {
+    console.error("Authentication token is missing.");
+    return null;
+  }
+  return token;
+};
+
 export interface Appointment {
   id: number;
   appointment_type: string;
@@ -22,20 +32,9 @@ export interface Appointment {
   };
 }
 
-export interface Pet {
-  id: number;
-  name: string;
-  breed: string;
-  age: number;
-}
-
-export interface User {
-  id: number;
-  username: string;
-  email: string;
-}
-
-export const fetchTodayAppointments = async (token: string): Promise<Appointment[]> => {
+export const fetchTodayAppointments = async (): Promise<Appointment[]> => {
+  const token = getAuthToken();
+  if (!token) throw new Error("Authentication token is missing.");
   try {
     const response = await axios.get(`${API_BASE_URL}/staff/appointments/today`, {
       headers: { Authorization: `Bearer ${token}` },
@@ -47,7 +46,9 @@ export const fetchTodayAppointments = async (token: string): Promise<Appointment
   }
 };
 
-export const fetchAllAppointments = async (token: string): Promise<Appointment[]> => {
+export const fetchAllAppointments = async (authToken: string): Promise<Appointment[]> => {
+  const token = getAuthToken();
+  if (!token) throw new Error("Authentication token is missing.");
   try {
     const response = await axios.get(`${API_BASE_URL}/staff/appointments`, {
       headers: { Authorization: `Bearer ${token}` },
@@ -59,7 +60,9 @@ export const fetchAllAppointments = async (token: string): Promise<Appointment[]
   }
 };
 
-export const fetchAppointmentById = async (token: string, appointmentId: number): Promise<Appointment> => {
+export const fetchAppointmentById = async (appointmentId: number): Promise<Appointment> => {
+  const token = getAuthToken();
+  if (!token) throw new Error("Authentication token is missing.");
   try {
     const response = await axios.get(`${API_BASE_URL}/staff/appointments/${appointmentId}`, {
       headers: { Authorization: `Bearer ${token}` },
@@ -72,10 +75,9 @@ export const fetchAppointmentById = async (token: string, appointmentId: number)
 };
 
 export const updateAppointmentStatus = async (
-  token: string,
-  appointmentId: number,
-  status: string
-): Promise<void> => {
+authToken: string, appointmentId: number, status: string): Promise<void> => {
+  const token = getAuthToken();
+  if (!token) throw new Error("Authentication token is missing.");
   try {
     console.log(`Updating appointment status: ID=${appointmentId}, Status=${status}`); // Debugging log
     const response = await axios.patch(
@@ -93,7 +95,9 @@ export const updateAppointmentStatus = async (
   }
 };
 
-export const fetchVetAppointments = async (token: string): Promise<Appointment[]> => {
+export const fetchVetAppointments = async (): Promise<Appointment[]> => {
+  const token = getAuthToken();
+  if (!token) throw new Error("Authentication token is missing.");
   try {
     const response = await axios.get(`${API_BASE_URL}/staff/appointments`, {
       headers: { Authorization: `Bearer ${token}` },
@@ -105,27 +109,58 @@ export const fetchVetAppointments = async (token: string): Promise<Appointment[]
   }
 };
 
-export const fetchUsers = async (token: string): Promise<User[]> => {
+export const createAppointment = async (
+  appointmentData: {
+    appointment_type: string;
+    pet_id: number;
+    owner_id: number;
+    appointment_date: string;
+    appointment_hour: string;
+    reason?: string;
+  }
+): Promise<void> => {
+  const token = getAuthToken();
+  if (!token) throw new Error("Authentication token is missing.");
   try {
-    const response = await axios.get(`${API_BASE_URL}/users`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    return response.data.data;
+    const response = await axios.post(
+      `${API_BASE_URL}/staff/appointments/new`,
+      appointmentData,
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    );
+    console.log("Appointment created successfully:", response.data);
   } catch (error: any) {
-    console.error("Error fetching users:", error.message);
-    throw new Error(error.message || "Failed to fetch users");
+    console.error("Error creating appointment:", error.message);
+    throw new Error(error.message || "Failed to create appointment");
   }
 };
 
-export const fetchPetsByUserId = async (token: string, userId: number): Promise<Pet[]> => {
+export const fetchOwners = async (): Promise<{ id: number; username: string; email: string }[]> => {
+  const token = getAuthToken();
+  if (!token) throw new Error("Authentication token is missing.");
   try {
-    const response = await axios.get(`${API_BASE_URL}/users/${userId}/pets`, {
+    const response = await axios.get(`${API_BASE_URL}/staff/owners`, {
       headers: { Authorization: `Bearer ${token}` },
     });
     return response.data.data;
   } catch (error: any) {
-    console.error(`Error fetching pets for user ID ${userId}:`, error.message);
-    throw new Error(error.message || `Failed to fetch pets for user ID ${userId}`);
+    console.error("Error fetching owners:", error.message);
+    throw new Error(error.message || "Failed to fetch owners");
+  }
+};
+
+export const fetchPetsByOwner = async (ownerId: number): Promise<{ id: number; name: string; type: string; breed: string; age: number }[]> => {
+  const token = getAuthToken();
+  if (!token) throw new Error("Authentication token is missing.");
+  try {
+    const response = await axios.get(`${API_BASE_URL}/staff/owners/${ownerId}/pets`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    return response.data.data;
+  } catch (error: any) {
+    console.error(`Error fetching pets for owner ID ${ownerId}:`, error.message);
+    throw new Error(error.message || `Failed to fetch pets for owner ID ${ownerId}`);
   }
 };
 

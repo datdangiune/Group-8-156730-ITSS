@@ -209,6 +209,133 @@ const StaffController = {
             });
         }
     },
+
+    async createAppointment(req, res) {
+        try {
+            const { pet_id, owner_id, appointment_date, appointment_hour, appointment_type, reason } = req.body;
+
+            // Log the incoming request payload for debugging
+            console.log("Incoming request payload:", req.body);
+
+            // Validate required fields
+            if (!pet_id || !owner_id || !appointment_date || !appointment_hour || !appointment_type) {
+                console.error("Validation failed: Missing required fields");
+                return res.status(400).json({
+                    success: false,
+                    message: 'Missing required fields',
+                });
+            }
+
+            // Check if pet and owner exist
+            const pet = await Pet.findByPk(pet_id);
+            const owner = await User.findByPk(owner_id);
+
+            if (!pet) {
+                console.error(`Pet with ID ${pet_id} not found`);
+                return res.status(404).json({
+                    success: false,
+                    message: `Pet with ID ${pet_id} not found`,
+                });
+            }
+
+            if (!owner) {
+                console.error(`Owner with ID ${owner_id} not found`);
+                return res.status(404).json({
+                    success: false,
+                    message: `Owner with ID ${owner_id} not found`,
+                });
+            }
+
+            // Log before creating the appointment
+            console.log("Creating appointment with data:", {
+                pet_id,
+                owner_id,
+                appointment_date,
+                appointment_hour,
+                appointment_type,
+                reason,
+            });
+
+            // Create a new appointment
+            const newAppointment = await Appointment.create({
+                pet_id,
+                owner_id,
+                appointment_date,
+                appointment_hour,
+                appointment_type,
+                reason,
+                appointment_status: 'Scheduled', // Default status
+            });
+
+            // Log after successful creation
+            console.log("Appointment created successfully:", newAppointment);
+
+            res.status(201).json({
+                success: true,
+                message: 'Appointment created successfully',
+                data: newAppointment,
+            });
+        } catch (err) {
+            console.error("Error creating appointment:", err); // Log the error for debugging
+            res.status(500).json({
+                success: false,
+                message: 'Error creating appointment',
+                error: err.message,
+            });
+        }
+    },
+
+    async getOwners(req, res) {
+        try {
+            const owners = await User.findAll({
+                attributes: ['id', 'username', 'email'], // Select relevant fields
+                where: { role: 'pet_owner' }, // Ensure 'role' column exists and is correctly set
+            });
+
+            res.status(200).json({
+                success: true,
+                message: 'Owners fetched successfully',
+                data: owners,
+            });
+        } catch (err) {
+            console.error("Error fetching owners:", err); // Log the error for debugging
+            res.status(500).json({
+                success: false,
+                message: 'Error fetching owners',
+                error: err.message,
+            });
+        }
+    },
+
+    async getPetsByOwner(req, res) {
+        try {
+            const { ownerId } = req.params;
+
+            const pets = await Pet.findAll({
+                attributes: ['id', 'name', 'type', 'breed', 'age'], // Select relevant fields
+                where: { owner_id: ownerId }, // Filter by owner ID
+            });
+
+            if (!pets.length) {
+                return res.status(404).json({
+                    success: false,
+                    message: 'No pets found for the specified owner',
+                });
+            }
+
+            res.status(200).json({
+                success: true,
+                message: 'Pets fetched successfully',
+                data: pets,
+            });
+        } catch (err) {
+            res.status(500).json({
+                success: false,
+                message: 'Error fetching pets',
+                error: err.message,
+            });
+        }
+    },
 };
 
 module.exports = StaffController;

@@ -1,5 +1,4 @@
-
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -38,6 +37,8 @@ import {
 } from "@/components/ui/popover";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
+import axios from "axios";
+import { fetchOwners, fetchPetsByOwner } from "@/service/Appointments";
 
 // Define the form schema with Zod
 const formSchema = z.object({
@@ -59,43 +60,12 @@ interface MultiStepAppointmentFormProps {
   onSave: (data: any) => void;
 }
 
-// Sample data - in a real app, this would come from an API
-const owners = [
-  { id: "1", name: "John Smith" },
-  { id: "2", name: "Emily Johnson" },
-  { id: "3", name: "Michael Brown" },
-  { id: "4", name: "Sarah Davis" },
-];
-
-const petsByOwner = {
-  "1": [
-    { id: "1", name: "Max", type: "Dog", breed: "Golden Retriever" },
-    { id: "2", name: "Bella", type: "Dog", breed: "Labrador" },
-  ],
-  "2": [
-    { id: "3", name: "Oliver", type: "Cat", breed: "Siamese" },
-    { id: "4", name: "Lucy", type: "Cat", breed: "Maine Coon" },
-  ],
-  "3": [
-    { id: "5", name: "Charlie", type: "Dog", breed: "Beagle" },
-    { id: "6", name: "Molly", type: "Dog", breed: "Poodle" },
-  ],
-  "4": [
-    { id: "7", name: "Tiger", type: "Cat", breed: "Tabby" },
-    { id: "8", name: "Rocky", type: "Dog", breed: "German Shepherd" },
-  ],
-};
-
 const timeSlots = [
-  "8:00 AM", "8:30 AM", "9:00 AM", "9:30 AM", "10:00 AM", 
-  "10:30 AM", "11:00 AM", "11:30 AM", "1:00 PM", "1:30 PM", 
-  "2:00 PM", "2:30 PM", "3:00 PM", "3:30 PM", "4:00 PM", "4:30 PM"
+  "08:00", "09:30", "11:00", "12:30", "14:00", "15:30"
 ];
 
 const appointmentReasons = [
-  "Annual Checkup", "Vaccination", "Illness", "Injury", 
-  "Surgery", "Dental Cleaning", "Grooming", "Behavioral Consultation",
-  "Nutrition Consultation", "Follow-up Visit", "Emergency"
+  'Annual Checkup', 'Vaccination', "Dental Cleaning", "Wing Trimming", "Checkup"
 ];
 
 const MultiStepAppointmentForm: React.FC<MultiStepAppointmentFormProps> = ({
@@ -104,7 +74,39 @@ const MultiStepAppointmentForm: React.FC<MultiStepAppointmentFormProps> = ({
   onSave,
 }) => {
   const [step, setStep] = useState(1);
-  const [selectedOwner, setSelectedOwner] = useState<string | null>(null);
+  const [owners, setOwners] = useState<{ id: number; username: string }[]>([]);
+  const [pets, setPets] = useState<{ id: number; name: string; type: string; breed: string }[]>([]);
+  const [selectedOwner, setSelectedOwner] = useState<number | null>(null);
+  
+  // Fetch owners on component mount
+  useEffect(() => {
+    const loadOwners = async () => {
+      try {
+        const data = await fetchOwners();
+        setOwners(data);
+      } catch (error) {
+        console.error("Error fetching owners:", error);
+      }
+    };
+    loadOwners();
+  }, []);
+
+  // Fetch pets when an owner is selected
+  useEffect(() => {
+    if (selectedOwner) {
+      const loadPets = async () => {
+        try {
+          const data = await fetchPetsByOwner(selectedOwner);
+          setPets(data);
+        } catch (error) {
+          console.error("Error fetching pets:", error);
+        }
+      };
+      loadPets();
+    } else {
+      setPets([]);
+    }
+  }, [selectedOwner]);
   
   // Initialize the form
   const form = useForm<FormValues>({
@@ -119,31 +121,42 @@ const MultiStepAppointmentForm: React.FC<MultiStepAppointmentFormProps> = ({
   });
   
   // Handle form submission
-  const handleSubmit = (values: FormValues) => {
+  const handleSubmit = async (values: FormValues) => {
     // Create a new appointment object
     const newAppointment = {
-      id: `apt-${Date.now()}`,
-      petName: values.petName,
-      ownerName: values.ownerName,
-      date: format(values.date, "PPP"),
-      time: values.time,
-      reason: values.reason,
-      status: "upcoming" as const,
-      notes: values.notes,
-      // Add pet type and breed from the sample data
-      petType: selectedOwner ? 
-        petsByOwner[selectedOwner as keyof typeof petsByOwner]
-          .find(pet => pet.name === values.petName)?.type || "" : "",
-      petBreed: selectedOwner ? 
-        petsByOwner[selectedOwner as keyof typeof petsByOwner]
-          .find(pet => pet.name === values.petName)?.breed || "" : "",
+      pet_id: pets.find(pet => pet.name === values.petName)?.id, // Map pet name to pet ID
+      owner_id: selectedOwner,
+      appointment_date: format(values.date, "yyyy-MM-dd"), // Format date for backend
+      appointment_hour: values.time,
+      appointment_type: values.reason, // Map reason to appointment type
+      reason: values.notes || "", // Use notes as the reason
     };
-    
-    onSave(newAppointment);
-    form.reset();
-    setStep(1);
-    setSelectedOwner(null);
-    toast.success("Appointment created successfully!");
+
+    try {
+      // Retrieve the token from localStorage
+      const token = localStorage.getItem("token");
+      if (!token) {
+        toast.error("Authentication token is missing. Please log in again.");
+        return;
+      }
+
+      // Send the appointment to the backend
+      await axios.post(
+        "http://localhost:3000/api/v1/staff/appointments/new",
+        newAppointment,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      toast.success("Appointment created successfully!");
+      onSave(newAppointment);
+      form.reset();
+      setStep(1);
+      setSelectedOwner(null);
+    } catch (error) {
+      console.error("Error creating appointment:", error);
+      toast.error("Failed to create appointment. Please try again.");
+    }
   };
   
   // Handle closing the dialog
@@ -162,7 +175,7 @@ const MultiStepAppointmentForm: React.FC<MultiStepAppointmentFormProps> = ({
       // Validate owner name
       const ownerName = form.getValues("ownerName");
       if (ownerName) {
-        setSelectedOwner(owners.find(owner => owner.name === ownerName)?.id || null);
+        setSelectedOwner(Number(ownerName));
         canProceed = true;
       } else {
         form.setError("ownerName", { message: "Owner name is required" });
@@ -199,7 +212,10 @@ const MultiStepAppointmentForm: React.FC<MultiStepAppointmentFormProps> = ({
               <FormItem className="mb-4">
                 <FormLabel>Owner Name</FormLabel>
                 <Select
-                  onValueChange={field.onChange}
+                  onValueChange={(value) => {
+                    field.onChange(value);
+                    setSelectedOwner(Number(value));
+                  }}
                   value={field.value}
                 >
                   <FormControl>
@@ -209,8 +225,8 @@ const MultiStepAppointmentForm: React.FC<MultiStepAppointmentFormProps> = ({
                   </FormControl>
                   <SelectContent>
                     {owners.map(owner => (
-                      <SelectItem key={owner.id} value={owner.name}>
-                        {owner.name}
+                      <SelectItem key={owner.id} value={owner.id.toString()}>
+                        {owner.username}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -240,12 +256,11 @@ const MultiStepAppointmentForm: React.FC<MultiStepAppointmentFormProps> = ({
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    {selectedOwner &&
-                      petsByOwner[selectedOwner as keyof typeof petsByOwner]?.map(pet => (
-                        <SelectItem key={pet.id} value={pet.name}>
-                          {pet.name} ({pet.type}, {pet.breed})
-                        </SelectItem>
-                      ))}
+                    {pets.map(pet => (
+                      <SelectItem key={pet.id} value={pet.name}>
+                        {pet.name} ({pet.type}, {pet.breed})
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
                 <FormMessage />

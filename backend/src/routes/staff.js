@@ -9,5 +9,8 @@ router.get('/appointments/today', verifyTokenStaff, StaffController.getTodayAppo
 router.get('/appointments', verifyTokenStaff, StaffController.getAllAppointments); // Fetch all appointments
 router.get('/appointments/:id', verifyTokenStaff, StaffController.getAppointmentById); // Fetch appointment by ID
 router.patch('/appointments/:id/status', verifyTokenStaff, StaffController.updateAppointmentStatus); // Update appointment status
+router.post('/appointments/new', verifyTokenStaff, StaffController.createAppointment); // Create a new appointment
+router.get('/owners', verifyTokenStaff, StaffController.getOwners); // Fetch all owners
+router.get('/owners/:ownerId/pets', verifyTokenStaff, StaffController.getPetsByOwner); // Fetch pets by owner ID
 
 module.exports = router;
