@@ -1,0 +1,1 @@
+postgresql://admin:npg_e7akvCz8wKqW@ep-delicate-surf-a2nmn43y-pooler.eu-central-1.aws.neon.tech/pet
