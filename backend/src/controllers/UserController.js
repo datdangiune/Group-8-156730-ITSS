@@ -1,4 +1,5 @@
-const { Pet, Appointment, Payment, Service } = require('../models');
+const { Pet, Appointment, Payment, Service, User } = require('../models');
+const ServiceUser = require('../models/ServiceUser')
 const sendMail = require('../util/sendMail'); // Import sendMail utility
 const { Op, fn, col } = require("sequelize");
 const UserController  = { 
@@ -340,6 +341,91 @@ const UserController  = {
             })
         } catch (error) {
             
+        }
+    },
+    async getAllService(req, res){
+        try {
+            const { type } = req.query; // Lấy type từ query parameter
+        
+            // Kiểm tra nếu type có trong giá trị hợp lệ
+            const validTypes = ['grooming', 'boarding', 'training'];
+            if (type && !validTypes.includes(type)) {
+              return res.status(400).json({ message: 'Invalid service type provided.' });
+            }
+        
+            // Truy vấn dịch vụ theo loại (type)
+            const services = await Service.findAll({
+              where: type ? { type } : {}, // Nếu type có, lọc theo type, nếu không, lấy tất cả
+            });
+        
+            // Kiểm tra nếu không có dịch vụ
+            if (services.length === 0) {
+              return res.status(404).json({ message: 'No services found.' });
+            }
+        
+            // Trả về danh sách dịch vụ
+            return res.status(200).json({
+              message: 'Services retrieved successfully',
+              services,
+            });
+          } catch (error) {
+            console.error('Error fetching services:', error);
+            return res.status(500).json({ message: 'An error occurred while fetching services.' });
+          }
+    },
+    async getServiceById(req, res){
+        try {
+            const {id} = req.params
+            
+
+            const services = await Service.findAll({
+              where:  {id: id}
+            });
+        
+            // Kiểm tra nếu không có dịch vụ
+            if (services.length === 0) {
+              return res.status(404).json({ message: 'No services found.' });
+            }
+        
+            // Trả về danh sách dịch vụ
+            return res.status(200).json({
+              message: 'Services retrieved successfully',
+              services,
+            });
+          } catch (error) {
+            console.error('Error fetching services:', error);
+            return res.status(500).json({ message: 'An error occurred while fetching services.' });
+          }
+    },
+    async registerService(req, res){
+        const { petId, serviceId, date, hour } = req.body;
+        const {id} = req.user
+        try {
+          // Kiểm tra sự tồn tại của dịch vụ, người dùng và thú cưng
+          const service = await Service.findByPk(serviceId);
+          const user = await User.findByPk(id);
+          const pet = await Pet.findByPk(petId);
+      
+          if (!service || !user || !pet) {
+            return res.status(404).json({ message: 'Service, User, or Pet not found' });
+          }
+      
+          // Tạo bản ghi mới trong bảng ServiceUser
+          const serviceUser = await ServiceUser.create({
+            serviceId,
+            userId: id,
+            petId,
+            date,
+            hour,
+          });
+      
+          return res.status(201).json({
+            message: 'Service registration successful',
+            serviceUser,
+          });
+        } catch (error) {
+          console.error('Error registering service:', error);
+          return res.status(500).json({ message: 'Internal server error' });
         }
     }
 }

@@ -15,7 +15,7 @@ const User = sequelize.define('User', {
     },
     name: {
         type: DataTypes.STRING,
-        allowNull: false, // Ensure this matches the database schema
+        allowNull: false, 
     },
     email: {
         type: DataTypes.STRING,

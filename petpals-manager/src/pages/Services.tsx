@@ -1,141 +1,23 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Scissors, BedDouble, Dumbbell, Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
-import ServiceCard, { Service } from '@/components/ui/service-card';
+import ServiceCard from '@/components/ui/service-card';
+import { useNavigate } from 'react-router-dom';
+import { fetchServices, GetServicesResponse, Service} from '@/service/service';
+import { getTokenFromCookies } from '@/service/auth';
 
-// Mock data
-const groomingServices: Service[] = [
-  {
-    id: 'g1',
-    petId: '',
-    petName: '',
-    type: 'grooming',
-    name: 'Basic Bath',
-    description: 'Includes shampoo, conditioner, blow dry, ear cleaning, and nail trim',
-    date: '',
-    duration: '45 mins',
-    price: 35,
-    status: 'scheduled',
-    image: 'https://images.unsplash.com/photo-1516734212186-a967f81ad0d7?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1471&q=80',
-  },
-  {
-    id: 'g2',
-    petId: '',
-    petName: '',
-    type: 'grooming',
-    name: 'Full Grooming',
-    description: 'Complete grooming with haircut, styling, bath, nail trim, ear cleaning, and teeth brushing',
-    date: '',
-    duration: '1.5 hours',
-    price: 65,
-    status: 'scheduled',
-    image: 'https://images.unsplash.com/photo-1581781870881-9afd59936de3?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1470&q=80',
-  },
-  {
-    id: 'g3',
-    petId: '',
-    petName: '',
-    type: 'grooming',
-    name: 'Nail Trim',
-    description: 'Professional nail trimming for your pet',
-    date: '',
-    duration: '15 mins',
-    price: 15,
-    status: 'scheduled',
-    image: 'https://images.unsplash.com/photo-1596272875729-ed2ff7d6d9c5?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1470&q=80',
-  },
-  {
-    id: 'g4',
-    petId: '',
-    petName: '',
-    type: 'grooming',
-    name: 'Spa Package',
-    description: 'Luxurious spa treatment including aromatherapy bath, massage, full grooming, and pawdicure',
-    date: '',
-    duration: '2 hours',
-    price: 85,
-    status: 'scheduled',
-    image: 'https://images.unsplash.com/photo-1596272875729-ed2ff7d6d9c5?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1470&q=80',
-  },
-];
 
-const boardingServices: Service[] = [
-  {
-    id: 'b1',
-    petId: '',
-    petName: '',
-    type: 'boarding',
-    name: 'Standard Boarding',
-    description: 'Comfortable accommodation with 3 daily walks and regular feeding',
-    date: '',
-    duration: 'Per night',
-    price: 40,
-    status: 'scheduled',
-    image: 'https://images.unsplash.com/photo-1596272875729-ed2ff7d6d9c5?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1470&q=80',
-  },
-  {
-    id: 'b2',
-    petId: '',
-    petName: '',
-    type: 'boarding',
-    name: 'Luxury Suite',
-    description: 'Premium suite with plush bedding, TV, webcam access, 4 daily walks, and extra playtime',
-    date: '',
-    duration: 'Per night',
-    price: 65,
-    status: 'scheduled',
-    image: 'https://images.unsplash.com/photo-1596272875729-ed2ff7d6d9c5?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1470&q=80',
-  },
-  {
-    id: 'b3',
-    petId: '',
-    petName: '',
-    type: 'boarding',
-    name: 'Cat Condo',
-    description: 'Multi-level cat condo with climbing shelves, toys, and private litter area',
-    date: '',
-    duration: 'Per night',
-    price: 35,
-    status: 'scheduled',
-    image: 'https://images.unsplash.com/photo-1596272875729-ed2ff7d6d9c5?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1470&q=80',
-  },
-];
-
-const trainingServices: Service[] = [
-  {
-    id: 't1',
-    petId: '',
-    petName: '',
-    type: 'training',
-    name: 'Basic Obedience',
-    description: 'Learn essential commands like sit, stay, come, and leash walking',
-    date: '',
-    duration: '4 weeks course',
-    price: 200,
-    status: 'scheduled',
-    image: 'https://images.unsplash.com/photo-1596272875729-ed2ff7d6d9c5?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1470&q=80',
-  },
-  {
-    id: 't2',
-    petId: '',
-    petName: '',
-    type: 'training',
-    name: 'Advanced Training',
-    description: 'Advanced commands, off-leash training, and behavior modification',
-    date: '',
-    duration: '6 weeks course',
-    price: 300,
-    status: 'scheduled',
-    image: 'https://images.unsplash.com/photo-1596272875729-ed2ff7d6d9c5?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1470&q=80',
-  },
-];
 
 const Services = () => {
   const [searchQuery, setSearchQuery] = useState('');
-  
+  const navigate = useNavigate();
+  const [services, setServices] = useState<Service[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+  const token = getTokenFromCookies();
   // Filter services based on search query
   const filterServices = (services: Service[]) => {
     if (!searchQuery) return services;
@@ -145,7 +27,28 @@ const Services = () => {
       service.description?.toLowerCase().includes(searchQuery.toLowerCase())
     );
   };
+  const handleServiceClick = (serviceId: string) => {
+    navigate(`/services/${serviceId}`);
+  };
+  useEffect(() => {
+    const loadServices = async () => {
+      try {
+        const data: GetServicesResponse = await fetchServices(token);
+        setServices(data.services); 
+        setLoading(false); 
+      } catch (error) {
+        setError('Failed to load services');
+        setLoading(false); 
+      }
+    };
 
+    loadServices(); // Gọi hàm loadServices khi component mount
+  }, [token]); 
+  useEffect(() => {
+    if(!token){
+      navigate('/login');
+    }
+  })
   return (
     <div className="container mx-auto px-4 animate-fade-in">
       <div className="mb-8">
@@ -186,12 +89,12 @@ const Services = () => {
         
         <TabsContent value="grooming" className="animate-fade-in">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filterServices(groomingServices).map(service => (
+            {services.map(service => (
               <ServiceCard
                 key={service.id}
                 service={service}
                 isPreview={true}
-                onClick={() => console.log(`Book ${service.name}`)}
+                onClick={() => handleServiceClick(String(service.id))}
               />
             ))}
           </div>
@@ -199,7 +102,7 @@ const Services = () => {
         
         <TabsContent value="boarding" className="animate-fade-in">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filterServices(boardingServices).map(service => (
+            {services.map(service => (
               <ServiceCard
                 key={service.id}
                 service={service}
@@ -212,7 +115,7 @@ const Services = () => {
         
         <TabsContent value="training" className="animate-fade-in">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filterServices(trainingServices).map(service => (
+            {services.map(service => (
               <ServiceCard
                 key={service.id}
                 service={service}

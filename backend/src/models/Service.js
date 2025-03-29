@@ -7,28 +7,38 @@ const Service = sequelize.define('Service', {
         primaryKey: true,
         autoIncrement: true,
     },
+    type: {
+        type: DataTypes.ENUM('grooming', 'boarding', 'training'),
+        allowNull: false,
+      },
     name: {
         type: DataTypes.STRING,
         allowNull: false,
     },
     description: {
         type: DataTypes.TEXT,
+        allowNull: false,
     },
     price: {
-        type: DataTypes.DECIMAL(10, 2),
+        type: DataTypes.FLOAT,
         allowNull: false,
     },
-    type: {
-        type: DataTypes.ENUM('grooming', 'medical', 'boarding'),
+    duration: {
+        type: DataTypes.STRING,
         allowNull: false,
     },
-    notes: {
-        type: DataTypes.TEXT, 
+    image: {
+        type: DataTypes.STRING,
+        allowNull: true,
     },
     status: {
-        type: DataTypes.ENUM('active', 'inactive', 'ongoing'),
+        type: DataTypes.ENUM('available', 'unavailable'),
         allowNull: false,
-        defaultValue: 'inactive', // Default status
+        defaultValue: 'available',
+    },
+    details: {
+        type: DataTypes.JSON,
+        allowNull: true,
     },
     created_at: {
         type: DataTypes.DATE,

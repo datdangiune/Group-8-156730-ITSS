@@ -1,3 +1,4 @@
+const { assign } = require('nodemailer/lib/shared');
 const { Appointment, Service, Boarding, Notification, Pet, User } = require('../models');
 const { Op } = require('sequelize');
 
@@ -32,7 +33,7 @@ const StaffController = {
 
             // Lấy số lượng dịch vụ đang chờ xử lý
             const pendingServices = await Service.count({
-                where: { status: 'inactive' },
+                where: { status: 'available' },
             });
 
             // Lấy số lượng thông báo chưa đọc
@@ -63,23 +64,10 @@ const StaffController = {
     // Lấy danh sách lịch hẹn hôm nay
     async getTodayAppointments(req, res) {
         try {
-            const today = new Date();
-            today.setDate(today.getDate() + 2); // Cộng thêm 2 ngày
-        
-            // Lấy khoảng thời gian từ đầu ngày đến cuối ngày
-            const startOfDay = new Date(today.setHours(0, 0, 0, 0)).toISOString(); // 2025-03-30T00:00:00.000Z
-            const endOfDay = new Date(today.setHours(23, 59, 59, 999)).toISOString(); // 2025-03-30T23:59:59.999Z
-        
-            console.log('Start of Day:', startOfDay);
-            console.log('End of Day:', endOfDay);
+
         
             // Truy vấn dựa trên khoảng thời gian
             const appointments = await Appointment.findAll({
-                where: {
-                    appointment_date: {
-                        [Op.between]: [startOfDay, endOfDay], // Sử dụng khoảng thời gian
-                    },
-                },
                 include: [
                     {
                         model: Pet,
@@ -336,6 +324,37 @@ const StaffController = {
             });
         }
     },
+    async createService(req, res){
+        try {
+            const { type, name, description, price, duration, status, image, details } = req.body;
+        
+            // Kiểm tra các trường bắt buộc
+            if (!type || !name || !description || !price || !duration) {
+              return res.status(400).json({ message: 'Missing required fields' });
+            }
+        
+            // Tạo một dịch vụ mới
+            const newService = await Service.create({
+              type,
+              name,
+              description,
+              price,
+              duration,
+              status: status || 'available',
+              image,
+              details,
+            });
+        
+            // Trả về phản hồi khi thành công
+            return res.status(201).json({
+              message: 'Service created successfully',
+              service: newService,
+            });
+          } catch (error) {
+            console.error('Error creating service:', error);
+            return res.status(500).json({ message: 'Internal server error' });
+          }
+    }
 };
 
 module.exports = StaffController;

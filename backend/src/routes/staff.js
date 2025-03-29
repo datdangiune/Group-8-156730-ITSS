@@ -12,5 +12,5 @@ router.patch('/appointments/:id/status', verifyTokenStaff, StaffController.updat
 router.post('/appointments/new', verifyTokenStaff, StaffController.createAppointment); // Create a new appointment
 router.get('/owners', verifyTokenStaff, StaffController.getOwners); // Fetch all owners
 router.get('/owners/:ownerId/pets', verifyTokenStaff, StaffController.getPetsByOwner); // Fetch pets by owner ID
-
+router.post('/service', verifyTokenStaff, StaffController.createService)
 module.exports = router;

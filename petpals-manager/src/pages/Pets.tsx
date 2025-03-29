@@ -104,9 +104,9 @@ const Pets = () => {
       
       {filteredPets.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredPets.map(pet => (
+          {filteredPets.map((pet, index)=> (
             <Link to={`${pet.id}`}>
-            <PetCard key={pet.id} pet={pet} />
+            <PetCard key={index} pet={pet} />
             </Link>
           ))}
           

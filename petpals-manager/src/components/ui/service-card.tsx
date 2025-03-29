@@ -3,24 +3,23 @@ import React from 'react';
 import { Clock, Calendar, DollarSign } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-export type ServiceType = 'grooming' | 'boarding' | 'training' | 'daycare' | 'other';
-export type ServiceStatus = 'scheduled' | 'completed' | 'cancelled' | 'in-progress';
+export type ServiceType = 'grooming' | 'boarding' | 'training' ;
+export type ServiceStatus = 'available' | 'unavailable' ;
 
 export interface Service {
-  id: string;
-  petId: string;
-  petName: string;
-  type: ServiceType;
-  name: string;
-  description?: string;
-  date: string;
-  time?: string;
-  duration?: string;
-  price?: number;
-  status: ServiceStatus;
-  image?: string;
-}
-
+    id: number;
+    type: 'boarding' | 'grooming' | 'training';
+    name: string;
+    description: string;
+    price: number;
+    duration: string;
+    image: string;
+    status: 'available' | 'unavailable';
+    details: ServiceDetail;
+  }
+  export interface ServiceDetail {
+    included: string[];
+  }
 interface ServiceCardProps {
   service: Service;
   isPreview?: boolean;
@@ -30,14 +29,10 @@ interface ServiceCardProps {
 
 const getStatusColor = (status: ServiceStatus) => {
   switch (status) {
-    case 'scheduled':
-      return 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300';
-    case 'completed':
+    case 'available':
       return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300';
-    case 'cancelled':
+    case 'unavailable':
       return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300';
-    case 'in-progress':
-      return 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300';
     default:
       return 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-300';
   }
@@ -87,10 +82,6 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
           )}
         </div>
         
-        {!isPreview && service.petName && (
-          <p className="text-sm text-gray-600 dark:text-gray-400">For {service.petName}</p>
-        )}
-        
         {service.description && (
           <p className="mt-2 text-sm text-gray-600 dark:text-gray-400 line-clamp-2">
             {service.description}
@@ -98,20 +89,6 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
         )}
         
         <div className="mt-4 space-y-2 text-sm">
-          {!isPreview && service.date && (
-            <div className="flex items-center text-gray-600 dark:text-gray-400">
-              <Calendar className="h-4 w-4 mr-2 flex-shrink-0" />
-              <span>{service.date}</span>
-            </div>
-          )}
-          
-          {!isPreview && service.time && (
-            <div className="flex items-center text-gray-600 dark:text-gray-400">
-              <Clock className="h-4 w-4 mr-2 flex-shrink-0" />
-              <span>{service.time}</span>
-            </div>
-          )}
-          
           {service.duration && (
             <div className="flex items-center text-gray-600 dark:text-gray-400">
               <Clock className="h-4 w-4 mr-2 flex-shrink-0" />

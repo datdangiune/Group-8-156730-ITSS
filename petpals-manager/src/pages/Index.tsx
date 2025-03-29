@@ -15,8 +15,8 @@ type PetType = "dog" | "cat" | "bird" | "rabbit" | "fish" | "other";
 
 const mockAppointments: Appointment[] = [
   {
-    id: '1',
-    petId: '1',
+    id: 1,
+    petId: 1,
     petName: 'Buddy',
     date: 'Apr 12, 2024',
     time: '10:30 AM',
@@ -150,9 +150,9 @@ const Dashboard = () => {
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {pets.map(pet => (
+          {pets.map((pet, index) => (
             <Link to={`pets/${pet.id}`}>
-            <PetCard key={pet.id} pet={pet} />
+            <PetCard key={index} pet={pet} />
             </Link>
           ))}
           
