@@ -41,22 +41,18 @@ const AdminController = {
     getDashboardStats: async (req, res) => {
         try {
             const totalUsers = await User.count({ where: { role: 'pet_owner' } });
-            const activeBoarders = await Boarding.count({ where: { status: 'active' } });
-            const pendingServices = await Service.count({ where: { status: 'pending' } });
-            const unreadNotifications = await Notification.count({ where: { status: 'unread' } });
-            
+            const activeBoarders = await Boarding.count({ where: { status: 'ongoing' } });
+            const pendingServices = await Service.count({ where: { status: 'available' } });
             const revenueOverview = await Payment.findAll({
                 attributes: [[Sequelize.fn('SUM', Sequelize.col('amount')), 'totalRevenue']],
                 where: { createdAt: { [Op.gte]: new Date(new Date().getFullYear(), 0, 1) } },
                 group: [Sequelize.fn('MONTH', Sequelize.col('createdAt'))],
             });
-            
             const servicesByCategory = await Service.findAll({
                 attributes: ['category', [Sequelize.fn('COUNT', Sequelize.col('id')), 'count']],
                 group: ['category'],
             });
-
-            res.json({ totalUsers, activeBoarders, pendingServices, unreadNotifications, revenueOverview, servicesByCategory });
+            res.json({ totalUsers, activeBoarders, pendingServices, revenueOverview, servicesByCategory });
         } catch (error) {
             res.status(500).json({ error: error.message });
         }
