@@ -1,6 +1,7 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const { User, Service, Appointment, MedicalRecord, Boarding, Room, Notification, Payment } = require('../models');
+const { User, Service, Appointment, MedicalRecord, Boarding, Room, Notification, Payment, Pet } = require('../models');
+
 const { Op, Sequelize } = require('sequelize');
 
 const AdminController = {
@@ -82,7 +83,7 @@ getAllServices: async (req, res) => {
 
 
     // Fetch appointments
-    getAppointments: async (req, res) => {
+    getAppointments : async (req, res) => {
         try {
             const today = new Date();
     
@@ -90,8 +91,8 @@ getAllServices: async (req, res) => {
             const upcomingAppointments = await Appointment.findAll({
                 where: { appointment_date: { [Op.gte]: today } },
                 include: [
-                    { model: Pet, attributes: ['name', 'type'] }, // Lấy tên và giống thú cưng
-                    { model: User, attributes: ['name'], as: 'staff' } // Lấy tên bác sĩ
+                    { model: Pet, attributes: ['name', 'type', 'breed'] }, // Lấy thông tin thú cưng
+                    { model: User, attributes: ['name'], as: 'vet', where: { role: 'vet' } } // Lấy tên bác sĩ
                 ],
                 order: [['appointment_date', 'ASC']]
             });
@@ -100,19 +101,19 @@ getAllServices: async (req, res) => {
             const recentAppointments = await Appointment.findAll({
                 where: { appointment_date: { [Op.lt]: today } },
                 include: [
-                    { model: Pet, attributes: ['name', 'type'] },
-                    { model: User, attributes: ['name'], as: 'staff' }
+                    { model: Pet, attributes: ['name', 'type', 'breed'] },
+                    { model: User, attributes: ['name'], as: 'vet', where: { role: 'vet' } }
                 ],
                 order: [['appointment_date', 'DESC']]
             });
     
-            // Format lại dữ liệu để gửi về frontend
+            // Format dữ liệu trả về
             const formatAppointments = (appointments) => {
                 return appointments.map(appt => ({
-                    title: `${appt.appointment_type} - ${appt.Pet.name} (${appt.Pet.type})`,
+                    title: `${appt.appointment_type} - ${appt.Pet.name} (${appt.Pet.type} - ${appt.Pet.breed || 'Unknown'})`,
                     date: appt.appointment_date,
                     time: appt.appointment_hour,
-                    doctor: `Dr. ${appt.staff.name}`
+                    doctor: `Dr. ${appt.vet.name}`
                 }));
             };
     
@@ -126,7 +127,6 @@ getAllServices: async (req, res) => {
             res.status(500).json({ error: error.message });
         }
     },
-
     // Fetch medical records
     getMedicalRecords: async (req, res) => {
         try {
