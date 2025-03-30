@@ -41,4 +41,12 @@ router.post('/auth/login', AdminController.loginAdmin); // Đăng nhập admin
 
 router.get('/analytics', verifyTokenAdmin, AdminController.getAnalyticsData); // Fetch analytics data
 
+//new
+router.post('/notifications/mark-all-read', verifyTokenAdmin, AdminController.markAllNotificationsRead);
+router.put('/settings/profile', verifyTokenAdmin, AdminController.updateProfile);
+router.put('/settings/account', verifyTokenAdmin, AdminController.updateAccount);
+router.put('/settings/notifications', verifyTokenAdmin, AdminController.updateNotificationPreferences);
+router.put('/settings/system', verifyTokenAdmin, AdminController.updateSystemSettings);
+
+
 module.exports = router;
