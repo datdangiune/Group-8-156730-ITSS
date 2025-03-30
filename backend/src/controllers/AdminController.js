@@ -50,7 +50,7 @@ const AdminController = {
 getAllUsers: async (req, res) => {
     try {
         const users = await User.findAll({
-            attributes: ['name', 'email', 'role', 'lastActive']
+            attributes: ['name', 'email', 'role']
         });
         res.json({ success: true, users });
     } catch (error) {
