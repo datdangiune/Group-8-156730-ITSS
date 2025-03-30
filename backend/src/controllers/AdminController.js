@@ -50,7 +50,7 @@ const AdminController = {
 getAllUsers: async (req, res) => {
     try {
         const users = await User.findAll({
-            attributes: ['name', 'email', 'role', 'status', 'lastActive']
+            attributes: ['name', 'email', 'role', 'lastActive']
         });
         res.json({ success: true, users });
     } catch (error) {
@@ -62,7 +62,7 @@ addUser: async (req, res) => {
     try {
         const { name, email, role, status } = req.body;
         const password = await bcrypt.hash('defaultPassword', 10);
-        const newUser = await User.create({ name, email, role, status, password });
+        const newUser = await User.create({ name, email, role, password });
         res.json(newUser);
     } catch (error) {
         res.status(500).json({ error: error.message });
