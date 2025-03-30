@@ -85,9 +85,43 @@ getAllServices: async (req, res) => {
     getAppointments: async (req, res) => {
         try {
             const today = new Date();
-            const upcomingAppointments = await Appointment.findAll({ where: { appointment_date: { [Op.gte]: today } } });
-            const recentAppointments = await Appointment.findAll({ where: { appointment_date: { [Op.lt]: today } } });
-            res.json({ upcomingAppointments, recentAppointments });
+    
+            // Lấy lịch hẹn sắp tới
+            const upcomingAppointments = await Appointment.findAll({
+                where: { appointment_date: { [Op.gte]: today } },
+                include: [
+                    { model: Pet, attributes: ['name', 'species'] }, // Lấy tên và giống thú cưng
+                    { model: User, attributes: ['name'], as: 'doctor' } // Lấy tên bác sĩ
+                ],
+                order: [['appointment_date', 'ASC']]
+            });
+    
+            // Lấy lịch hẹn đã hoàn thành
+            const recentAppointments = await Appointment.findAll({
+                where: { appointment_date: { [Op.lt]: today } },
+                include: [
+                    { model: Pet, attributes: ['name', 'species'] },
+                    { model: User, attributes: ['name'], as: 'doctor' }
+                ],
+                order: [['appointment_date', 'DESC']]
+            });
+    
+            // Format lại dữ liệu để gửi về frontend
+            const formatAppointments = (appointments) => {
+                return appointments.map(appt => ({
+                    title: `${appt.appointment_type} - ${appt.Pet.name} (${appt.Pet.species})`,
+                    date: appt.appointment_date,
+                    time: appt.appointment_hour,
+                    doctor: `Dr. ${appt.doctor.name}`
+                }));
+            };
+    
+            res.json({
+                success: true,
+                message: "Appointments retrieved successfully",
+                upcomingAppointments: formatAppointments(upcomingAppointments),
+                recentAppointments: formatAppointments(recentAppointments)
+            });
         } catch (error) {
             res.status(500).json({ error: error.message });
         }
@@ -118,7 +152,7 @@ getAllServices: async (req, res) => {
     },
     getAnalyticsData: async (req, res) => {
         try {
-            const newPatients = await User.count({ where: { role: 'customer', createdAt: { [Op.gte]: Sequelize.literal('CURRENT_DATE - INTERVAL 1 MONTH') } } });
+            const newPatients = await User.count({ where: { role: 'owner', createdAt: { [Op.gte]: Sequelize.literal('CURRENT_DATE - INTERVAL 1 MONTH') } } });
             const revenueGrowth = await Payment.sum('amount', { where: { createdAt: { [Op.gte]: Sequelize.literal('CURRENT_DATE - INTERVAL 1 MONTH') } } });
             const avgVisitValue = await Payment.findOne({ attributes: [[Sequelize.fn('AVG', Sequelize.col('amount')), 'avgValue']] });
             const bookings = await Appointment.count();
