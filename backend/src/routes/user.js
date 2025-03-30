@@ -27,5 +27,6 @@ router.post('/boarding', verifyToken, UserController.createBoarding);
 router.get('/get-all-service', verifyToken, UserController.getAllService)
 router.get('/get-service/:id', verifyToken, UserController.getServiceById)
 router.post('/service', verifyToken, UserController.registerService)
+router.get('/service', verifyToken, UserController.getUserServices)
 router.post('/image', verifyToken, fileUploader.single('file'), UserController.uploadImage)
 module.exports = router;

@@ -1,5 +1,4 @@
-const { Pet, Appointment, Payment, Service, User } = require('../models');
-const ServiceUser = require('../models/ServiceUser')
+const { Pet, Appointment, Payment, Service, User, ServiceUser} = require('../models');
 const sendMail = require('../util/sendMail'); // Import sendMail utility
 const { Op, fn, col } = require("sequelize");
 const UserController  = { 
@@ -357,7 +356,7 @@ const UserController  = {
     },
     async getAllService(req, res){
         try {
-            const { type } = req.query; // Lấy type từ query parameter
+            const { type } = req.query; 
         
             // Kiểm tra nếu type có trong giá trị hợp lệ
             const validTypes = ['grooming', 'boarding', 'training'];
@@ -438,6 +437,45 @@ const UserController  = {
         } catch (error) {
           console.error('Error registering service:', error);
           return res.status(500).json({ message: 'Internal server error' });
+        }
+    },
+    async getUserServices(req, res){
+        try {
+            const userId = req.user.id; 
+            const { status } = req.query;
+    
+            const whereCondition = { userId };
+            if (status) {
+                whereCondition.status = { [Op.eq]: status };
+            }
+    
+            const userServices = await ServiceUser.findAll({
+                where: whereCondition,
+                include: [
+                    {
+                        model: Service,
+                        as: 'service',
+                        attributes: ['id', 'name', 'description', 'price', 'duration'],
+                    },
+                    {
+                        model: Pet,
+                        as: 'pet',
+                        attributes: ['id', 'name', 'type', 'breed'],
+                    }
+                ]
+            });
+    
+            res.status(200).json({
+                success: true,
+                message: 'User services fetched successfully',
+                data: userServices
+            });
+        } catch (err) {
+            res.status(500).json({
+                success: false,
+                message: 'Error fetching user services',
+                error: err.message
+            });
         }
     }
 }

@@ -55,7 +55,7 @@ const PetCard: React.FC<PetCardProps> = ({ pet, className }) => {
         />
         <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
           <Link
-            to={`/pets/${pet.id}/edit`}
+            to={`/pets/${pet.id}`}
             className="bg-white/90 dark:bg-gray-900/90 p-2 rounded-full shadow-md text-gray-700 dark:text-gray-200 hover:text-primary"
             aria-label={`Edit ${pet.name}`}
           >

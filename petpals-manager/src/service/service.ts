@@ -2,7 +2,12 @@ import Cookies from "js-cookie";
 export interface ServiceDetail {
     included: string[];
   }
-  
+  interface Pet {
+    id: number;
+    name: string;
+    type: string;
+    breed: string;
+  }
 export interface Service {
     id: number;
     type: 'boarding' | 'grooming' | 'training';
@@ -18,6 +23,17 @@ export interface Service {
 export interface GetServicesResponse {
     message: string;
     services: Service[];
+  }
+export interface UserService {
+    id: number;
+    serviceId: number;
+    userId: number;
+    petId: number;
+    date: string;
+    hour: string;
+    status: string;
+    service: Service;
+    pet: Pet;
   }
   export async function fetchServices(token: string): Promise<GetServicesResponse> {
     try {
@@ -123,4 +139,27 @@ export interface GetServicesResponse {
       throw error;
     }
   }
+
+  export const fetchUserServices = async (token: string, status: string): Promise<UserService[]> => {
+    try {
+      const response = await fetch(`http://localhost:3000/api/v1/user/service?status=${status}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+  
+      if (!response.ok) {
+        const result = await response.json();
+        throw new Error(result.message || "Failed to fetch user services.");
+      }
+  
+      const { data } = await response.json();
+      return data as UserService[];
+    } catch (error) {
+      console.error("Error fetching user services:", error);
+      throw error;
+    }
+  };
   

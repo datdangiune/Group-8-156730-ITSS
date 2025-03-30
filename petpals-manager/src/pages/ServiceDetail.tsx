@@ -64,6 +64,7 @@ const ServiceDetail = () => {
         if (id) {
           const serviceData: GetServicesResponse= await fetchServicesById(id, token);
           setService(serviceData.services[0]);
+          console.log(serviceData)
         }
       } catch (error) {
         console.error('Error fetching service details:', error);
@@ -209,7 +210,7 @@ const ServiceDetail = () => {
               <div className="border rounded-lg p-4">
                 <h3 className="font-medium mb-3">What's Included</h3>
                 <ul className="space-y-2">
-                {service.details.included.map((item: string, index: number) => (
+                {service?.details?.included?.map((item: string, index: number) => (
                     <li key={index} className="flex items-center">
                     <span className="bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 p-1 rounded-full mr-2">
                         <Sparkles className="h-3 w-3" />

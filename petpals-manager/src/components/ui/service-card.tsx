@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Clock, Calendar, DollarSign } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -20,16 +19,22 @@ export interface Service {
   export interface ServiceDetail {
     included: string[];
   }
-interface ServiceCardProps {
-  service: Service;
-  isPreview?: boolean;
-  onClick?: () => void;
-  className?: string;
-}
+  interface ServiceCardProps {
+    service: Service;
+    userServiceStatus?: string; // Trạng thái đặt lịch
+    isPreview?: boolean;
+    onClick?: () => void;
+    className?: string;
+  }
+  
 
-const getStatusColor = (status: ServiceStatus) => {
-  switch (status) {
+const getStatusColor = (status?: string) => {
+  if (!status) return 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-300';
+  
+  switch (status.toLowerCase()) {
     case 'available':
+      return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300';
+    case 'completed':
       return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300';
     case 'unavailable':
       return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300';
@@ -40,10 +45,13 @@ const getStatusColor = (status: ServiceStatus) => {
 
 const ServiceCard: React.FC<ServiceCardProps> = ({ 
   service, 
+  userServiceStatus,
   isPreview = false, 
   onClick, 
   className 
 }) => {
+  const statusText = userServiceStatus || service.status;
+  
   return (
     <div 
       className={cn(
@@ -75,9 +83,9 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
           {!isPreview && (
             <div className={cn(
               "px-3 py-1 rounded-full text-xs font-medium",
-              getStatusColor(service.status)
+              getStatusColor(statusText)
             )}>
-              {service.status.charAt(0).toUpperCase() + service.status.slice(1).replace('-', ' ')}
+              {statusText?.charAt(0).toUpperCase() + statusText?.slice(1).replace('-', ' ') || 'Unknown'}
             </div>
           )}
         </div>

@@ -5,42 +5,17 @@ import { PlusCircle, Calendar, Scissors, BedDouble, ArrowRight } from 'lucide-re
 import { Button } from '@/components/ui/button';
 import PetCard, { Pet } from '@/components/ui/pet-card';
 import AppointmentCard, { Appointment } from '@/components/ui/appointment-card';
-import ServiceCard, { Service } from '@/components/ui/service-card';
+import ServiceCard from '@/components/ui/service-card';
 import { getTokenFromCookies } from '@/service/auth';
 import { useNavigate } from 'react-router-dom';
 import { getPets } from '@/service/pet';
 import { fetchUserAppointments } from '@/service/appointment';
+import { fetchUserServices, Service, UserService} from '@/service/service';
 type PetType = "dog" | "cat" | "bird" | "rabbit" | "fish" | "other";
 
 
 
-const recentServices: Service[] = [
-  {
-    id: '1',
-    petId: '1',
-    petName: 'Buddy',
-    type: 'grooming',
-    name: 'Full Grooming',
-    description: 'Bath, haircut, nail trimming, ear cleaning',
-    date: 'Mar 25, 2024',
-    time: '1:00 PM',
-    duration: '1.5 hours',
-    price: 65,
-    status: 'completed',
-  },
-  {
-    id: '2',
-    petId: '2',
-    petName: 'Whiskers',
-    type: 'boarding',
-    name: 'Weekend Boarding',
-    description: 'Premium room with 3 daily play sessions',
-    date: 'Mar 18-20, 2024',
-    duration: '2 days',
-    price: 120,
-    status: 'completed',
-  },
-];
+
 
 const Dashboard = () => {
   const [greeting, setGreeting] = useState(() => {
@@ -52,6 +27,8 @@ const Dashboard = () => {
   const [pets, setPets] = useState<Pet[]>([]);  
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [status, setStatus] = useState("Scheduled");
+  const [status1, setStatus1] = useState("Completed");
+  const [services, setServices] = useState<UserService[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const navigate = useNavigate();
@@ -96,6 +73,20 @@ const Dashboard = () => {
 
     getAppointments();
   }, [token]);
+    useEffect(() => {
+      const loadServices = async () => {
+        try {
+          const data = await fetchUserServices(token, status1);
+          setServices(data); 
+          setLoading(false); 
+        } catch (error) {
+          setError('Failed to load services');
+          setLoading(false); 
+        }
+      };
+  
+      loadServices(); // Gọi hàm loadServices khi component mount
+    }, [token]); 
   return (
     <div className="container mx-auto px-4 animate-fade-in">
       <section className="mb-10">
@@ -142,7 +133,7 @@ const Dashboard = () => {
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {pets.map((pet, index) => (
-            <Link to={`pets/${pet.id}`}>
+            <Link to={`pets/${pet.id}`} key={index}>
             <PetCard key={index} pet={pet} />
             </Link>
           ))}
@@ -193,10 +184,10 @@ const Dashboard = () => {
           </Button>
         </div>
         
-        {recentServices.length > 0 ? (
+        {services.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {recentServices.map(service => (
-              <ServiceCard key={service.id} service={service} />
+            {services.map((service, index) => (
+              <ServiceCard key={index} service={service.service} userServiceStatus={service.status} />
             ))}
           </div>
         ) : (

@@ -21,7 +21,7 @@ app.get('/', (req, res) => {
     res.send('Welcome to the Pet Care API!');
 });
 
-sequelize.sync({ force: false })
+sequelize.sync({ force: false})
     .then(() => {
         console.log('Database synced successfully.');
         app.listen(PORT, () => {
