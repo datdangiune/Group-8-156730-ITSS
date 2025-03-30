@@ -36,7 +36,7 @@ export const createAppointment = async (data: AppointmentFormValues, token: stri
             },
             body: JSON.stringify(data), 
         });
-
+        
         if (!response.ok) {
             const result = await response.json();
             throw new Error(result.message || "Failed to book appointment.");
@@ -51,9 +51,9 @@ export const createAppointment = async (data: AppointmentFormValues, token: stri
 
 
 
-export const fetchUserAppointments = async (token: string): Promise<Appointment[]> => {
+export const fetchUserAppointments = async (token: string, status: string): Promise<Appointment[]> => {
     try {
-      const response = await fetch(API_URL, {
+      const response = await fetch(`${API_URL}?status=${status}`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -75,4 +75,4 @@ export const fetchUserAppointments = async (token: string): Promise<Appointment[
       console.error("Error fetching appointments:", error);
       throw error;
     }
-  };
+};

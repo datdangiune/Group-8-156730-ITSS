@@ -9,36 +9,10 @@ import ServiceCard, { Service } from '@/components/ui/service-card';
 import { getTokenFromCookies } from '@/service/auth';
 import { useNavigate } from 'react-router-dom';
 import { getPets } from '@/service/pet';
-
+import { fetchUserAppointments } from '@/service/appointment';
 type PetType = "dog" | "cat" | "bird" | "rabbit" | "fish" | "other";
 
 
-const mockAppointments: Appointment[] = [
-  {
-    id: 1,
-    petId: 1,
-    petName: 'Buddy',
-    date: 'Apr 12, 2024',
-    time: '10:30 AM',
-    type: 'Annual Checkup',
-    reason: 'Routine health examination and vaccinations',
-    veterinarian: 'Dr. Smith',
-    location: 'Main Pet Clinic',
-    status: 'scheduled',
-  },
-  {
-    id: '2',
-    petId: '2',
-    petName: 'Whiskers',
-    date: 'Apr 15, 2024',
-    time: '2:15 PM',
-    type: 'Dental Cleaning',
-    reason: 'Preventative dental care',
-    veterinarian: 'Dr. Johnson',
-    location: 'Main Pet Clinic',
-    status: 'scheduled',
-  },
-];
 
 const recentServices: Service[] = [
   {
@@ -76,6 +50,10 @@ const Dashboard = () => {
     return 'Good evening';
   });
   const [pets, setPets] = useState<Pet[]>([]);  
+  const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [status, setStatus] = useState("Scheduled");
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
   const navigate = useNavigate();
   const token = getTokenFromCookies();
   useEffect(() => {
@@ -104,7 +82,20 @@ const Dashboard = () => {
     fetchPets();
   }, [token]);
   
+  useEffect(() => {
+    const getAppointments = async () => {
+      try {
+        const data = await fetchUserAppointments(token, status);
+        setAppointments(data);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
 
+    getAppointments();
+  }, [token]);
   return (
     <div className="container mx-auto px-4 animate-fade-in">
       <section className="mb-10">
@@ -176,9 +167,9 @@ const Dashboard = () => {
           </Button>
         </div>
         
-        {mockAppointments.length > 0 ? (
+        {appointments.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {mockAppointments.map(appointment => (
+            {appointments.map(appointment => (
               <AppointmentCard key={appointment.id} appointment={appointment} />
             ))}
           </div>

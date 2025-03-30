@@ -16,7 +16,7 @@ const verifyToken = (req, res, next) => {
     }
 };
 
-// Middleware để xác thực token và kiểm tra quyền admin
+
 const verifyTokenAdmin = (req, res, next) => {
     const token = req.header('Authorization')?.replace('Bearer ', '');
     if (!token) {

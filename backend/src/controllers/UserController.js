@@ -207,8 +207,20 @@ const UserController  = {
     async getUserAppointments(req, res) {
         try {
             const ownerId = req.user.id;
+            const { status } = req.query;
+            const validStatuses = ['Scheduled', 'Done', 'Cancel', 'In progess'];
+            const whereCondition = { owner_id: ownerId };
+            if (status) {
+                if (!validStatuses.includes(status)) {
+                    return res.status(400).json({
+                        success: false,
+                        message: 'Invalid appointment status',
+                    });
+                }
+                whereCondition.appointment_status = status;
+            }
             const appointments = await Appointment.findAll({
-                where: { owner_id: ownerId },
+                where: whereCondition,
                 include: [
                     {
                         model: Pet,

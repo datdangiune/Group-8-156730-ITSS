@@ -14,6 +14,7 @@ const Appointments = () => {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
+  const [status, setStatus] = useState("");
   const token = getTokenFromCookies();
   const filterAppointments = (status: AppointmentStatus | 'all') => {
     return appointments.filter(appointment => {
@@ -28,7 +29,7 @@ const Appointments = () => {
   useEffect(() => {
     const getAppointments = async () => {
       try {
-        const data = await fetchUserAppointments(token);
+        const data = await fetchUserAppointments(token, status);
         setAppointments(data);
       } catch (err) {
         setError(err.message);
