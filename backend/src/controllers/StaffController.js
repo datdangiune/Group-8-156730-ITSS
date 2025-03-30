@@ -354,7 +354,46 @@ const StaffController = {
             console.error('Error creating service:', error);
             return res.status(500).json({ message: 'Internal server error' });
           }
+    },
+
+    async getServices(req, res) {
+        try {
+            const { type, status } = req.query;
+
+            // Build query conditions dynamically
+            const whereCondition = {};
+            if (type) whereCondition.type = type;
+            if (status) whereCondition.status = status;
+
+            // Fetch services based on conditions
+            const services = await Service.findAll({
+                where: whereCondition,
+                attributes: ['id', 'type', 'name', 'description', 'price', 'duration', 'status', 'image', 'details'],
+            });
+
+            if (!services.length) {
+                return res.status(404).json({
+                    success: false,
+                    message: 'No services found',
+                });
+            }
+
+            res.status(200).json({
+                success: true,
+                message: 'Services fetched successfully',
+                data: services,
+            });
+        } catch (err) {
+            console.error('Error fetching services:', err);
+            res.status(500).json({
+                success: false,
+                message: 'Error fetching services',
+                error: err.message,
+            });
+        }
     }
 };
+
+    
 
 module.exports = StaffController;

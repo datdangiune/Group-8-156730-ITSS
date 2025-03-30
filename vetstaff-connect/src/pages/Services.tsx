@@ -1,18 +1,15 @@
-
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { ArrowLeft, ArrowRight, Clock, Edit, Plus, Search, Stethoscope } from "lucide-react";
 import PageTransition from "@/components/animations/PageTransition";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { services } from "@/lib/data";
 import StatusBadge from "@/components/dashboard/StatusBadge";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Progress } from "@/components/ui/progress";
 import ServiceForm from "@/components/services/ServiceForm";
 import EditServiceForm from "@/components/services/EditServiceForm";
 import { toast } from "sonner";
-import { cn } from "@/lib/utils";
 import { 
   Pagination, 
   PaginationContent, 
@@ -21,6 +18,7 @@ import {
   PaginationNext, 
   PaginationPrevious
 } from "@/components/ui/pagination";
+import { fetchServices } from "@/service/services";
 
 const Services = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -28,13 +26,35 @@ const Services = () => {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isEditFormOpen, setIsEditFormOpen] = useState(false);
   const [selectedService, setSelectedService] = useState(null);
-  
+  const [servicesData, setServicesData] = useState([]);
+
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
-  
+
+  const loadServices = async () => {
+    try {
+      const token = localStorage.getItem("token"); // Retrieve token from localStorage
+      console.log("Retrieved token:", token); // Log the token for debugging
+      if (!token) {
+        toast.error("Access token is missing. Please log in.");
+        return;
+      }
+
+      const services = await fetchServices(token); // Use the updated fetchServices function
+      setServicesData(services);
+    } catch (error: any) {
+      console.error("Error loading services:", error.message);
+      toast.error(error.message || "An error occurred while loading services");
+    }
+  };
+
+  useEffect(() => {
+    loadServices();
+  }, []);
+
   // Filter services based on search query and active tab
-  const filteredServices = services.filter(service => {
+  const filteredServices = servicesData.filter(service => {
     // Filter by tab
     if (activeTab !== "all" && service.status !== activeTab) {
       return false;
@@ -44,9 +64,9 @@ const Services = () => {
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
       return (
-        service.petName.toLowerCase().includes(query) ||
-        service.serviceType.toLowerCase().includes(query) ||
-        service.notes.toLowerCase().includes(query)
+        service.name.toLowerCase().includes(query) ||
+        service.type.toLowerCase().includes(query) ||
+        service.description.toLowerCase().includes(query)
       );
     }
     
@@ -151,13 +171,13 @@ const Services = () => {
                   <thead>
                     <tr>
                       <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                        Pet
+                        Name
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                        Service Type
+                        Type
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                        Time
+                        Price
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                         Status
@@ -174,26 +194,13 @@ const Services = () => {
                     {paginatedServices.map((service) => (
                       <tr key={service.id} className="hover:bg-muted/20 transition-colors">
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="flex items-center">
-                            <div>
-                              <div className="font-medium">{service.petName}</div>
-                              <div className="text-sm text-muted-foreground">
-                                {service.petType}
-                              </div>
-                            </div>
-                          </div>
+                          <div className="font-medium">{service.name}</div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm">{service.serviceType}</div>
-                          <div className="text-sm text-muted-foreground truncate max-w-[200px]">
-                            {service.notes}
-                          </div>
+                          <div className="text-sm">{service.type}</div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm">{service.startTime}</div>
-                          <div className="text-sm text-muted-foreground">
-                            Est. end: {service.estimatedEndTime}
-                          </div>
+                          <div className="text-sm">${service.price}</div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <StatusBadge status={service.status} />
