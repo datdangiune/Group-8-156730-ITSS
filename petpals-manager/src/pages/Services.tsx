@@ -72,24 +72,9 @@ const Services = () => {
       </div>
       
       <Tabs defaultValue="grooming" className="w-full">
-        <TabsList className="grid grid-cols-3 mb-8">
-          <TabsTrigger value="grooming" className="flex items-center gap-2">
-            <Scissors className="h-4 w-4" />
-            <span className="hidden sm:inline">Grooming</span>
-          </TabsTrigger>
-          <TabsTrigger value="boarding" className="flex items-center gap-2">
-            <BedDouble className="h-4 w-4" />
-            <span className="hidden sm:inline">Boarding</span>
-          </TabsTrigger>
-          <TabsTrigger value="training" className="flex items-center gap-2">
-            <Dumbbell className="h-4 w-4" />
-            <span className="hidden sm:inline">Training</span>
-          </TabsTrigger>
-        </TabsList>
-        
         <TabsContent value="grooming" className="animate-fade-in">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {services.map(service => (
+            {filterServices(services).map(service => (
               <ServiceCard
                 key={service.id}
                 service={service}
@@ -100,7 +85,7 @@ const Services = () => {
           </div>
         </TabsContent>
         
-        <TabsContent value="boarding" className="animate-fade-in">
+        {/* <TabsContent value="boarding" className="animate-fade-in">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {services.map(service => (
               <ServiceCard
@@ -124,7 +109,7 @@ const Services = () => {
               />
             ))}
           </div>
-        </TabsContent>
+        </TabsContent> */}
       </Tabs>
       
       <div className="mt-12 glass-card dark:glass-card-dark rounded-xl p-8 text-center">

@@ -39,6 +39,11 @@ const ServiceUser = sequelize.define('ServiceUser', {
     type: DataTypes.STRING,
     allowNull: false,
   },
+  status: {
+    type: DataTypes.STRING,
+    allowNull: false,
+    defaultValue:"In Progess"
+  }
 }, {
   tableName: 'service_users',
   timestamps: false,

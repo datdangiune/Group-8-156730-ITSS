@@ -133,11 +133,11 @@ const Appointments = () => {
       </div>
       
       <Tabs defaultValue="all" className="w-full">
-        <TabsList className="grid grid-cols-3 mb-8">
+        {/* <TabsList className="grid grid-cols-3 mb-8">
           <TabsTrigger value="all">All Appointments</TabsTrigger>
           <TabsTrigger value="upcoming">Upcoming</TabsTrigger>
           <TabsTrigger value="past">Past</TabsTrigger>
-        </TabsList>
+        </TabsList> */}
         
         <TabsContent value="upcoming" className="animate-fade-in">
           {upcomingAppointments.length > 0 ? (
