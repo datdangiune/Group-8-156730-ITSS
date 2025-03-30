@@ -72,7 +72,7 @@ addUser: async (req, res) => {
 getAllServices: async (req, res) => {
     try {
         const services = await Service.findAll({
-            attributes: ['name', 'category', 'price', 'duration', 'status']
+            attributes: ['name', 'price', 'duration', 'status']
         });
         res.json({ success: true, services });
     } catch (error) {
