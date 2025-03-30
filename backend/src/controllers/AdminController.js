@@ -40,7 +40,7 @@ const AdminController = {
     // Dashboard statistics
     getDashboardStats: async (req, res) => {
         try {
-            const totalUsers = await User.count({ where: { role: 'owner' } });
+            const totalUsers = await User.count({ where: { role: 'pet_owner' } });
             const activeBoarders = await Boarding.count({ where: { status: 'active' } });
             const pendingServices = await Service.count({ where: { status: 'pending' } });
             const unreadNotifications = await Notification.count({ where: { status: 'unread' } });
