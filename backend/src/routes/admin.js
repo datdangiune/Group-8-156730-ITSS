@@ -11,10 +11,11 @@ router.get('/dashboard', verifyTokenAdmin, AdminController.getDashboardStats);
 router.get('/analytics', verifyTokenAdmin, AdminController.getAnalyticsData);
 
 // Quản lý người dùng
-router.post('/users', verifyTokenAdmin, AdminController.addUser);
+router.get('/users', verifyTokenAdmin, AdminController.getAllUsers);
 
 // Quản lý dịch vụ
-router.post('/services', verifyTokenAdmin, AdminController.addService);
+router.get('/services', verifyTokenAdmin, AdminController.getAllServices);
+
 
 // Quản lý cuộc hẹn
 router.get('/appointments', verifyTokenAdmin, AdminController.getAppointments);

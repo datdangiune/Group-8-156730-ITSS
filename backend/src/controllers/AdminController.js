@@ -46,28 +46,30 @@ const AdminController = {
         }
     },
 
-    // Add user
-    addUser: async (req, res) => {
-        try {
-            const { name, email, role, status } = req.body;
-            const password = await bcrypt.hash('defaultPassword', 10);
-            const newUser = await User.create({ name, email, role, status, password });
-            res.json(newUser);
-        } catch (error) {
-            res.status(500).json({ error: error.message });
-        }
-    },
+    // Lấy danh sách user
+getAllUsers: async (req, res) => {
+    try {
+        const users = await User.findAll({
+            attributes: ['name', 'email', 'role', 'status', 'lastActive']
+        });
+        res.json({ success: true, users });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+},
 
-    // Add service
-    addService: async (req, res) => {
-        try {
-            const { name, category, price, duration, status } = req.body;
-            const newService = await Service.create({ name, category, price, duration, status });
-            res.json(newService);
-        } catch (error) {
-            res.status(500).json({ error: error.message });
-        }
-    },
+// Lấy danh sách service
+getAllServices: async (req, res) => {
+    try {
+        const services = await Service.findAll({
+            attributes: ['name', 'category', 'price', 'duration', 'status']
+        });
+        res.json({ success: true, services });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+},
+
 
     // Fetch appointments
     getAppointments: async (req, res) => {
