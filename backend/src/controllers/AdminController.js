@@ -90,8 +90,8 @@ getAllServices: async (req, res) => {
             const upcomingAppointments = await Appointment.findAll({
                 where: { appointment_date: { [Op.gte]: today } },
                 include: [
-                    { model: Pet, attributes: ['name', 'species'] }, // Lấy tên và giống thú cưng
-                    { model: User, attributes: ['name'], as: 'doctor' } // Lấy tên bác sĩ
+                    { model: Pet, attributes: ['name', 'type'] }, // Lấy tên và giống thú cưng
+                    { model: User, attributes: ['name'], as: 'staff' } // Lấy tên bác sĩ
                 ],
                 order: [['appointment_date', 'ASC']]
             });
@@ -100,8 +100,8 @@ getAllServices: async (req, res) => {
             const recentAppointments = await Appointment.findAll({
                 where: { appointment_date: { [Op.lt]: today } },
                 include: [
-                    { model: Pet, attributes: ['name', 'species'] },
-                    { model: User, attributes: ['name'], as: 'doctor' }
+                    { model: Pet, attributes: ['name', 'type'] },
+                    { model: User, attributes: ['name'], as: 'staff' }
                 ],
                 order: [['appointment_date', 'DESC']]
             });
@@ -109,10 +109,10 @@ getAllServices: async (req, res) => {
             // Format lại dữ liệu để gửi về frontend
             const formatAppointments = (appointments) => {
                 return appointments.map(appt => ({
-                    title: `${appt.appointment_type} - ${appt.Pet.name} (${appt.Pet.species})`,
+                    title: `${appt.appointment_type} - ${appt.Pet.name} (${appt.Pet.type})`,
                     date: appt.appointment_date,
                     time: appt.appointment_hour,
-                    doctor: `Dr. ${appt.doctor.name}`
+                    doctor: `Dr. ${appt.staff.name}`
                 }));
             };
     
