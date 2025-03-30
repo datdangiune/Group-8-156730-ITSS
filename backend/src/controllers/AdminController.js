@@ -164,37 +164,67 @@ getAllServices: async (req, res) => {
             res.status(500).json({ error: error.message });
         }
     },
+
     getAnalyticsData: async (req, res) => {
         try {
-            const newPatients = await User.count({ where: { role: 'pet_owner', createdAt: { [Op.gte]: Sequelize.literal('CURRENT_DATE - INTERVAL 1 MONTH') } } });
-            const revenueGrowth = await Payment.sum('amount', { where: { createdAt: { [Op.gte]: Sequelize.literal('CURRENT_DATE - INTERVAL 1 MONTH') } } });
-            const avgVisitValue = await Payment.findOne({ attributes: [[Sequelize.fn('AVG', Sequelize.col('amount')), 'avgValue']] });
+            const newPatients = await User.count({ 
+                where: { 
+                    role: 'pet_owner', 
+                    created_at: { [Op.gte]: Sequelize.literal('CURRENT_DATE - INTERVAL 1 MONTH') } 
+                } 
+            });
+    
+            const revenueGrowth = await Payment.sum('amount', { 
+                where: { 
+                    payment_date: { [Op.gte]: Sequelize.literal('CURRENT_DATE - INTERVAL 1 MONTH') } 
+                } 
+            });
+    
+            const avgVisitValue = await Payment.findOne({ 
+                attributes: [[Sequelize.fn('AVG', Sequelize.col('amount')), 'avgValue']] 
+            });
+    
             const bookings = await Appointment.count();
             const capacityUtilization = (bookings / (await Room.count())) * 100;
-
+    
             const revenueOverview = await Payment.findAll({
-                attributes: [[Sequelize.fn('SUM', Sequelize.col('amount')), 'totalRevenue']],
-                where: { createdAt: { [Op.gte]: new Date(new Date().getFullYear(), 0, 1) } },
-                group: [Sequelize.fn('MONTH', Sequelize.col('createdAt'))],
+                attributes: [
+                    [Sequelize.fn('MONTH', Sequelize.col('payment_date')), 'month'],
+                    [Sequelize.fn('SUM', Sequelize.col('amount')), 'totalRevenue']
+                ],
+                where: { 
+                    payment_date: { [Op.gte]: new Date(new Date().getFullYear(), 0, 1) } 
+                },
+                group: [Sequelize.fn('MONTH', Sequelize.col('payment_date'))],
+                order: [[Sequelize.fn('MONTH', Sequelize.col('payment_date')), 'ASC']]
             });
-
+    
             const servicesBreakdown = await Service.findAll({
                 attributes: ['type', [Sequelize.fn('COUNT', Sequelize.col('id')), 'count']],
                 group: ['type'],
             });
-
-            res.json({ newPatients, revenueGrowth, avgVisitValue, bookings, capacityUtilization, revenueOverview, servicesBreakdown });
+    
+            res.json({ 
+                newPatients, 
+                revenueGrowth, 
+                avgVisitValue, 
+                bookings, 
+                capacityUtilization, 
+                revenueOverview, 
+                servicesBreakdown 
+            });
         } catch (error) {
             res.status(500).json({ error: error.message });
         }
     },
+    
 
     // Fetch notifications
     getNotifications: async (req, res) => {
         try {
             const { type } = req.query;
             const filter = type ? { category: type } : {};
-            const notifications = await Notification.findAll({ where: filter });
+            const notifications = await Notification.findAll({ where: filter }); //filter???
             res.json(notifications);
         } catch (error) {
             res.status(500).json({ error: error.message });
