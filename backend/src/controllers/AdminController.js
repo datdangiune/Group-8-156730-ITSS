@@ -9,16 +9,18 @@ const AdminController = {
         try {
             const { email, password } = req.body;
             const admin = await User.findOne({ where: { email, role: 'admin' } });
+    
             if (!admin || !(await bcrypt.compare(password, admin.password))) {
-                return res.status(401).json({ message: 'Invalid credentials' });
+                return res.status(401).json({ success: false, message: 'Invalid credentials' });
             }
+    
             const token = jwt.sign({ id: admin.id, role: admin.role }, process.env.JWT_SECRET, { expiresIn: '1d' });
-            res.json({ token, admin });
+    
+            res.json({ success: true, message: 'Login successful', token });
         } catch (error) {
-            res.status(500).json({ error: error.message });
+            res.status(500).json({ success: false, message: 'Internal server error' });
         }
-    },
-
+    },    
     // Dashboard statistics
     getDashboardStats: async (req, res) => {
         try {
