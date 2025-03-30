@@ -49,8 +49,8 @@ const AdminController = {
                 group: [Sequelize.fn('MONTH', Sequelize.col('createdAt'))],
             });
             const servicesByCategory = await Service.findAll({
-                attributes: ['category', [Sequelize.fn('COUNT', Sequelize.col('id')), 'count']],
-                group: ['category'],
+                attributes: ['type', [Sequelize.fn('COUNT', Sequelize.col('id')), 'count']],
+                group: ['type'],
             });
             res.json({ totalUsers, activeBoarders, pendingServices, revenueOverview, servicesByCategory });
         } catch (error) {
@@ -152,10 +152,13 @@ getAllServices: async (req, res) => {
     getBoardingInfo: async (req, res) => {
         try {
             const totalRooms = await Room.count();
-            const occupied = await Boarding.count({ where: { status: 'occupied' } });
-            const available = totalRooms - occupied;
-            const reserved = await Boarding.count({ where: { status: 'reserved' } });
-            const currentBoarders = await Boarding.findAll({ where: { status: 'occupied' } });
+            const occupied = await Boarding.count({ where: { status: 'ongoing' } });
+            const available = await Room.count({ where: { is_available: true } });
+            const reserved = await Boarding.count({ where: { status: 'completed' } });
+            const currentBoarders = await Boarding.findAll({
+                where: { status: 'ongoing' },
+                include: [{ model: Room, attributes: ['room_number', 'type'] }]
+            });
             res.json({ totalRooms, occupied, available, reserved, currentBoarders });
         } catch (error) {
             res.status(500).json({ error: error.message });
@@ -163,7 +166,7 @@ getAllServices: async (req, res) => {
     },
     getAnalyticsData: async (req, res) => {
         try {
-            const newPatients = await User.count({ where: { role: 'owner', createdAt: { [Op.gte]: Sequelize.literal('CURRENT_DATE - INTERVAL 1 MONTH') } } });
+            const newPatients = await User.count({ where: { role: 'pet_owner', createdAt: { [Op.gte]: Sequelize.literal('CURRENT_DATE - INTERVAL 1 MONTH') } } });
             const revenueGrowth = await Payment.sum('amount', { where: { createdAt: { [Op.gte]: Sequelize.literal('CURRENT_DATE - INTERVAL 1 MONTH') } } });
             const avgVisitValue = await Payment.findOne({ attributes: [[Sequelize.fn('AVG', Sequelize.col('amount')), 'avgValue']] });
             const bookings = await Appointment.count();
@@ -176,8 +179,8 @@ getAllServices: async (req, res) => {
             });
 
             const servicesBreakdown = await Service.findAll({
-                attributes: ['category', [Sequelize.fn('COUNT', Sequelize.col('id')), 'count']],
-                group: ['category'],
+                attributes: ['type', [Sequelize.fn('COUNT', Sequelize.col('id')), 'count']],
+                group: ['type'],
             });
 
             res.json({ newPatients, revenueGrowth, avgVisitValue, bookings, capacityUtilization, revenueOverview, servicesBreakdown });
