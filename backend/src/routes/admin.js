@@ -12,6 +12,7 @@ router.get('/analytics', verifyTokenAdmin, AdminController.getAnalyticsData);
 
 // Quản lý người dùng
 router.get('/users', verifyTokenAdmin, AdminController.getAllUsers);
+router.post('/users', verifyTokenAdmin, AdminController.addUser);
 
 // Quản lý dịch vụ
 router.get('/services', verifyTokenAdmin, AdminController.getAllServices);
