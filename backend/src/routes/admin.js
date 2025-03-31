@@ -8,7 +8,7 @@ router.get('/users', verifyTokenAdmin, AdminController.getAllUsers);
 router.post('/users', verifyTokenAdmin, AdminController.addUser);
 
 // Quản lý dịch vụ
-router.get('/services', verifyTokenAdmin, AdminController.getAllServices);
+// router.get('/services', verifyTokenAdmin, AdminController.getAllServices);
 
 // Quản lý lưu trú
 router.get('/boarding', verifyTokenAdmin, AdminController.getBoardingInfo);
