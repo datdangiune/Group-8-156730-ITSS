@@ -107,9 +107,8 @@ getAllUsers: async (req, res) => {
         }
     },
     
-//=> MÁY HẾT PIN CHƯA KỊP TEST ĐỢI SẠC PIN 
-    // Fetch appointments
-    getAppointments : async (req, res) => {
+
+    getAppointments: async (req, res) => {
         try {
             const today = new Date();
     
@@ -117,8 +116,8 @@ getAllUsers: async (req, res) => {
             const upcomingAppointments = await Appointment.findAll({
                 where: { appointment_date: { [Op.gte]: today } },
                 include: [
-                    { model: Pet, attributes: ['name', 'type', 'breed'] }, // Lấy thông tin thú cưng
-                    { model: User, attributes: ['name'], as: 'vet', where: { role: 'vet' } } // Lấy tên bác sĩ
+                    { model: Pet, as: 'pet', attributes: ['name', 'type', 'breed'] }, // Đúng alias 'pet'
+                    { model: User, as: 'staff', attributes: ['name'], where: { role: 'vet' } } // Đúng alias 'staff'
                 ],
                 order: [['appointment_date', 'ASC']]
             });
@@ -127,8 +126,8 @@ getAllUsers: async (req, res) => {
             const recentAppointments = await Appointment.findAll({
                 where: { appointment_date: { [Op.lt]: today } },
                 include: [
-                    { model: Pet, attributes: ['name', 'type', 'breed'] },
-                    { model: User, attributes: ['name'], as: 'vet', where: { role: 'vet' } }
+                    { model: Pet, as: 'pet', attributes: ['name', 'type', 'breed'] },
+                    { model: User, as: 'staff', attributes: ['name'], where: { role: 'vet' } }
                 ],
                 order: [['appointment_date', 'DESC']]
             });
@@ -136,10 +135,10 @@ getAllUsers: async (req, res) => {
             // Format dữ liệu trả về
             const formatAppointments = (appointments) => {
                 return appointments.map(appt => ({
-                    title: `${appt.appointment_type} - ${appt.Pet.name} (${appt.Pet.type} - ${appt.Pet.breed || 'Unknown'})`,
+                    title: `${appt.appointment_type} - ${appt.pet.name} (${appt.pet.type} - ${appt.pet.breed || 'Unknown'})`,
                     date: appt.appointment_date,
                     time: appt.appointment_hour,
-                    doctor: `Dr. ${appt.vet.name}`
+                    doctor: `Dr. ${appt.staff.name}` // Đổi từ 'vet' thành 'staff'
                 }));
             };
     
@@ -152,8 +151,8 @@ getAllUsers: async (req, res) => {
         } catch (error) {
             res.status(500).json({ error: error.message });
         }
-    },
-    // Fetch medical records
+    },    
+    // Fetch medical records => Đang đợi sửa db
     getMedicalRecords: async (req, res) => {
         try {
             const records = await MedicalRecord.findAll();
@@ -163,7 +162,7 @@ getAllUsers: async (req, res) => {
         }
     },
 
-    // Fetch boarding details
+    // Fetch boarding details => Đang đợi sửa db
     getBoardingInfo: async (req, res) => {
         try {
             const totalRooms = await Room.count();
