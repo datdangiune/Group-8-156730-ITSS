@@ -203,6 +203,7 @@ const ClinicServices = () => {
       } else {
         // Creating a new service
         const requestData = {
+          id: null,
           type: formData.type,
           name: formData.name,
           description: formData.description,

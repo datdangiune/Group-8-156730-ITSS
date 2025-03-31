@@ -8,11 +8,13 @@ import ServiceCard from '@/components/ui/service-card';
 import { useNavigate } from 'react-router-dom';
 import { fetchServices, GetServicesResponse, Service} from '@/service/service';
 import { getTokenFromCookies } from '@/service/auth';
+import { io } from "socket.io-client";
 
 
 
 const Services = () => {
   const [searchQuery, setSearchQuery] = useState('');
+  const socket = io("http://localhost:3000");
   const navigate = useNavigate();
   const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -34,16 +36,34 @@ const Services = () => {
     const loadServices = async () => {
       try {
         const data: GetServicesResponse = await fetchServices(token);
-        setServices(data.services); 
-        setLoading(false); 
+        setServices(data.services);
+        setLoading(false);
       } catch (error) {
         setError('Failed to load services');
-        setLoading(false); 
+        setLoading(false);
       }
     };
-
-    loadServices(); // Gọi hàm loadServices khi component mount
-  }, [token]); 
+  
+    loadServices(); // Fetch dữ liệu khi component mount
+  
+    // Lắng nghe sự kiện cập nhật dịch vụ từ WebSocket
+    socket.on("serviceUpdated", (updatedService) => {
+      console.log("📢 Received updated service:", updatedService);
+      window.location.reload()
+    });
+    
+    socket.on("connect", () => {
+      console.log("Connected to WebSocket server with ID:", socket.id);
+    });
+    
+    socket.on("disconnect", () => {
+      console.log("Disconnected from WebSocket server");
+    });
+    return () => {
+      socket.off("serviceUpdated"); // Cleanup listener khi component unmount
+    };
+  }, [token]);
+  
   useEffect(() => {
     if(!token){
       navigate('/login');

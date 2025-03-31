@@ -1,7 +1,14 @@
 import axios from "axios";
-
+import { io } from "socket.io-client";
+const socket = io("http://localhost:3000");
 const API_BASE_URL = "http://localhost:3000/api/v1"; // Adjusted base URL if necessary
+socket.on("connect", () => {
+  console.log("Connected to WebSocket server with ID:", socket.id);
+});
 
+socket.on("disconnect", () => {
+  console.log("Disconnected from WebSocket server");
+});
 // Define interfaces
 export interface Pet {
   id: number;
@@ -33,6 +40,7 @@ interface ClinicService {
   status: 'available' | 'unavailable';
 }
 interface CreateServiceRequest {
+  id: number;
   type: string;
   name: string;
   description: string;
@@ -85,7 +93,7 @@ export const fetchCreateService = async (
       headers: { Authorization: `Bearer ${token}` },
       
     });
-
+    socket.emit("updateService", response.data);
     console.log("Backend response:", response.data); // Log the response for debugging
 
     if (response.status !== 201) {
