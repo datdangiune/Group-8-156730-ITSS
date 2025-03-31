@@ -7,33 +7,34 @@ const Boarding = sequelize.define('Boarding', {
         primaryKey: true,
         autoIncrement: true,
     },
-    pet_id: {
-        type: DataTypes.INTEGER,
-    },
-    owner_id: {
-        type: DataTypes.INTEGER,
-    },
-    room_id: {
-        type: DataTypes.INTEGER,
-    },
-    start_date: {
-        type: DataTypes.DATE,
+    price: {  // giá trên ngày
+        type: DataTypes.FLOAT,
         allowNull: false,
     },
-    end_date: {
-        type: DataTypes.DATE,
+    maxday: {  //Số ngày nhiều nhất có thể hỗ trợ
+        type: DataTypes.INTEGER,
         allowNull: false,
     },
-    special_care_instructions: {
-        type: DataTypes.TEXT,
+    image: {
+        type: DataTypes.STRING,
+        allowNull: true,
     },
     status: {
-        type: DataTypes.ENUM('ongoing', 'completed'),
-        defaultValue: 'ongoing',
+        type: DataTypes.ENUM('available', 'unavailable'),
+        allowNull: false,
+        defaultValue: 'available',
+    },
+    details: {
+        type: DataTypes.JSON,
+        allowNull: true,
     },
     created_at: {
         type: DataTypes.DATE,
         defaultValue: DataTypes.NOW,
+    },
+    createdAt: {
+        type: DataTypes.DATE,
+        field: 'created_at',
     },
 }, {
     tableName: 'boarding',
