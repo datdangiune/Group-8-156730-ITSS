@@ -92,7 +92,7 @@ export const uploadFile = async (file: File, token: string): Promise<string | nu
   if (!file) return null;
 
   const formData = new FormData();
-  formData.append("file", file); // 🔹 Đúng với key "file" mà backend yêu cầu
+  formData.append("file", file); 
 
   try {
     const response = await fetch("http://localhost:3000/api/v1/user/image", {

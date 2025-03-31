@@ -368,7 +368,7 @@ const StaffController = {
             // Truy vấn danh sách dịch vụ
             const services = await Service.findAll({
                 where: whereCondition,
-                attributes: ['id', 'type', 'name', 'description', 'price', 'duration', 'status'],
+                attributes: ['id', 'type', 'name', 'description', 'price', 'duration', 'status', 'image'],
                 order: [['created_at', 'DESC']], // Use 'created_at' for sorting
             });
 
@@ -383,11 +383,12 @@ const StaffController = {
             const formattedServices = services.map(service => ({
                 id: service.id,
                 type: service.type,
-                serviceName: service.name,
+                name: service.name,
                 description: service.description,
                 price: `$${service.price.toFixed(2)}`,
                 duration: service.duration,
                 status: service.status,
+                image: service.image,
             }));
 
             res.status(200).json({

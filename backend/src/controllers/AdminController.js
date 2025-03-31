@@ -1,6 +1,6 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const { User, Service, Appointment, MedicalRecord, Boarding, Room, Notification, Payment, Pet } = require('../models');
+const { User, Service, Appointment, MedicalRecord, Boarding, Room, Notification, Payment, Pet, ServiceUser} = require('../models');
 const { Op, Sequelize } = require('sequelize');
 require("dotenv").config();
 const AdminController = {
@@ -299,6 +299,19 @@ getAllUsers: async (req, res) => {
             res.status(500).json({ error: error.message });
         }
     },
+    //mượn xóa tạm
+    deleteService: async (req, res) => {
+        try {
+            await ServiceUser.destroy({
+                where: { }
+            });
+            await Service.destroy({ where: {} }); // Xóa tất cả bản ghi
+            res.status(200).json({ message: "Deleted all services successfully!" });
+        } catch (error) {
+            res.status(500).json({ message: "Error deleting services", error });
+        }
+    }
+    
 };
 
 

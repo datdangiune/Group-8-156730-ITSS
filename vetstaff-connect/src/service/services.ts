@@ -10,9 +10,9 @@ export interface Pet {
 }
 
 export interface Service {
-  serviceId: number;
+  id: number;
   type: string;
-  serviceName: string;
+  name: string;
   description: string;
   price: string;
   duration: string;
@@ -20,8 +20,18 @@ export interface Service {
   date: string;
   hour: string;
   pet?: Pet;
+  image?: string;
 }
-
+interface ClinicService {
+  id: number;
+  type: string;
+  name: string;
+  description: string;
+  price: number;
+  duration: string;
+  image?: string;
+  status: 'available' | 'unavailable';
+}
 interface CreateServiceRequest {
   type: string;
   name: string;
@@ -40,10 +50,10 @@ interface CreateServiceResponse {
   service: Service;
 }
 
-export const fetchServices = async (token: string): Promise<any> => {
+export const fetchServices = async (token: string): Promise<ClinicService[]> => {
   try {
     const response = await axios.get(`${API_BASE_URL}/staff/clinic-services`, {
-      headers: { Authorization: `Bearer ${token}` }, // Include the token in the Authorization header
+      headers: { Authorization: `Bearer ${token}` }, 
     });
     return response.data.data;
   } catch (error: any) {
@@ -66,14 +76,14 @@ export const fetchUserServices = async (token: string): Promise<Service[]> => {
 
 export const fetchCreateService = async (
   token: string,
-  requestData: CreateServiceRequest
+  requestData: CreateServiceRequest,
+  image: string
 ): Promise<CreateServiceResponse> => {
   try {
-    const response = await axios.post(`${API_BASE_URL}/staff/clinic-services/create`, requestData, {
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
+    const payload = {...requestData, image: image}
+    const response = await axios.post(`${API_BASE_URL}/staff/clinic-services/create`, payload, {
+      headers: { Authorization: `Bearer ${token}` },
+      
     });
 
     console.log("Backend response:", response.data); // Log the response for debugging

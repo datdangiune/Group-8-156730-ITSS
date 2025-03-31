@@ -2,18 +2,10 @@ import React, { useState, useRef, useEffect } from "react";
 import { PageTransition } from "@/components/animations/PageTransition";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
+
 import { 
   Dialog, 
   DialogContent, 
@@ -28,16 +20,17 @@ import { Search, Plus, Edit, Image, ArrowLeft, Trash2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { fetchServices, fetchCreateService } from "@/service/services";
-
+import { uploadFile } from "@/service/UploadImage";
 // Type for clinic services
 interface ClinicService {
-  id: string;
+  id: number;
+  type: string;
   name: string;
   description: string;
   price: number;
   duration: string;
-  image: string;
-  status: "available" | "unavailable";
+  image?: string;
+  status: 'available' | 'unavailable';
 }
 
 const ClinicServices = () => {
@@ -46,7 +39,9 @@ const ClinicServices = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingService, setEditingService] = useState<ClinicService | null>(null);
-  
+  const token = localStorage.getItem("token");
+  const [isUploading, setIsUploading] = useState(false)
+  const [selectImage, setSelectedImage] = useState(null)
   // Form state
   const [formData, setFormData] = useState({
     type: "",
@@ -79,7 +74,6 @@ const ClinicServices = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const token = localStorage.getItem("token") || ""; // Replace with actual token retrieval logic
         const fetchedServices = await fetchServices(token);
         setServices(fetchedServices);
       } catch (error) {
@@ -89,8 +83,8 @@ const ClinicServices = () => {
     };
 
     fetchData();
-  }, []);
-  
+  }, [token]);
+  console.log(services)
   // Filter services based on search term
   const filteredServices = services.filter(service =>
     (service.name?.toLowerCase().includes(searchTerm.toLowerCase()) || "") ||
@@ -134,36 +128,23 @@ const ClinicServices = () => {
     setDialogOpen(true);
   };
   
-  // Handle image upload
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      try {
-        const formData = new FormData();
-        formData.append("file", file);
-        formData.append("upload_preset", "default_preset"); // Replace with your Cloudinary upload preset
+  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
 
-        const response = await fetch(
-          `https://api.cloudinary.com/v1_1/dnmosnoqi/image/upload`,
-          {
-            method: "POST",
-            body: formData,
-          }
-        );
+    setIsUploading(true);
 
-        if (!response.ok) {
-          throw new Error("Failed to upload image to Cloudinary");
-        }
-
-        const data = await response.json();
-        setFormData((prev) => ({ ...prev, image: data.secure_url })); // Use the secure URL from Cloudinary
-        toast.success("Image uploaded successfully");
-      } catch (error) {
-        console.error("Error uploading image:", error);
-        toast.error("Failed to upload image");
+    try {
+      const imageUrl = await uploadFile(file, token); // Gọi API upload ảnh
+      if (imageUrl) {
+        setSelectedImage(imageUrl);
       }
+    } catch (error) {
+      alert(error.message);
+    } finally {
+      setIsUploading(false);
     }
-  };
+};
   
   // Handle input changes
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -175,7 +156,7 @@ const ClinicServices = () => {
   const handleStatusToggle = (serviceId: string) => {
     setServices(prevServices =>
       prevServices.map(service =>
-        service.id === serviceId
+        String(service.id) === serviceId
           ? { ...service, status: service.status === "available" ? "unavailable" : "available" }
           : service
       )
@@ -187,7 +168,7 @@ const ClinicServices = () => {
   // Handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
+    console.log(token)
     const price = parseFloat(formData.price);
     if (isNaN(price) || price <= 0) {
       toast.error("Please enter a valid price");
@@ -200,7 +181,7 @@ const ClinicServices = () => {
     }
 
     try {
-      const token = localStorage.getItem("token") || ""; // Replace with actual token retrieval logic
+       // Replace with actual token retrieval logic
 
       if (editingService) {
         setServices(prevServices =>
@@ -212,7 +193,7 @@ const ClinicServices = () => {
                   description: formData.description,
                   price: price,
                   duration: formData.duration,
-                  image: formData.image || service.image,
+                  image: selectImage,
                   status: formData.status,
                 }
               : service
@@ -228,11 +209,10 @@ const ClinicServices = () => {
           price: price,
           duration: formData.duration,
           status: formData.status,
-          image: formData.image,
           details: { included: formData.whatsIncluded },
         };
 
-        const response = await fetchCreateService(token, requestData);
+        const response = await fetchCreateService(token, requestData, selectImage);
         const newService = response.service;
 
         console.log("New service response:", newService); // Log the response for debugging
@@ -244,14 +224,17 @@ const ClinicServices = () => {
 
         // Transform newService to match ClinicService type
         const transformedService: ClinicService = {
-          id: newService.id.toString(), // Use `id` instead of `serviceId`
-          name: newService.serviceName || "Unnamed Service",
+          id: newService.id, 
+          type: newService.type || "default-type", // 🔹 Thêm type, có thể đặt giá trị mặc định
+          name: newService.name || "Unnamed Service",
           description: newService.description || "",
           price: typeof newService.price === "number" ? newService.price : parseFloat(newService.price) || 0,
           duration: newService.duration || "",
           image: newService.image || "",
           status: (newService.status as "available" | "unavailable") || "unavailable",
+
         };
+        
 
         setServices(prev => [...prev, transformedService]);
         toast.success("Service created successfully");
@@ -267,7 +250,7 @@ const ClinicServices = () => {
   
   // Handle service deletion
   const handleDelete = (serviceId: string) => {
-    setServices(prevServices => prevServices.filter(service => service.id !== serviceId));
+    setServices(prevServices => prevServices.filter(service => String(service.id) !== serviceId));
     toast.success("Service deleted successfully");
   };
   
@@ -304,8 +287,8 @@ const ClinicServices = () => {
             </div>
             
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-              {filteredServices.map(service => (
-                <Card key={service.id} className="overflow-hidden hover:shadow-md transition-shadow">
+              {filteredServices.map((service, index) => (
+                <Card key={index} className="overflow-hidden hover:shadow-md transition-shadow">
                   <div className="relative h-40 bg-muted">
                     {service.image ? (
                       <img 
@@ -343,7 +326,7 @@ const ClinicServices = () => {
                         <Button 
                           variant="outline" 
                           size="sm"
-                          onClick={() => handleStatusToggle(service.id)}
+                          onClick={() => handleStatusToggle(String(service.id))}
                         >
                           {service.status === "available" ? "Deactivate" : "Activate"}
                         </Button>
@@ -392,7 +375,7 @@ const ClinicServices = () => {
       <option value="">Select service type</option>
       <option value="grooming">Grooming</option>
       <option value="boarding">Boarding</option>
-      <option value="medical">Medical</option>
+      <option value="training">Trainning</option>
     </select>
   </div>
 
@@ -508,10 +491,10 @@ const ClinicServices = () => {
     <Label>Service Image (Optional)</Label>
     <div className="grid grid-cols-[1fr_auto] gap-2">
       <div className="border rounded-md p-1 flex items-center overflow-hidden">
-        {formData.image ? (
+        {selectImage ? (
           <div className="relative w-full h-12">
             <img
-              src={formData.image}
+              src={selectImage}
               alt="Service preview"
               className="h-full object-cover mx-auto"
             />
@@ -543,7 +526,7 @@ const ClinicServices = () => {
       <Button 
         type="button" 
         variant="destructive"
-        onClick={() => handleDelete(editingService.id)}
+        onClick={() => handleDelete(String(editingService.id))}
       >
         <Trash2 className="h-4 w-4 mr-2" />
         Delete
