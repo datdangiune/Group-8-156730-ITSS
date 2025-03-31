@@ -1,5 +1,5 @@
 const { assign } = require('nodemailer/lib/shared');
-const { Appointment, Service, Boarding, Notification, Pet, User } = require('../models');
+const { Appointment, Service, Boarding, Notification, Pet, User, ServiceUser } = require('../models');
 const { Op } = require('sequelize');
 
 const StaffController = {
@@ -360,15 +360,16 @@ const StaffController = {
         try {
             const { type, status } = req.query;
 
-            // Build query conditions dynamically
+            // Xây dựng điều kiện truy vấn động
             const whereCondition = {};
             if (type) whereCondition.type = type;
             if (status) whereCondition.status = status;
 
-            // Fetch services based on conditions
+            // Truy vấn danh sách dịch vụ
             const services = await Service.findAll({
                 where: whereCondition,
-                attributes: ['id', 'type', 'name', 'description', 'price', 'duration', 'status', 'image', 'details'],
+                attributes: ['id', 'type', 'name', 'description', 'price', 'duration', 'status'],
+                order: [['created_at', 'DESC']], // Use 'created_at' for sorting
             });
 
             if (!services.length) {
@@ -378,10 +379,21 @@ const StaffController = {
                 });
             }
 
+            // Định dạng dữ liệu đầu ra phù hợp với frontend
+            const formattedServices = services.map(service => ({
+                id: service.id,
+                type: service.type,
+                serviceName: service.name,
+                description: service.description,
+                price: `$${service.price.toFixed(2)}`,
+                duration: service.duration,
+                status: service.status,
+            }));
+
             res.status(200).json({
                 success: true,
                 message: 'Services fetched successfully',
-                data: services,
+                data: formattedServices,
             });
         } catch (err) {
             console.error('Error fetching services:', err);
@@ -391,9 +403,72 @@ const StaffController = {
                 error: err.message,
             });
         }
+    },
+   
+
+    async getUserServices(req, res) {
+        try {
+            const { id } = req.user;
+
+            // Truy vấn danh sách dịch vụ mà user đã đăng ký
+            const services = await ServiceUser.findAll({
+                
+                include: [
+                    {
+                        model: Service,
+                        as: 'service',
+                        attributes: ['id', 'type', 'name', 'description', 'price', 'duration', 'status'],
+                    },
+                    {
+                        
+                        model: Pet,
+                        as: 'pet',
+                        attributes: ['id', 'name', 'breed'],
+                    },
+                ],
+                order: [['date', 'DESC']],
+            });
+
+            if (!services || services.length === 0) {
+                return res.status(200).json({
+                    success: true,
+                    message: 'No registered services found for this user',
+                    data: [],
+                });
+            }
+
+            // Định dạng dữ liệu đầu ra
+            const formattedServices = services.map(serviceUser => ({
+                serviceId: serviceUser.service?.id || null,
+                type: serviceUser.service?.type || null,
+                serviceName: serviceUser.service?.name || null,
+                pet: serviceUser.pet ? {
+                    id: serviceUser.pet.id,
+                    name: serviceUser.pet.name,
+                    breed: serviceUser.pet.breed,
+                } : null,
+                description: serviceUser.service?.description || null,
+                price: serviceUser.service ? `$${serviceUser.service.price.toFixed(2)}` : null,
+                duration: serviceUser.service?.duration || null,
+                status: serviceUser.status || null,
+                date: serviceUser.date || null,
+                hour: serviceUser.hour || null,
+            }));
+
+            res.status(200).json({
+                success: true,
+                message: 'User services fetched successfully',
+                data: formattedServices,
+            });
+        } catch (err) {
+            console.error('Error fetching user services:', err);
+            res.status(500).json({
+                success: false,
+                message: 'Error fetching user services',
+                error: err.message,
+            });
+        }
     }
 };
-
-    
 
 module.exports = StaffController;

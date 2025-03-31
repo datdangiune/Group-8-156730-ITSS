@@ -44,6 +44,10 @@ const Service = sequelize.define('Service', {
         type: DataTypes.DATE,
         defaultValue: DataTypes.NOW,
     },
+    createdAt: {
+        type: DataTypes.DATE,
+        field: 'created_at', // Map to the existing 'created_at' column
+    },
 }, {
     tableName: 'services',
     timestamps: false,
