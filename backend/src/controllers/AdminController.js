@@ -4,7 +4,7 @@ const { User, Service, Appointment, MedicalRecord, Boarding, Room, Notification,
 const { Op, Sequelize } = require('sequelize');
 require("dotenv").config();
 const AdminController = {
-    // Admin login
+    //Thông tin đăng nhập của admin => test thành công
     login: async (req, res) => {
         try {
             const { email, password } = req.body;
@@ -41,8 +41,8 @@ const AdminController = {
     getDashboardStats: async (req, res) => {
         try {
             const totalUsers = await User.count({ where: { role: 'pet_owner' } });
-            const activeBoarders = await Boarding.count({ where: { status: 'ongoing' } });
-            const pendingServices = await Service.count({ where: { status: 'available' } });
+            const ongoingBoarders = await Boarding.count({ where: { status: 'ongoing' } });
+            const availableServices = await Service.count({ where: { status: 'available' } });
             const revenueOverview = await Payment.findAll({
                 attributes: [[Sequelize.fn('SUM', Sequelize.col('amount')), 'totalRevenue']],
                 where: { createdAt: { [Op.gte]: new Date(new Date().getFullYear(), 0, 1) } },
@@ -58,40 +58,45 @@ const AdminController = {
         }
     },
 
-    // Lấy danh sách user
+    // Lấy danh sách user => test thành công
 getAllUsers: async (req, res) => {
     try {
         const users = await User.findAll({
-            attributes: ['name', 'email', 'role']
+            attributes: ['name', 'username', 'email', 'role']
         });
         res.json({ success: true, users });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
     }
 },
-// Add user
-addUser: async (req, res) => {
-    try {
-        const { name, email, role, status } = req.body;
-        const password = await bcrypt.hash('defaultPassword', 10);
-        const newUser = await User.create({ name, email, role, password });
-        res.json(newUser);
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-},
-// Lấy danh sách service
-getAllServices: async (req, res) => {
-    try {
-        const services = await Service.findAll({
-            attributes: ['name', 'price', 'duration', 'status']
-        });
-        res.json({ success: true, services });
-    } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
-    }
-},
-
+// Thêm user => 
+    addUser: async (req, res) => {
+        try {
+            const { name, email, role, username, phone_number } = req.body;
+            // Kiểm tra xem username đã được cung cấp chưa
+            if (!username) {
+                return res.status(400).json({ error: "Username is required!" });
+            }
+            // Kiểm tra xem email hoặc username đã tồn tại chưa
+            const existingUser = await User.findOne({ where: { [Op.or]: [{ email }, { username }] } });
+            if (existingUser) {
+                return res.status(400).json({ error: "Email hoặc Username đã tồn tại!" });
+            }
+            // Mật khẩu mặc định sẽ được hash trong hook `beforeCreate`
+            const newUser = await User.create({
+                name,
+                username, // Sử dụng username trực tiếp từ req.body
+                email,
+                role: role || 'pet_owner', // Mặc định là 'pet_owner' nếu không truyền
+                password: 'defaultPassword', // Sẽ được hash tự động
+                phone_number
+            });
+            res.status(201).json({ success: true, message: "User created successfully!", user: newUser });
+        } catch (error) {
+            res.status(500).json({ error: error.message });
+        }
+    },
+    
 
     // Fetch appointments
     getAppointments : async (req, res) => {
