@@ -1,351 +1,244 @@
+
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { format } from "date-fns";
-import { 
-  Plus, 
-  Search, 
-  Calendar, 
-  Trash2, 
-  Edit, 
-  ArrowUpDown,
-  ChevronDown 
-} from "lucide-react";
-import { PageTransition } from "@/components/animations/PageTransition";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { ArrowLeft, ArrowRight, Calendar, Clock, Home, MoreHorizontal, Plus, Search } from "lucide-react";
+import PageTransition from "@/components/animations/PageTransition";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { toast } from "sonner";
+import { boardingPets } from "@/lib/data";
+import StatusBadge from "@/components/dashboard/StatusBadge";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import BoardingServiceForm from "@/components/boarding/BoardingServiceForm";
-import { BoardingService, BoardingServiceFormValues } from "@/types/boardingService";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import BoardingForm from "@/components/boarding/BoardingForm";
+import { toast } from "sonner";
 
-// Mock data for boarding services
-const mockBoardingServices: BoardingService[] = [
-  {
-    id: "bs1",
-    name: "Standard Kennel",
-    pricePerDay: 35.00,
-    maxDayStay: 14,
-    image: "https://images.unsplash.com/photo-1582562124811-c09040d0a901?w=500&auto=format",
-    status: "available",
-    details: {
-      amenities: ["Daily Feeding", "Fresh Water", "Basic Exercise", "Regular Cleaning"],
-    },
-    createdAt: "2023-10-15T08:00:00.000Z",
-  },
-  {
-    id: "bs2",
-    name: "Premium Suite",
-    pricePerDay: 65.00,
-    maxDayStay: 30,
-    image: "https://images.unsplash.com/photo-1493962853295-0fd70327578a?w=500&auto=format",
-    status: "available",
-    details: {
-      amenities: ["Premium Food", "Spacious Area", "Extended Play Time", "Grooming", "Webcam Access"],
-    },
-    createdAt: "2023-10-10T10:30:00.000Z",
-  },
-  {
-    id: "bs3",
-    name: "Cat Condo",
-    pricePerDay: 40.00,
-    maxDayStay: 21,
-    image: "https://images.unsplash.com/photo-1535268647677-300dbf3d78d1?w=500&auto=format",
-    status: "available",
-    details: {
-      amenities: ["Cat Tree", "Cat Toys", "Premium Litter", "Daily Brushing", "Window Views"],
-    },
-    createdAt: "2023-09-28T14:15:00.000Z",
-  },
-  {
-    id: "bs4",
-    name: "Exotic Pet Suite",
-    pricePerDay: 85.00,
-    maxDayStay: 14,
-    image: "https://images.unsplash.com/photo-1441057206919-63d19fac2369?w=500&auto=format",
-    status: "unavailable",
-    details: {
-      amenities: ["Specialized Care", "Climate Control", "Species-Specific Housing", "Expert Handling"],
-    },
-    createdAt: "2023-09-20T09:45:00.000Z",
-  },
-];
-
-const ClinicBoarding: React.FC = () => {
-  const navigate = useNavigate();
+const Boarding = () => {
   const [searchQuery, setSearchQuery] = useState("");
-  const [formOpen, setFormOpen] = useState(false);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [selectedService, setSelectedService] = useState<BoardingService | null>(null);
-  const [boardingServices, setBoardingServices] = useState<BoardingService[]>(mockBoardingServices);
+  const [activeTab, setActiveTab] = useState("active");
+  const [isFormOpen, setIsFormOpen] = useState(false);
   
-  // Filter boarding services based on search query
-  const filteredServices = boardingServices.filter(service => 
-    service.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    service.details.amenities.some(amenity => 
-      amenity.toLowerCase().includes(searchQuery.toLowerCase())
-    )
-  );
-  
-  // Handle creating a new boarding service
-  const handleCreateService = (formData: BoardingServiceFormValues) => {
-    // In a real app, this would be an API call
-    const newService: BoardingService = {
-      id: `bs${Date.now()}`,
-      ...formData,
-      createdAt: new Date().toISOString(),
-    };
+  // Filter boarding pets based on search query and active tab
+  const filteredBoardingPets = boardingPets.filter(pet => {
+    // Filter by tab
+    if (activeTab !== "all" && pet.status !== activeTab) {
+      return false;
+    }
     
-    setBoardingServices([newService, ...boardingServices]);
+    // Filter by search query
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      return (
+        pet.petName.toLowerCase().includes(query) ||
+        pet.petType.toLowerCase().includes(query) ||
+        pet.petBreed.toLowerCase().includes(query) ||
+        pet.ownerName.toLowerCase().includes(query) ||
+        pet.ownerPhone.includes(query)
+      );
+    }
+    
+    return true;
+  });
+  
+  // Get pet initials
+  const getPetInitials = (name: string) => {
+    return name.charAt(0).toUpperCase();
   };
   
-  // Handle editing a boarding service
-  const handleEditService = (formData: BoardingServiceFormValues) => {
-    if (!selectedService) return;
+  // Generate avatar color based on pet name
+  const getAvatarColor = (name: string) => {
+    const colors = [
+      "bg-blue-100 text-blue-600",
+      "bg-green-100 text-green-600",
+      "bg-yellow-100 text-yellow-600",
+      "bg-red-100 text-red-600",
+      "bg-purple-100 text-purple-600",
+      "bg-pink-100 text-pink-600",
+      "bg-indigo-100 text-indigo-600",
+    ];
     
-    // In a real app, this would be an API call
-    const updatedServices = boardingServices.map(service => 
-      service.id === selectedService.id 
-        ? { ...service, ...formData } 
-        : service
-    );
-    
-    setBoardingServices(updatedServices);
+    const index = name.charCodeAt(0) % colors.length;
+    return colors[index];
   };
-  
-  // Handle deleting a boarding service
-  const handleDeleteService = () => {
-    if (!selectedService) return;
-    
-    // In a real app, this would be an API call
-    const updatedServices = boardingServices.filter(
-      service => service.id !== selectedService.id
-    );
-    
-    setBoardingServices(updatedServices);
-    setDeleteDialogOpen(false);
-    toast.success("Boarding service deleted successfully");
-  };
-  
-  // Open form for editing
-  const openEditForm = (service: BoardingService) => {
-    setSelectedService(service);
-    setFormOpen(true);
-  };
-  
-  // Open delete confirmation dialog
-  const openDeleteDialog = (service: BoardingService) => {
-    setSelectedService(service);
-    setDeleteDialogOpen(true);
-  };
-  
-  // Format currency
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-    }).format(amount);
+
+  const handleCreateBoarding = (data: any) => {
+    // In a real app, you would save this data to your backend
+    console.log("New boarding:", data);
+    toast.success("Boarding created successfully!");
+    setIsFormOpen(false);
   };
   
   return (
     <PageTransition>
-      <div className="container py-6 space-y-6">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <div>
-            <h1 className="text-2xl font-bold">Clinic Boarding Services</h1>
-            <p className="text-muted-foreground">
-              Manage boarding services offered by the clinic
-            </p>
-          </div>
+      <div className="container px-4 py-6 max-w-7xl mx-auto">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
+          <h1 className="text-2xl font-medium mb-4 md:mb-0">Boarding</h1>
           
-          <Button onClick={() => {
-            setSelectedService(null);
-            setFormOpen(true);
-          }}>
-            <Plus className="h-4 w-4 mr-2" />
-            Add Boarding Service
-          </Button>
+          <div className="flex flex-col sm:flex-row gap-2">
+            <Button onClick={() => setIsFormOpen(true)}>
+              <Plus className="h-4 w-4 mr-2" />
+              New Boarding
+            </Button>
+          </div>
         </div>
         
-        <Card>
-          <CardHeader className="pb-3">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-              <div>
-                <CardTitle>All Boarding Services</CardTitle>
-                <CardDescription>
-                  {filteredServices.length} total services
-                </CardDescription>
+        <div className="bg-card rounded-lg shadow-sm border p-4 mb-6">
+          <div className="flex flex-col md:flex-row md:items-center gap-4 mb-6">
+            <div className="relative w-full md:w-72">
+              <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search boarders..."
+                className="pl-9"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+            
+            <Tabs defaultValue="active" className="w-full" onValueChange={setActiveTab}>
+              <TabsList className="grid w-full max-w-md grid-cols-3">
+                <TabsTrigger value="active">Active</TabsTrigger>
+                <TabsTrigger value="inactive">Past</TabsTrigger>
+                <TabsTrigger value="all">All</TabsTrigger>
+              </TabsList>
+            </Tabs>
+          </div>
+          
+          {filteredBoardingPets.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {filteredBoardingPets.map(pet => (
+                <Card key={pet.id} className="overflow-hidden hover:shadow-md transition-shadow">
+                  <CardHeader className="pb-2">
+                    <div className="flex justify-between items-start">
+                      <div className="flex items-center">
+                        <Avatar className="h-10 w-10 mr-3">
+                          <AvatarFallback className={getAvatarColor(pet.petName)}>
+                            {getPetInitials(pet.petName)}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <CardTitle className="text-lg">{pet.petName}</CardTitle>
+                          <CardDescription>
+                            {pet.petType}, {pet.petBreed}
+                          </CardDescription>
+                        </div>
+                      </div>
+                      
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem>View Details</DropdownMenuItem>
+                          <DropdownMenuItem>Update Status</DropdownMenuItem>
+                          <DropdownMenuItem>Send Photo</DropdownMenuItem>
+                          <DropdownMenuItem>Contact Owner</DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+                  </CardHeader>
+                  
+                  <CardContent>
+                    <div className="space-y-3">
+                      <div className="flex justify-between">
+                        <div>
+                          <p className="text-sm text-muted-foreground">Owner</p>
+                          <p className="text-sm font-medium">{pet.ownerName}</p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-muted-foreground">Phone</p>
+                          <p className="text-sm font-medium">{pet.ownerPhone}</p>
+                        </div>
+                      </div>
+                      
+                      <div className="flex justify-between">
+                        <div>
+                          <p className="text-sm text-muted-foreground">Check In</p>
+                          <div className="flex items-center">
+                            <Calendar className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
+                            <p className="text-sm font-medium">{pet.checkInDate}</p>
+                          </div>
+                        </div>
+                        <div>
+                          <p className="text-sm text-muted-foreground">Check Out</p>
+                          <div className="flex items-center">
+                            <Calendar className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
+                            <p className="text-sm font-medium">{pet.checkOutDate}</p>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div>
+                        <p className="text-sm text-muted-foreground">Status</p>
+                        <div className="flex items-center gap-2 mt-1">
+                          <StatusBadge status={
+                            pet.status === "active" ? "in-progress" :
+                            pet.status === "inactive" ? "completed" :
+                            pet.status === "all" ? "upcoming" : undefined
+                          } />
+                          <div className="flex items-center text-xs text-muted-foreground">
+                            <Clock className="h-3 w-3 mr-1" />
+                            <span>Last updated 2h ago</span>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {pet.medications.length > 0 && (
+                        <div>
+                          <p className="text-sm text-muted-foreground">Medications</p>
+                          <div className="flex flex-wrap gap-1 mt-1">
+                            {pet.medications.map((medication, index) => (
+                              <Badge key={index} variant="outline" className="text-xs">
+                                {medication}
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-12">
+              <Home className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+              <h3 className="text-lg font-medium">No boarding pets found</h3>
+              <p className="text-muted-foreground mt-2">
+                Try adjusting your search criteria or add a new boarding
+              </p>
+            </div>
+          )}
+          
+          {filteredBoardingPets.length > 0 && (
+            <div className="mt-6 flex items-center justify-between">
+              <div className="text-sm text-muted-foreground">
+                Showing <span className="font-medium">{filteredBoardingPets.length}</span> of{" "}
+                <span className="font-medium">{boardingPets.length}</span> boarding pets
               </div>
               
-              <div className="w-full sm:w-auto">
-                <div className="relative">
-                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    type="search"
-                    placeholder="Search services..."
-                    className="pl-8 w-full sm:w-[260px]"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                  />
-                </div>
+              <div className="flex items-center space-x-2">
+                <Button variant="outline" size="icon" disabled>
+                  <ArrowLeft className="h-4 w-4" />
+                </Button>
+                <Button variant="outline" size="icon">
+                  <ArrowRight className="h-4 w-4" />
+                </Button>
               </div>
             </div>
-          </CardHeader>
-          
-          <CardContent>
-            <div className="rounded-md border">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Service</TableHead>
-                    <TableHead>Price/Day</TableHead>
-                    <TableHead>Max Stay</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Created</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredServices.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={6} className="text-center h-24">
-                        No boarding services found
-                      </TableCell>
-                    </TableRow>
-                  ) : (
-                    filteredServices.map((service) => (
-                      <TableRow key={service.id}>
-                        <TableCell>
-                          <div className="flex items-center gap-3">
-                            <Avatar className="h-9 w-9">
-                              <AvatarImage src={service.image} alt={service.name} />
-                              <AvatarFallback className="bg-primary/10 text-primary">
-                                {service.name.charAt(0)}
-                              </AvatarFallback>
-                            </Avatar>
-                            <div>
-                              <p className="font-medium">{service.name}</p>
-                              <p className="text-xs text-muted-foreground line-clamp-1">
-                                {service.details.amenities.slice(0, 2).join(", ")}
-                                {service.details.amenities.length > 2 && "..."}
-                              </p>
-                            </div>
-                          </div>
-                        </TableCell>
-                        <TableCell className="font-medium">
-                          {formatCurrency(service.pricePerDay)}
-                        </TableCell>
-                        <TableCell>{service.maxDayStay} days</TableCell>
-                        <TableCell>
-                          <Badge 
-                            variant={service.status === "available" ? "default" : "destructive"}
-                            className="capitalize"
-                          >
-                            {service.status}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center text-sm">
-                            <Calendar className="h-3.5 w-3.5 mr-1 text-muted-foreground" />
-                            {format(new Date(service.createdAt), "MMM d, yyyy")}
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="sm">
-                                Actions <ChevronDown className="h-4 w-4 ml-1" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuLabel>Options</DropdownMenuLabel>
-                              <DropdownMenuItem onClick={() => openEditForm(service)}>
-                                <Edit className="h-4 w-4 mr-2" />
-                                Edit
-                              </DropdownMenuItem>
-                              <DropdownMenuSeparator />
-                              <DropdownMenuItem 
-                                className="text-destructive"
-                                onClick={() => openDeleteDialog(service)}
-                              >
-                                <Trash2 className="h-4 w-4 mr-2" />
-                                Delete
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
-            </div>
-          </CardContent>
-        </Card>
+          )}
+        </div>
+
+        <BoardingForm 
+          open={isFormOpen}
+          onClose={() => setIsFormOpen(false)}
+          onSubmit={handleCreateBoarding}
+        />
       </div>
-      
-      {/* Boarding Service Form */}
-      <BoardingServiceForm
-        open={formOpen}
-        onClose={() => setFormOpen(false)}
-        onSubmit={selectedService ? handleEditService : handleCreateService}
-        initialData={selectedService || undefined}
-      />
-      
-      {/* Delete Confirmation Dialog */}
-      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Delete Boarding Service</DialogTitle>
-            <DialogDescription>
-              Are you sure you want to delete "{selectedService?.name}"? This action cannot be undone.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button variant="destructive" onClick={handleDeleteService}>
-              Delete
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </PageTransition>
   );
 };
 
-export default ClinicBoarding;
+export default Boarding;

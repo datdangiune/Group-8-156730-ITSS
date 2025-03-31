@@ -126,7 +126,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
                 <SidebarLink href="/services" icon={<Stethoscope size={18} />} onClick={onClose}>
                   Services
                 </SidebarLink>
-                <SidebarLink href="/clinic-boarding" icon={<Home size={18} />} onClick={onClose}>
+                <SidebarLink href="/boarding" icon={<Home size={18} />} onClick={onClose}>
                   Boarding
                 </SidebarLink>
               </nav>

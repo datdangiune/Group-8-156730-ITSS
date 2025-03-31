@@ -13,7 +13,7 @@ import Appointments from "./pages/Appointments";
 import AppointmentDetail from "./pages/AppointmentDetail";
 import MedicalRecords from "./pages/MedicalRecords";
 import Services from "./pages/Services";
-import ClinicBoarding from "./pages/Boarding";
+import Boarding from "./pages/Boarding";
 import BoardingServices from "./pages/BoardingServices";
 import Notifications from "./pages/Notifications";
 import Navbar from "./components/layout/Navbar";
@@ -45,7 +45,7 @@ const App = () => {
                   <Route path="/medical-records" element={<MedicalRecords />} />
                   <Route path="/services" element={<Services />} />
                   <Route path="/clinic-services" element={<ClinicServices />} />
-                  <Route path="/clinic-boarding" element={<ClinicBoarding />} />
+                  <Route path="/boarding" element={<Boarding />} />
                   <Route path="/boarding-services" element={<BoardingServices />} />
                   <Route path="/notifications" element={<Notifications />} />
                   <Route path="*" element={<NotFound />} />
