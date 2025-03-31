@@ -37,7 +37,7 @@ const AdminController = {
             res.status(500).json({ message: 'Error logging in', error: err.message });
         }
     },    
-    // Dashboard statistics
+    // Lấy thông tin bảng ở trang dashboard => test thành công, lưu ý tính tổng revenue 
     getDashboardStats: async (req, res) => {
         try {
             const totalUsers = await User.count({ where: { role: 'pet_owner' } });
@@ -107,7 +107,7 @@ getAllUsers: async (req, res) => {
         }
     },
     
-
+//=> MÁY HẾT PIN CHƯA KỊP TEST ĐỢI SẠC PIN 
     // Fetch appointments
     getAppointments : async (req, res) => {
         try {
