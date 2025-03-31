@@ -293,7 +293,7 @@ const Appointments = () => {
                 <SelectContent>
                   <SelectItem value="all">All statuses</SelectItem>
                   <SelectItem value="Scheduled">Scheduled</SelectItem>
-                  <SelectItem value="In progess">In Progress</SelectItem>
+                  <SelectItem value="In Progess">In Progress</SelectItem>
                   <SelectItem value="Done">Done</SelectItem>
                   <SelectItem value="Cancel">Cancel</SelectItem>
                 </SelectContent>
