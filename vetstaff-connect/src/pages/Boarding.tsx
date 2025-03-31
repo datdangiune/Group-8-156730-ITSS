@@ -174,7 +174,7 @@ const Boarding = () => {
                         <p className="text-sm text-muted-foreground">Status</p>
                         <div className="flex items-center gap-2 mt-1">
                           <StatusBadge status={
-                            pet.status === "active" ? "in-progress" :
+                            pet.status === "active" ? "In progress" :
                             pet.status === "inactive" ? "completed" :
                             pet.status === "all" ? "upcoming" : undefined
                           } />

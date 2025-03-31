@@ -18,7 +18,7 @@ import BoardingServices from "./pages/BoardingServices";
 import Notifications from "./pages/Notifications";
 import Navbar from "./components/layout/Navbar";
 import Sidebar from "./components/layout/Sidebar";
-
+import ClininBoarding from "@/pages/ClinicBoarding"
 const queryClient = new QueryClient();
 
 const App = () => {
@@ -46,6 +46,7 @@ const App = () => {
                   <Route path="/services" element={<Services />} />
                   <Route path="/clinic-services" element={<ClinicServices />} />
                   <Route path="/boarding" element={<Boarding />} />
+                  <Route path="/clinic-boarding" element={<ClininBoarding />} />
                   <Route path="/boarding-services" element={<BoardingServices />} />
                   <Route path="/notifications" element={<Notifications />} />
                   <Route path="*" element={<NotFound />} />

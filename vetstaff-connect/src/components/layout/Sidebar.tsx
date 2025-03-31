@@ -131,10 +131,15 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
                 </SidebarLink>
               </nav>
             </div>
-            
             <div className="mb-4">
-              <h3 className="px-4 text-sm font-medium text-muted-foreground">Clinic</h3>
+              <h3 className="px-4 text-sm font-medium text-muted-foreground">Clinic Management</h3>
               <nav className="mt-2 flex flex-col gap-1">
+                <SidebarLink href="/clinic-services" icon={<Stethoscope size={18} />} onClick={onClose}>
+                  Clinic Services
+                </SidebarLink>
+                <SidebarLink href="/clinic-boarding" icon={<Home size={18} />} onClick={onClose}>
+                  Clinic Boarding
+                </SidebarLink>
                 <SidebarLink href="/notifications" icon={<Heart size={18} />} onClick={onClose}>
                   Notifications
                 </SidebarLink>
@@ -143,6 +148,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
                 </SidebarLink>
               </nav>
             </div>
+
           </div>
         </ScrollArea>
       </div>
