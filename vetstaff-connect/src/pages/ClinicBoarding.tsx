@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { 
@@ -7,7 +7,6 @@ import {
   Calendar, 
   Trash2, 
   Edit, 
-  ArrowUpDown,
   ChevronDown 
 } from "lucide-react";
 import { PageTransition } from "@/components/animations/PageTransition";
@@ -15,7 +14,6 @@ import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -44,65 +42,13 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import BoardingServiceForm from "@/components/boarding/BoardingServiceForm";
 import { BoardingService, BoardingServiceFormValues } from "@/types/boardingService";
-
-// Mock data for boarding services
-const mockBoardingServices: BoardingService[] = [
-  {
-    id: "bs1",
-    name: "Standard Kennel",
-    pricePerDay: 35.00,
-    maxDayStay: 14,
-    image: "https://images.unsplash.com/photo-1582562124811-c09040d0a901?w=500&auto=format",
-    status: "available",
-    details: {
-      amenities: ["Daily Feeding", "Fresh Water", "Basic Exercise", "Regular Cleaning"],
-    },
-    createdAt: "2023-10-15T08:00:00.000Z",
-  },
-  {
-    id: "bs2",
-    name: "Premium Suite",
-    pricePerDay: 65.00,
-    maxDayStay: 30,
-    image: "https://images.unsplash.com/photo-1493962853295-0fd70327578a?w=500&auto=format",
-    status: "available",
-    details: {
-      amenities: ["Premium Food", "Spacious Area", "Extended Play Time", "Grooming", "Webcam Access"],
-    },
-    createdAt: "2023-10-10T10:30:00.000Z",
-  },
-  {
-    id: "bs3",
-    name: "Cat Condo",
-    pricePerDay: 40.00,
-    maxDayStay: 21,
-    image: "https://images.unsplash.com/photo-1535268647677-300dbf3d78d1?w=500&auto=format",
-    status: "available",
-    details: {
-      amenities: ["Cat Tree", "Cat Toys", "Premium Litter", "Daily Brushing", "Window Views"],
-    },
-    createdAt: "2023-09-28T14:15:00.000Z",
-  },
-  {
-    id: "bs4",
-    name: "Exotic Pet Suite",
-    pricePerDay: 85.00,
-    maxDayStay: 14,
-    image: "https://images.unsplash.com/photo-1441057206919-63d19fac2369?w=500&auto=format",
-    status: "unavailable",
-    details: {
-      amenities: ["Specialized Care", "Climate Control", "Species-Specific Housing", "Expert Handling"],
-    },
-    createdAt: "2023-09-20T09:45:00.000Z",
-  },
-];
+import { addNewBoardingService, fetchAvailableBoardingServices } from "@/service/Boarding";
 
 const ClinicBoarding: React.FC = () => {
   const navigate = useNavigate();
@@ -110,68 +56,127 @@ const ClinicBoarding: React.FC = () => {
   const [formOpen, setFormOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedService, setSelectedService] = useState<BoardingService | null>(null);
-  const [boardingServices, setBoardingServices] = useState<BoardingService[]>(mockBoardingServices);
-  
+  const [boardingServices, setBoardingServices] = useState<BoardingService[]>([]);
+  const token = localStorage.getItem("token");
+
+  // Fetch all boarding services on component mount
+  useEffect(() => {
+    const fetchServices = async () => {
+      if (!token) {
+        toast.error("Authentication token is missing. Please log in.");
+        return;
+      }
+
+      try {
+        const services = await fetchAvailableBoardingServices(token);
+        const mappedServices = services.map(service => ({
+          id: service.id,
+          name: service.name,
+          description: service.description || "",
+          pricePerDay: service.pricePerDay, // Ensure pricePerDay is a number
+          maxStay: service.maxStay, // Use maxStay to match the BoardingService type
+          status: service.status,
+          createdAt: service.createdAt,
+          image: service.image || "",
+        }));
+        setBoardingServices(mappedServices);
+      } catch (error: any) {
+        console.error("Error fetching boarding services:", error.message);
+        toast.error(error.message || "Failed to fetch boarding services");
+      }
+    };
+
+    fetchServices();
+  }, [token]);
+
   // Filter boarding services based on search query
   const filteredServices = boardingServices.filter(service => 
     service.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    service.details.amenities.some(amenity => 
-      amenity.toLowerCase().includes(searchQuery.toLowerCase())
-    )
+    service.description.toLowerCase().includes(searchQuery.toLowerCase())
   );
-  
+
   // Handle creating a new boarding service
-  const handleCreateService = (formData: BoardingServiceFormValues) => {
-    // In a real app, this would be an API call
-    const newService: BoardingService = {
-      id: `bs${Date.now()}`,
-      ...formData,
-      createdAt: new Date().toISOString(),
-    };
-    
-    setBoardingServices([newService, ...boardingServices]);
+  const handleCreateService = async (formData: BoardingServiceFormValues) => {
+    if (!token) {
+      toast.error("Authentication token is missing. Please log in.");
+      return;
+    }
+
+    // Validate required fields
+    if (!formData.name?.trim()) {
+      toast.error("Service name is required.");
+      return;
+    }
+    if (!formData.pricePerDay || formData.pricePerDay <= 0) {
+      toast.error("Price per day must be greater than 0.");
+      return;
+    }
+    if (!formData.maxStay || formData.maxStay <= 0) {
+      toast.error("Maximum stay must be greater than 0.");
+      return;
+    }
+    if (!formData.status) {
+      toast.error("Status is required.");
+      return;
+    }
+
+    try {
+      const response = await addNewBoardingService(token, {
+        serviceName: formData.name.trim(),
+        pricePerDay: formData.pricePerDay,
+        maxStayDays: formData.maxStay, // Use maxStay directly
+        status: formData.status,
+        image: formData.image || undefined,
+        amenities: formData.amenities || [],
+      });
+
+      const newService: BoardingService = {
+        id: response.data.id,
+        name: response.data.name || "Unnamed Service",
+        description: response.data.description || "",
+        pricePerDay: response.data.pricePerDay || 0,
+        maxStay: response.data.maxStay || 0,
+        status: response.data.status || "unavailable",
+        createdAt: response.data.createdAt || new Date().toISOString(),
+        image: response.data.image || "",
+        amenities: response.data.amenities || [],
+      };
+
+      setBoardingServices([newService, ...boardingServices]);
+      toast.success("Boarding service added successfully");
+      setFormOpen(false); // Close the form after successful submission
+    } catch (error: any) {
+      console.error("Error adding boarding service:", error.message);
+      toast.error(error.response?.data?.message || "Failed to add boarding service");
+    }
   };
-  
-  // Handle editing a boarding service
-  const handleEditService = (formData: BoardingServiceFormValues) => {
-    if (!selectedService) return;
-    
-    // In a real app, this would be an API call
-    const updatedServices = boardingServices.map(service => 
-      service.id === selectedService.id 
-        ? { ...service, ...formData } 
-        : service
-    );
-    
-    setBoardingServices(updatedServices);
-  };
-  
+
   // Handle deleting a boarding service
   const handleDeleteService = () => {
     if (!selectedService) return;
-    
+
     // In a real app, this would be an API call
     const updatedServices = boardingServices.filter(
       service => service.id !== selectedService.id
     );
-    
+
     setBoardingServices(updatedServices);
     setDeleteDialogOpen(false);
     toast.success("Boarding service deleted successfully");
   };
-  
+
   // Open form for editing
   const openEditForm = (service: BoardingService) => {
     setSelectedService(service);
     setFormOpen(true);
   };
-  
+
   // Open delete confirmation dialog
   const openDeleteDialog = (service: BoardingService) => {
     setSelectedService(service);
     setDeleteDialogOpen(true);
   };
-  
+
   // Format currency
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -179,7 +184,7 @@ const ClinicBoarding: React.FC = () => {
       currency: 'USD',
     }).format(amount);
   };
-  
+
   return (
     <PageTransition>
       <div className="container py-6 space-y-6">
@@ -259,8 +264,7 @@ const ClinicBoarding: React.FC = () => {
                             <div>
                               <p className="font-medium">{service.name}</p>
                               <p className="text-xs text-muted-foreground line-clamp-1">
-                                {service.details.amenities.slice(0, 2).join(", ")}
-                                {service.details.amenities.length > 2 && "..."}
+                                {service.description}
                               </p>
                             </div>
                           </div>
@@ -268,7 +272,7 @@ const ClinicBoarding: React.FC = () => {
                         <TableCell className="font-medium">
                           {formatCurrency(service.pricePerDay)}
                         </TableCell>
-                        <TableCell>{service.maxDayStay} days</TableCell>
+                        <TableCell>{service.maxStay}</TableCell>
                         <TableCell>
                           <Badge 
                             variant={service.status === "available" ? "default" : "destructive"}
@@ -321,7 +325,7 @@ const ClinicBoarding: React.FC = () => {
       <BoardingServiceForm
         open={formOpen}
         onClose={() => setFormOpen(false)}
-        onSubmit={selectedService ? handleEditService : handleCreateService}
+        onSubmit={selectedService ? undefined : handleCreateService}
         initialData={selectedService || undefined}
       />
       

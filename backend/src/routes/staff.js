@@ -15,5 +15,7 @@ router.get('/owners/:ownerId/pets', verifyTokenStaff, StaffController.getPetsByO
 router.post('/clinic-services/create', verifyTokenStaff, StaffController.createService)
 router.get('/clinic-services', verifyTokenStaff, StaffController.getServices); // Fetch services
 router.get('/user-services', verifyTokenStaff, StaffController.getUserServices); // Fetch services
+router.get('/boarding-services/available', verifyTokenStaff, StaffController.getAvailableBoardingServices);
+router.post('/boarding-services/new', verifyTokenStaff, StaffController.addNewBoardingService); // Add route for adding new boarding service
 
 module.exports = router;

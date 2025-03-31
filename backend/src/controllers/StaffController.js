@@ -524,7 +524,105 @@ const StaffController = {
                 error: err.message,
             });
         }
+    },
+
+    async getAvailableBoardingServices(req, res) {
+        try {
+            // Fetch boarding services with status 'available'
+            const boardingServices = await Boarding.findAll({
+                where: { status: 'available' },
+                attributes: ['id', 'price', 'maxday', 'image', 'status', 'details', 'created_at'],
+                order: [['created_at', 'DESC']], // Sort by creation date
+            });
+
+            if (!boardingServices.length) {
+                return res.status(404).json({
+                    success: false,
+                    message: 'No available boarding services found',
+                });
+            }
+
+            // Format the data for frontend
+            const formattedBoardingServices = boardingServices.map(service => ({
+                id: service.id,
+                name: service.details?.name || 'Unnamed Service',
+                description: service.details?.description || '',
+                pricePerDay: service.price,
+                maxStay: service.maxday,
+                status: service.status,
+                createdAt: service.created_at,
+                image: service.image || null,
+                amenities: service.details?.amenities || [], // Include amenities if available
+            }));
+
+            res.status(200).json({
+                success: true,
+                message: 'Available boarding services fetched successfully',
+                data: formattedBoardingServices,
+            });
+        } catch (err) {
+            console.error('Error fetching available boarding services:', err);
+            res.status(500).json({
+                success: false,
+                message: 'Error fetching available boarding services',
+                error: err.message,
+            });
+        }
+    },
+
+    async addNewBoardingService(req, res) {
+        try {
+            const { serviceName, pricePerDay, maxStayDays, status, amenities } = req.body;
+            let image = null;
+    
+            // Kiểm tra các trường bắt buộc
+            if (!serviceName || !pricePerDay || !maxStayDays || !status) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Missing required fields",
+                });
+            }
+    
+            // Xử lý file ảnh nếu có
+            if (req.file) {
+                try {
+                    image = await uploadFile(req.file); // Upload file và lấy URL
+                } catch (error) {
+                    console.error("Error uploading image:", error);
+                    return res.status(500).json({
+                        success: false,
+                        message: "Error uploading image",
+                    });
+                }
+            }
+    
+            // Tạo dịch vụ boarding mới
+            const newBoardingService = await Boarding.create({
+                price: parseFloat(pricePerDay),
+                maxday: parseInt(maxStayDays),
+                status: status || "available",
+                image: image || null,
+                details: {
+                    name: serviceName,
+                    amenities: amenities || [], // Mặc định là mảng rỗng nếu không có
+                },
+            });
+    
+            return res.status(201).json({
+                success: true,
+                message: "New boarding service added successfully",
+                data: newBoardingService,
+            });
+    
+        } catch (err) {
+            console.error("Error adding new boarding service:", err);
+            return res.status(500).json({
+                success: false,
+                message: "Error adding new boarding service",
+                error: err.message,
+            });
+        }
     }
-};
+};    
 
 module.exports = StaffController;
