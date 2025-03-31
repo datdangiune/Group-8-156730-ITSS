@@ -46,7 +46,7 @@ const Services: React.FC = () => {
   // Filter services based on search query and filters
   const filteredServices = services.filter((service) => {
     const matchesSearch =
-      service.serviceName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      service.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       service.pet?.name.toLowerCase().includes(searchQuery.toLowerCase());
 
     const matchesStatus =
@@ -76,7 +76,7 @@ const Services: React.FC = () => {
   const handleCompleteService = (serviceId: number) => {
     setServices((prev) =>
       prev.map((service) =>
-        service.serviceId === serviceId
+        service.id === serviceId
           ? { ...service, status: "completed" }
           : service
       )
@@ -87,7 +87,7 @@ const Services: React.FC = () => {
   const handleCancelService = (serviceId: number) => {
     setServices((prev) =>
       prev.map((service) =>
-        service.serviceId === serviceId
+        service.id === serviceId
           ? { ...service, status: "cancelled" }
           : service
       )
@@ -204,12 +204,12 @@ const Services: React.FC = () => {
                 ) : (
                   filteredServices.map((service) => (
                     <tr
-                      key={service.serviceId}
+                      key={service.id}
                       className="hover:bg-muted/50"
                     >
                       <td className="px-4 py-4">
                         <div>
-                          <p className="font-medium">{service.serviceName}</p>
+                          <p className="font-medium">{service.name}</p>
                           <p className="text-sm text-muted-foreground">
                             {service.description}
                           </p>
@@ -255,7 +255,7 @@ const Services: React.FC = () => {
                               variant="outline"
                               size="sm"
                               onClick={() =>
-                                handleCancelService(service.serviceId)
+                                handleCancelService(service.id)
                               }
                               className="text-destructive border-destructive hover:bg-destructive/10"
                             >
@@ -268,7 +268,7 @@ const Services: React.FC = () => {
                               variant="outline"
                               size="sm"
                               onClick={() =>
-                                handleCompleteService(service.serviceId)
+                                handleCompleteService(service.id)
                               }
                               className="text-success border-success hover:bg-success/10"
                             >

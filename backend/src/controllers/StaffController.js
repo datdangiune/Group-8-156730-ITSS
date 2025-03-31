@@ -1,47 +1,43 @@
 const { assign } = require('nodemailer/lib/shared');
-const { Appointment, Service, Boarding, Notification, Pet, User, ServiceUser } = require('../models');
+const { Appointment, Service, Boarding, Notification, Pet, User, ServiceUser, BoardingUser } = require('../models');
 const { Op } = require('sequelize');
 
 const StaffController = {
     // Lấy thống kê dashboard
     async getDashboardStats(req, res) {
         try {
-    // Lấy ngày hiện tại
-    const today = new Date();
-    today.setDate(today.getDate() + 2); // Cộng thêm 2 ngày
+            // Get the current date
+            const today = new Date();
 
-    // Lấy khoảng thời gian từ đầu ngày đến cuối ngày
-    const startOfDay = new Date(today.setHours(0, 0, 0, 0)).toISOString(); // 2025-03-30T00:00:00.000Z
-    const endOfDay = new Date(today.setHours(23, 59, 59, 999)).toISOString(); // 2025-03-30T23:59:59.999Z
+            // Set the start and end of the day
+            const startOfDay = new Date(today.setHours(0, 0, 0, 0)).toISOString();
+            const endOfDay = new Date(today.setHours(23, 59, 59, 999)).toISOString();
 
-    console.log('Start of Day:', startOfDay);
-    console.log('End of Day:', endOfDay);
-
-    // Truy vấn dựa trên khoảng thời gian
-    const counttodayAppointments = await Appointment.count({
-        where: {
-            appointment_date: {
-                [Op.between]: [startOfDay, endOfDay], // Sử dụng khoảng thời gian
-            },
-        },
-    });
-
-            // Lấy số lượng thú cưng đang lưu trú
-            const activeBoarders = await Boarding.count({
-                where: { status: 'ongoing' },
+            // Count today's appointments
+            const counttodayAppointments = await Appointment.count({
+                where: {
+                    appointment_date: {
+                        [Op.between]: [startOfDay, endOfDay],
+                    },
+                },
             });
 
-            // Lấy số lượng dịch vụ đang chờ xử lý
+            // Count active boarders (status: 'available')
+            const activeBoarders = await Boarding.count({
+                where: { status: 'available' },
+            });
+
+            // Count pending services (status: 'available')
             const pendingServices = await Service.count({
                 where: { status: 'available' },
             });
 
-            // Lấy số lượng thông báo chưa đọc
+            // Count unread notifications
             const unreadNotifications = await Notification.count({
                 where: { is_read: false },
             });
 
-            // Trả về kết quả
+            // Return the results
             res.status(200).json({
                 success: true,
                 message: 'Dashboard stats fetched successfully',
@@ -466,6 +462,65 @@ const StaffController = {
             res.status(500).json({
                 success: false,
                 message: 'Error fetching user services',
+                error: err.message,
+            });
+        }
+    },
+
+    async getBoardingUserDetails(req, res) {
+        try {
+            const boardingUsers = await BoardingUser.findAll({
+                include: [
+                    {
+                        model: User,
+                        as: 'user',
+                        attributes: ['id', 'username', 'phone'], // Include owner details
+                    },
+                    {
+                        model: Pet,
+                        as: 'pet',
+                        attributes: ['id', 'name', 'type', 'breed'], // Include pet details
+                    },
+                ],
+                attributes: ['id', 'start_date', 'end_date', 'total_price', 'status', 'updated_at'], // Include boarding details
+                order: [['updated_at', 'DESC']], // Sort by last updated
+            });
+
+            if (!boardingUsers.length) {
+                return res.status(404).json({
+                    success: false,
+                    message: 'No boarding users found',
+                });
+            }
+
+            // Format the data for frontend
+            const formattedBoardingUsers = boardingUsers.map(boarding => ({
+                pet: {
+                    name: boarding.pet.name,
+                    type: boarding.pet.type,
+                    breed: boarding.pet.breed,
+                },
+                owner: {
+                    name: boarding.user.username,
+                    phone: boarding.user.phone,
+                },
+                checkIn: boarding.start_date,
+                checkOut: boarding.end_date,
+                status: boarding.status || 'In progress',
+                lastUpdated: boarding.updated_at,
+                medications: boarding.details?.medications || [], // Include medications if available
+            }));
+
+            res.status(200).json({
+                success: true,
+                message: 'Boarding user details fetched successfully',
+                data: formattedBoardingUsers,
+            });
+        } catch (err) {
+            console.error('Error fetching boarding user details:', err);
+            res.status(500).json({
+                success: false,
+                message: 'Error fetching boarding user details',
                 error: err.message,
             });
         }

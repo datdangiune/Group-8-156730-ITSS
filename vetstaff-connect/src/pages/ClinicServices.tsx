@@ -218,22 +218,21 @@ const ClinicServices = () => {
 
         console.log("New service response:", newService); // Log the response for debugging
 
-        if (!newService || typeof newService.id === "undefined") {
+        if (!newService || typeof newService.id === "undefined") { // Use 'id' instead of 'serviceId'
           console.error("Invalid response from the server:", response);
           throw new Error("Invalid response from the server");
         }
 
         // Transform newService to match ClinicService type
         const transformedService: ClinicService = {
-          id: newService.id, 
-          type: newService.type || "default-type", // 🔹 Thêm type, có thể đặt giá trị mặc định
+          id: newService.id, // Use 'id' from the server response
+          type: newService.type || "default-type",
           name: newService.name || "Unnamed Service",
           description: newService.description || "",
           price: typeof newService.price === "number" ? newService.price : parseFloat(newService.price) || 0,
           duration: newService.duration || "",
           image: newService.image || "",
           status: (newService.status as "available" | "unavailable") || "unavailable",
-
         };
         
 
