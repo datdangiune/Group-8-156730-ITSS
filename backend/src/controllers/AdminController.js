@@ -43,20 +43,30 @@ const AdminController = {
             const totalUsers = await User.count({ where: { role: 'pet_owner' } });
             const ongoingBoarders = await Boarding.count({ where: { status: 'ongoing' } });
             const availableServices = await Service.count({ where: { status: 'available' } });
+    
             const revenueOverview = await Payment.findAll({
-                attributes: [[Sequelize.fn('SUM', Sequelize.col('amount')), 'totalRevenue']],
-                where: { createdAt: { [Op.gte]: new Date(new Date().getFullYear(), 0, 1) } },
-                group: [Sequelize.fn('MONTH', Sequelize.col('createdAt'))],
+                attributes: [
+                    [Sequelize.fn('SUM', Sequelize.col('amount')), 'totalRevenue'],
+                    [Sequelize.literal("EXTRACT(MONTH FROM payment_date)"), 'month']
+                ],
+                where: { 
+                    payment_date: { [Op.gte]: new Date(new Date().getFullYear(), 0, 1) }
+                },
+                group: [Sequelize.literal("EXTRACT(MONTH FROM payment_date)")],
+                order: [[Sequelize.literal("EXTRACT(MONTH FROM payment_date)"), 'ASC']]
             });
+    
             const servicesByCategory = await Service.findAll({
                 attributes: ['type', [Sequelize.fn('COUNT', Sequelize.col('id')), 'count']],
                 group: ['type'],
             });
-            res.json({ totalUsers, activeBoarders, pendingServices, revenueOverview, servicesByCategory });
+    
+            res.json({ totalUsers, ongoingBoarders, availableServices, revenueOverview, servicesByCategory });
         } catch (error) {
             res.status(500).json({ error: error.message });
         }
     },
+    
 
     // Lấy danh sách user => test thành công
 getAllUsers: async (req, res) => {
@@ -69,7 +79,7 @@ getAllUsers: async (req, res) => {
         res.status(500).json({ success: false, message: error.message });
     }
 },
-// Thêm user => 
+// Thêm user => test thành công
     addUser: async (req, res) => {
         try {
             const { name, email, role, username, phone_number } = req.body;
