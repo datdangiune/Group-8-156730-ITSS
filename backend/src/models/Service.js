@@ -46,7 +46,7 @@ const Service = sequelize.define('Service', {
     },
     createdAt: {
         type: DataTypes.DATE,
-        field: 'created_at', // Map to the existing 'created_at' column
+        field: 'created_at',
     },
 }, {
     tableName: 'services',
