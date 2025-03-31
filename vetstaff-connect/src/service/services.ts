@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_BASE_URL = "http://localhost:3000/api/v1/staff";
+const API_BASE_URL = "http://localhost:3000/api/v1"; // Adjusted base URL if necessary
 
 // Define interfaces
 export interface Pet {
@@ -30,7 +30,9 @@ interface CreateServiceRequest {
   duration: string;
   status?: string;
   image?: string;
-  details?: object;
+  details?: {
+    included: string[];
+  };
 }
 
 interface CreateServiceResponse {
@@ -40,7 +42,7 @@ interface CreateServiceResponse {
 
 export const fetchServices = async (token: string): Promise<any> => {
   try {
-    const response = await axios.get(`${API_BASE_URL}/clinic-services`, {
+    const response = await axios.get(`${API_BASE_URL}/staff/clinic-services`, {
       headers: { Authorization: `Bearer ${token}` }, // Include the token in the Authorization header
     });
     return response.data.data;
@@ -52,7 +54,7 @@ export const fetchServices = async (token: string): Promise<any> => {
 
 export const fetchUserServices = async (token: string): Promise<Service[]> => {
   try {
-    const response = await axios.get(`${API_BASE_URL}/user-services`, {
+    const response = await axios.get(`${API_BASE_URL}/staff/user-services`, {
       headers: { Authorization: `Bearer ${token}` }, // Include the token in the Authorization header
     });
     return response.data.data;
@@ -67,12 +69,14 @@ export const fetchCreateService = async (
   requestData: CreateServiceRequest
 ): Promise<CreateServiceResponse> => {
   try {
-    const response = await axios.post(`${API_BASE_URL}/clinic-services`, requestData, {
+    const response = await axios.post(`${API_BASE_URL}/staff/clinic-services/create`, requestData, {
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
     });
+
+    console.log("Backend response:", response.data); // Log the response for debugging
 
     if (response.status !== 201) {
       throw new Error(response.data.message || "Failed to create service");

@@ -16,7 +16,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { X, Save } from "lucide-react";
+import { X, Save, Upload } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -39,6 +39,7 @@ const serviceFormSchema = z.object({
   description: z.string().min(2, { message: "Description is required" }),
   price: z.string().min(1, { message: "Price is required" }),
   type: z.string().min(1, { message: "Service type is required" }),
+  duration: z.string().min(1, { message: "Duration is required" }),
   notes: z.string().optional(),
   status: z.string().min(1, { message: "Status is required" }),
 });
@@ -59,6 +60,7 @@ const EditServiceForm: React.FC<EditServiceFormProps> = ({
   onSubmit,
 }) => {
   const isEditMode = !!service;
+  const [serviceImage, setServiceImage] = React.useState<string | null>(null);
 
   const form = useForm<ServiceFormValues>({
     resolver: zodResolver(serviceFormSchema),
@@ -67,16 +69,34 @@ const EditServiceForm: React.FC<EditServiceFormProps> = ({
       description: "",
       price: "",
       type: "",
+      duration: "",
       notes: "",
       status: "active",
     },
   });
 
+  React.useEffect(() => {
+    if (service) {
+      form.reset(service);
+    }
+  }, [service, form]);
+
   const handleSubmit = (data: ServiceFormValues) => {
-    onSubmit(data);
+    onSubmit({ ...data, image: serviceImage || undefined });
     form.reset();
     onClose();
     toast.success(`Service ${isEditMode ? "updated" : "created"} successfully`);
+  };
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setServiceImage(e.target?.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   return (
@@ -160,6 +180,26 @@ const EditServiceForm: React.FC<EditServiceFormProps> = ({
 
                 <FormField
                   control={form.control}
+                  name="duration"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Duration (minutes)</FormLabel>
+                      <FormControl>
+                        <Input 
+                          type="number" 
+                          min="5" 
+                          step="5" 
+                          placeholder="30"
+                          {...field} 
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
                   name="status"
                   render={({ field }) => (
                     <FormItem>
@@ -174,10 +214,10 @@ const EditServiceForm: React.FC<EditServiceFormProps> = ({
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="active">Active</SelectItem>
-                          <SelectItem value="inactive">Inactive</SelectItem>
-                          <SelectItem value="discontinued">Discontinued</SelectItem>
+                          <SelectItem value="active">Available</SelectItem>
+                          <SelectItem value="inactive">Unavailable</SelectItem>
                           <SelectItem value="seasonal">Seasonal</SelectItem>
+                          <SelectItem value="discontinued">Discontinued</SelectItem>
                         </SelectContent>
                       </Select>
                       <FormMessage />
@@ -195,7 +235,7 @@ const EditServiceForm: React.FC<EditServiceFormProps> = ({
                     <FormControl>
                       <Textarea
                         placeholder="Enter service description"
-                        rows={2}
+                        rows={3}
                         {...field}
                       />
                     </FormControl>
@@ -203,6 +243,44 @@ const EditServiceForm: React.FC<EditServiceFormProps> = ({
                   </FormItem>
                 )}
               />
+
+              <div className="space-y-2">
+                <FormLabel>Service Image</FormLabel>
+                <div className="flex flex-col space-y-2">
+                  {serviceImage ? (
+                    <div className="relative h-40 w-full">
+                      <img
+                        src={serviceImage}
+                        alt="Service preview"
+                        className="h-full w-full object-cover rounded-md"
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="absolute top-2 right-2 bg-background/80"
+                        onClick={() => setServiceImage(null)}
+                      >
+                        Remove
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="border-2 border-dashed border-muted-foreground/25 rounded-md p-8 flex flex-col items-center justify-center bg-muted/50 h-40">
+                      <Upload className="h-8 w-8 text-muted-foreground mb-2" />
+                      <p className="text-sm text-muted-foreground text-center">
+                        Click to upload or drag and drop
+                      </p>
+                    </div>
+                  )}
+                  
+                  <Input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                    className={serviceImage ? "hidden" : ""}
+                  />
+                </div>
+              </div>
               
               <FormField
                 control={form.control}
@@ -213,7 +291,7 @@ const EditServiceForm: React.FC<EditServiceFormProps> = ({
                     <FormControl>
                       <Textarea
                         placeholder="Enter any additional notes"
-                        rows={3}
+                        rows={2}
                         {...field}
                       />
                     </FormControl>
@@ -228,7 +306,7 @@ const EditServiceForm: React.FC<EditServiceFormProps> = ({
               <DrawerFooter className="px-0 pb-0">
                 <Button type="submit" className="w-full">
                   <Save className="h-4 w-4 mr-2" />
-                  Save Service
+                  {isEditMode ? "Update Service" : "Add Service"}
                 </Button>
               </DrawerFooter>
             </form>

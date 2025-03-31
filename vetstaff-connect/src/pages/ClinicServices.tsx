@@ -27,7 +27,7 @@ import StatusBadge from "@/components/dashboard/StatusBadge";
 import { Search, Plus, Edit, Image, ArrowLeft, Trash2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { fetchServices } from "@/service/services";
+import { fetchServices, fetchCreateService } from "@/service/services";
 
 // Type for clinic services
 interface ClinicService {
@@ -49,17 +49,33 @@ const ClinicServices = () => {
   
   // Form state
   const [formData, setFormData] = useState({
+    type: "",
     name: "",
     description: "",
     price: "",
     duration: "",
     image: "",
-    status: "available" as "available" | "unavailable"
+    status: "available" as "available" | "unavailable",
+    whatsIncluded: [] as string[],
   });
   
   // Ref for image upload
   const fileInputRef = useRef<HTMLInputElement>(null);
   
+  const [includedItem, setIncludedItem] = useState("");
+  const addIncludedItem = () => {
+    if (includedItem.trim()) {
+      setFormData(prev => ({ ...prev, whatsIncluded: [...prev.whatsIncluded, includedItem.trim()] }));
+      setIncludedItem("");
+    }
+  };
+  const removeIncludedItem = (index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      whatsIncluded: prev.whatsIncluded.filter((_, i) => i !== index),
+    }));
+  };
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -84,12 +100,14 @@ const ClinicServices = () => {
   // Reset form
   const resetForm = () => {
     setFormData({
+      type: "",
       name: "",
       description: "",
       price: "",
       duration: "",
       image: "",
-      status: "available"
+      status: "available",
+      whatsIncluded: [],
     });
     setEditingService(null);
   };
@@ -104,29 +122,51 @@ const ClinicServices = () => {
   const handleEdit = (service: ClinicService) => {
     setEditingService(service);
     setFormData({
+      type: "",
       name: service.name,
       description: service.description,
       price: service.price.toString(),
       duration: service.duration,
       image: service.image,
-      status: service.status
+      status: service.status,
+      whatsIncluded: [],
     });
     setDialogOpen(true);
   };
   
   // Handle image upload
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      // In a real app, this would upload to a server
-      // For now, we'll create a local URL for preview
-      const imageUrl = URL.createObjectURL(file);
-      setFormData(prev => ({ ...prev, image: imageUrl }));
+      try {
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("upload_preset", "default_preset"); // Replace with your Cloudinary upload preset
+
+        const response = await fetch(
+          `https://api.cloudinary.com/v1_1/dnmosnoqi/image/upload`,
+          {
+            method: "POST",
+            body: formData,
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error("Failed to upload image to Cloudinary");
+        }
+
+        const data = await response.json();
+        setFormData((prev) => ({ ...prev, image: data.secure_url })); // Use the secure URL from Cloudinary
+        toast.success("Image uploaded successfully");
+      } catch (error) {
+        console.error("Error uploading image:", error);
+        toast.error("Failed to upload image");
+      }
     }
   };
   
   // Handle input changes
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
@@ -145,56 +185,84 @@ const ClinicServices = () => {
   };
   
   // Handle form submission
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     const price = parseFloat(formData.price);
     if (isNaN(price) || price <= 0) {
       toast.error("Please enter a valid price");
       return;
     }
-    
-    if (!formData.name || !formData.description || !formData.duration) {
+
+    if (!formData.name || !formData.description || !formData.duration || !formData.type) {
       toast.error("Please fill all required fields");
       return;
     }
-    
-    // If we're editing an existing service
-    if (editingService) {
-      setServices(prevServices =>
-        prevServices.map(service =>
-          service.id === editingService.id
-            ? {
-                ...service,
-                name: formData.name,
-                description: formData.description,
-                price: price,
-                duration: formData.duration,
-                image: formData.image || service.image,
-                status: formData.status
-              }
-            : service
-        )
-      );
-      toast.success("Service updated successfully");
-    } else {
-      // Creating a new service
-      const newService: ClinicService = {
-        id: `cs${Date.now()}`,
-        name: formData.name,
-        description: formData.description,
-        price: price,
-        duration: formData.duration,
-        image: formData.image || "https://images.unsplash.com/photo-1465146344425-f00d5f5c8f07?auto=format&fit=crop&w=300&h=200",
-        status: formData.status
-      };
-      
-      setServices(prev => [...prev, newService]);
-      toast.success("Service created successfully");
+
+    try {
+      const token = localStorage.getItem("token") || ""; // Replace with actual token retrieval logic
+
+      if (editingService) {
+        setServices(prevServices =>
+          prevServices.map(service =>
+            service.id === editingService.id
+              ? {
+                  ...service,
+                  name: formData.name,
+                  description: formData.description,
+                  price: price,
+                  duration: formData.duration,
+                  image: formData.image || service.image,
+                  status: formData.status,
+                }
+              : service
+          )
+        );
+        toast.success("Service updated successfully");
+      } else {
+        // Creating a new service
+        const requestData = {
+          type: formData.type,
+          name: formData.name,
+          description: formData.description,
+          price: price,
+          duration: formData.duration,
+          status: formData.status,
+          image: formData.image,
+          details: { included: formData.whatsIncluded },
+        };
+
+        const response = await fetchCreateService(token, requestData);
+        const newService = response.service;
+
+        console.log("New service response:", newService); // Log the response for debugging
+
+        if (!newService || typeof newService.id === "undefined") {
+          console.error("Invalid response from the server:", response);
+          throw new Error("Invalid response from the server");
+        }
+
+        // Transform newService to match ClinicService type
+        const transformedService: ClinicService = {
+          id: newService.id.toString(), // Use `id` instead of `serviceId`
+          name: newService.serviceName || "Unnamed Service",
+          description: newService.description || "",
+          price: typeof newService.price === "number" ? newService.price : parseFloat(newService.price) || 0,
+          duration: newService.duration || "",
+          image: newService.image || "",
+          status: (newService.status as "available" | "unavailable") || "unavailable",
+        };
+
+        setServices(prev => [...prev, transformedService]);
+        toast.success("Service created successfully");
+      }
+
+      setDialogOpen(false);
+      resetForm();
+    } catch (error: any) {
+      console.error("Error creating service:", error.message);
+      toast.error("Failed to create service");
     }
-    
-    setDialogOpen(false);
-    resetForm();
   };
   
   // Handle service deletion
@@ -310,115 +378,191 @@ const ClinicServices = () => {
             </DialogHeader>
             
             <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">Service Name *</Label>
-                <Input
-                  id="name"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleInputChange}
-                  placeholder="Enter service name"
-                  required
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="description">Description *</Label>
-                <Textarea
-                  id="description"
-                  name="description"
-                  value={formData.description}
-                  onChange={handleInputChange}
-                  placeholder="Enter service description"
-                  required
-                />
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="price">Price (VND) *</Label>
-                  <Input
-                    id="price"
-                    name="price"
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    value={formData.price}
-                    onChange={handleInputChange}
-                    placeholder="0.00"
-                    required
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="duration">Duration *</Label>
-                  <Input
-                    id="duration"
-                    name="duration"
-                    value={formData.duration}
-                    onChange={handleInputChange}
-                    placeholder="e.g. 30 min"
-                    required
-                  />
-                </div>
-              </div>
-              
-              <div className="space-y-2">
-                <Label>Service Image</Label>
-                <div className="grid grid-cols-[1fr_auto] gap-2">
-                  <div className="border rounded-md p-1 flex items-center overflow-hidden">
-                    {formData.image ? (
-                      <div className="relative w-full h-12">
-                        <img
-                          src={formData.image}
-                          alt="Service preview"
-                          className="h-full object-cover mx-auto"
-                        />
-                      </div>
-                    ) : (
-                      <p className="text-sm text-muted-foreground p-2">No image selected</p>
-                    )}
-                  </div>
-                  <Button 
-                    type="button" 
-                    variant="outline"
-                    onClick={() => fileInputRef.current?.click()}
-                  >
-                    Upload
-                  </Button>
-                  <input
-                    type="file"
-                    ref={fileInputRef}
-                    className="hidden"
-                    accept="image/*"
-                    onChange={handleImageUpload}
-                  />
-                </div>
-              </div>
-              
-              <DialogFooter className="flex justify-between sm:justify-between">
-                {editingService && (
-                  <Button 
-                    type="button" 
-                    variant="destructive"
-                    onClick={() => handleDelete(editingService.id)}
-                  >
-                    <Trash2 className="h-4 w-4 mr-2" />
-                    Delete
-                  </Button>
-                )}
-                <div className="flex gap-2">
-                  <DialogClose asChild>
-                    <Button type="button" variant="outline">
-                      Cancel
-                    </Button>
-                  </DialogClose>
-                  <Button type="submit">
-                    {editingService ? "Update Service" : "Add Service"}
-                  </Button>
-                </div>
-              </DialogFooter>
-            </form>
+  {/* Service Type Dropdown */}
+  <div className="space-y-2">
+    <Label htmlFor="type">Service Type *</Label>
+    <select
+      id="type"
+      name="type"
+      value={formData.type}
+      onChange={handleInputChange}
+      required
+      className="border rounded-md p-2 w-full"
+    >
+      <option value="">Select service type</option>
+      <option value="grooming">Grooming</option>
+      <option value="boarding">Boarding</option>
+      <option value="medical">Medical</option>
+    </select>
+  </div>
+
+  {/* Service Name */}
+  <div className="space-y-2">
+    <Label htmlFor="name">Service Name *</Label>
+    <Input
+      id="name"
+      name="name"
+      value={formData.name}
+      onChange={handleInputChange}
+      placeholder="Enter service name"
+      required
+    />
+  </div>
+
+  {/* Description */}
+  <div className="space-y-2">
+    <Label htmlFor="description">Description *</Label>
+    <Textarea
+      id="description"
+      name="description"
+      value={formData.description}
+      onChange={handleInputChange}
+      placeholder="Enter service description"
+      required
+    />
+  </div>
+
+  {/* Price & Duration */}
+  <div className="grid grid-cols-2 gap-4">
+    <div className="space-y-2">
+      <Label htmlFor="price">Price (VND) *</Label>
+      <Input
+        id="price"
+        name="price"
+        type="number"
+        step="0.01"
+        min="0"
+        value={formData.price}
+        onChange={handleInputChange}
+        placeholder="0.00"
+        required
+      />
+    </div>
+    <div className="space-y-2">
+      <Label htmlFor="duration">Duration (minutes) *</Label>
+      <Input
+        id="duration"
+        name="duration"
+        type="number"
+        min="1"
+        value={formData.duration}
+        onChange={handleInputChange}
+        placeholder="e.g. 30"
+        required
+      />
+    </div>
+  </div>
+
+  {/* Service Status Dropdown */}
+  <div className="space-y-2">
+    <Label htmlFor="status">Status *</Label>
+    <select
+      id="status"
+      name="status"
+      value={formData.status}
+      onChange={handleInputChange}
+      required
+      className="border rounded-md p-2 w-full"
+    >
+      <option value="">Select status</option>
+      <option value="available">Available</option>
+      <option value="unavailable">Unavailable</option>
+    </select>
+  </div>
+
+  {/* What's Included Section */}
+  <div className="space-y-2">
+    <Label>What's Included</Label>
+    <div className="flex gap-2">
+      <Input
+        id="includedItem"
+        name="includedItem"
+        value={includedItem}
+        onChange={(e) => setIncludedItem(e.target.value)}
+        placeholder="Enter an item (e.g., Bath, Haircut)"
+      />
+      <Button type="button" onClick={addIncludedItem}>Add</Button>
+    </div>
+    
+    {/* List of included items */}
+    {formData.whatsIncluded.length > 0 && (
+      <ul className="mt-2 border rounded-md p-2 bg-gray-100">
+        {formData.whatsIncluded.map((item, index) => (
+          <li key={index} className="flex justify-between items-center border-b p-1 last:border-0">
+            {item}
+            <button 
+              type="button"
+              className="text-red-500 text-sm"
+              onClick={() => removeIncludedItem(index)}
+            >
+              Remove
+            </button>
+          </li>
+        ))}
+      </ul>
+    )}
+  </div>
+
+  {/* Service Image Upload */}
+  <div className="space-y-2">
+    <Label>Service Image (Optional)</Label>
+    <div className="grid grid-cols-[1fr_auto] gap-2">
+      <div className="border rounded-md p-1 flex items-center overflow-hidden">
+        {formData.image ? (
+          <div className="relative w-full h-12">
+            <img
+              src={formData.image}
+              alt="Service preview"
+              className="h-full object-cover mx-auto"
+            />
+          </div>
+        ) : (
+          <p className="text-sm text-muted-foreground p-2">No image selected</p>
+        )}
+      </div>
+      <Button 
+        type="button" 
+        variant="outline"
+        onClick={() => fileInputRef.current?.click()}
+      >
+        Upload
+      </Button>
+      <input
+        type="file"
+        ref={fileInputRef}
+        className="hidden"
+        accept="image/*"
+        onChange={handleImageUpload}
+      />
+    </div>
+  </div>
+
+  {/* Form Actions */}
+  <DialogFooter className="flex justify-between sm:justify-between">
+    {editingService && (
+      <Button 
+        type="button" 
+        variant="destructive"
+        onClick={() => handleDelete(editingService.id)}
+      >
+        <Trash2 className="h-4 w-4 mr-2" />
+        Delete
+      </Button>
+    )}
+    <div className="flex gap-2">
+      <DialogClose asChild>
+        <Button type="button" variant="outline">
+          Cancel
+        </Button>
+      </DialogClose>
+      <Button type="submit">
+        {editingService ? "Update Service" : "Add Service"}
+      </Button>
+    </div>
+  </DialogFooter>
+</form>
+
+
           </DialogContent>
         </Dialog>
       </div>

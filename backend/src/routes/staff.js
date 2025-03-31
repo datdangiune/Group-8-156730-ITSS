@@ -12,7 +12,7 @@ router.patch('/appointments/:id/status', verifyTokenStaff, StaffController.updat
 router.post('/appointments/new', verifyTokenStaff, StaffController.createAppointment); // Create a new appointment
 router.get('/owners', verifyTokenStaff, StaffController.getOwners); // Fetch all owners
 router.get('/owners/:ownerId/pets', verifyTokenStaff, StaffController.getPetsByOwner); // Fetch pets by owner ID
-router.post('/service', verifyTokenStaff, StaffController.createService)
+router.post('/clinic-services/create', verifyTokenStaff, StaffController.createService)
 router.get('/clinic-services', verifyTokenStaff, StaffController.getServices); // Fetch services
 router.get('/user-services', verifyTokenStaff, StaffController.getUserServices); // Fetch services
 

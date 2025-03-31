@@ -6,14 +6,15 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
+import Login from "./pages/Login";
+import ClinicServices from "./pages/ClinicServices";
 import NotFound from "./pages/NotFound";
 import Appointments from "./pages/Appointments";
 import AppointmentDetail from "./pages/AppointmentDetail";
 import MedicalRecords from "./pages/MedicalRecords";
-import Login from "./pages/Login";
-import ClinicServices from "./pages/ClinicServices";
 import Services from "./pages/Services";
 import Boarding from "./pages/Boarding";
+import BoardingServices from "./pages/BoardingServices";
 import Notifications from "./pages/Notifications";
 import Navbar from "./components/layout/Navbar";
 import Sidebar from "./components/layout/Sidebar";
@@ -37,14 +38,15 @@ const App = () => {
               
               <main className="flex-1">
                 <Routes>
-                <Route path="/login" element={<Login />} />
                   <Route path="/" element={<Index />} />
-                  <Route path="/clinic-services" element={<ClinicServices />} />
+                  <Route path="/login" element={<Login />} />
                   <Route path="/appointments" element={<Appointments />} />
                   <Route path="/appointments/:appointmentId" element={<AppointmentDetail />} />
                   <Route path="/medical-records" element={<MedicalRecords />} />
                   <Route path="/services" element={<Services />} />
+                  <Route path="/clinic-services" element={<ClinicServices />} />
                   <Route path="/boarding" element={<Boarding />} />
+                  <Route path="/boarding-services" element={<BoardingServices />} />
                   <Route path="/notifications" element={<Notifications />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
