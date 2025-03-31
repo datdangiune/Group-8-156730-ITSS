@@ -13,12 +13,12 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import BoardingForm from "@/components/boarding/BoardingForm";
 import { toast } from "sonner";
-
+import { useNavigate } from "react-router-dom";
 const Boarding = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("active");
   const [isFormOpen, setIsFormOpen] = useState(false);
-  
+  const navigate = useNavigate();
   // Filter boarding pets based on search query and active tab
   const filteredBoardingPets = boardingPets.filter(pet => {
     // Filter by tab
@@ -76,9 +76,9 @@ const Boarding = () => {
           <h1 className="text-2xl font-medium mb-4 md:mb-0">Boarding</h1>
           
           <div className="flex flex-col sm:flex-row gap-2">
-            <Button onClick={() => setIsFormOpen(true)}>
+            <Button onClick={() => navigate("/clinic-boarding")}>
               <Plus className="h-4 w-4 mr-2" />
-              New Boarding
+              Manage Boarding
             </Button>
           </div>
         </div>
