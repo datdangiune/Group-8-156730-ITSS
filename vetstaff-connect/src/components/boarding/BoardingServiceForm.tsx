@@ -140,6 +140,7 @@ const BoardingServiceForm: React.FC<BoardingServiceFormProps> = ({
     try {
       onSubmit(data as NewBoardingServiceRequest);
       console.log("Form submission successful!");
+      window.location.reload();
     } catch (error) {
       console.error("Error during form submission:", error);
     }
