@@ -507,6 +507,27 @@ const UserController  = {
             return res.status(500).json({ message: 'An error occurred while fetching boarding.' });
           }
     },
+    async getBoardingById(req, res){
+        try {
+            const {id} = req.params
+            const boardings = await Boarding.findAll({
+              where:  {id: id}
+            });
+
+            if (boardings.length === 0) {
+              return res.status(404).json({ message: 'No boardings found.' });
+            }
+        
+            // Trả về danh sách dịch vụ
+            return res.status(200).json({
+              message: 'boardings retrieved successfully',
+              boardings,
+            });
+          } catch (error) {
+            console.error('Error fetching boardings:', error);
+            return res.status(500).json({ message: 'An error occurred while fetching boardings.' });
+          }
+    },
 }
 
 module.exports =  UserController;

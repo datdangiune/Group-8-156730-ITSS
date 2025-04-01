@@ -588,11 +588,11 @@ const StaffController = {
 
     async addNewBoardingService(req, res) {
         try {
-            const { name, price, maxday, image, status, details } = req.body;
-            const parsedDetails = details ? JSON.parse(details) : [];  // Ensure parsedDetails is defined here
+            const { name, price, maxday, image, status, details, type } = req.body;
+            //const parsedDetails = details ? JSON.parse(details) : [];  // Ensure parsedDetails is defined here
 
             // Kiểm tra dữ liệu đầu vào
-            if (!name || !price || !type || !maxday) {
+            if (!name || !price  || !type || !maxday) {
                 return res.status(400).json({ message: "Missing required fields" });
             }
     
@@ -604,7 +604,7 @@ const StaffController = {
                 maxday,
                 image,
                 status: status || 'available',
-                details: parsedDetails,
+                details: details,
             });
     
             return res.status(201).json({ message: "Boarding service added successfully", boarding: newBoarding });

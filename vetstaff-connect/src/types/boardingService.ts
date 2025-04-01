@@ -1,4 +1,5 @@
 export interface BoardingService {
+  type: string;
   id: number;
   name: string;
   description: string;

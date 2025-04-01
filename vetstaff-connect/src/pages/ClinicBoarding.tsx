@@ -70,6 +70,7 @@ const ClinicBoarding: React.FC = () => {
       try {
         const services = await fetchAvailableBoardingServices(token);
         const mappedServices = services.map(service => ({
+          type: service.type,
           id: service.id,
           name: service.name,
           description: service.description || "",
@@ -124,17 +125,19 @@ const ClinicBoarding: React.FC = () => {
     try {
       const requestData = {
         name: formData.name.trim(),
+        type: formData.type,
         price: formData.price,
         maxday: formData.maxday,
         duration: "1 day", // Hoặc giá trị phù hợp
         status: formData.status,
-        details: formData.details ? { included: formData.details.included || [] } : { included: [] },
+        details: formData.details || [] ,
       }
       const response = await addNewBoardingService(token, requestData, image);
       
 
       const newService: BoardingService = {
         id: response.data.id,
+        type: response.data.type,
         name: response.data.name || "Unnamed Service",
         description: response.data.description || "",
         pricePerDay: response.data.pricePerDay || 0,

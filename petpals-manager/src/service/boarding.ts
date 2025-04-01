@@ -38,5 +38,29 @@ export const fetchBoardingServices = async (token: string): Promise<BoardingResp
       console.error('Error fetching boarding services:', error);
       throw error;
     }
-  };
+};
+export const fetchBoardingServiceById = async (token: string, id: string): Promise<BoardingResponse> => {
+    try {
+      const response = await fetch(`http://localhost:3000/api/v1/user/get-boarding/${id}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`, // Pass the token in headers
+        },
+      });
+      if(response.status === 401){
+        Cookies.remove('token');
+      }
+      if (!response.ok) {
+        const result = await response.json();
+        throw new Error(result.message || 'Failed to fetch boarding services');
+      }
+  
+      const data: BoardingResponse = await response.json(); // Assuming the response has 'boarding' key
+      return data; 
+    } catch (error) {
+      console.error('Error fetching boarding services:', error);
+      throw error;
+    }
+};
   

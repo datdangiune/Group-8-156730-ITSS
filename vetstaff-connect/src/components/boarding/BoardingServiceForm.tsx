@@ -38,6 +38,7 @@ const MAX_FILE_SIZE = 5000000; // 5MB
 const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
 
 const boardingServiceSchema = z.object({
+  type: z.string(),
   name: z.string().min(2, { message: "Service name is required" }),
   price: z.coerce.number().positive({ message: "Price must be positive" }),
   maxday: z.coerce.number().int().positive({ message: "Maximum stay must be a positive integer" }),
@@ -80,6 +81,7 @@ const BoardingServiceForm: React.FC<BoardingServiceFormProps> = ({
     resolver: zodResolver(boardingServiceSchema),
     defaultValues: {
       name: initialData?.name || "",
+      type: initialData?.type || "",
       price: initialData?.pricePerDay|| 0,
       maxday: initialData?.maxStay|| 7,
       status: initialData?.status || "available",
@@ -176,6 +178,19 @@ const BoardingServiceForm: React.FC<BoardingServiceFormProps> = ({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Service Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter boarding service name" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="type"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Description</FormLabel>
                     <FormControl>
                       <Input placeholder="Enter boarding service name" {...field} />
                     </FormControl>

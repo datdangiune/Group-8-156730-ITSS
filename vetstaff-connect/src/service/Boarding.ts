@@ -14,6 +14,7 @@ socket.on("disconnect", () => {
 
 // Define interfaces
 export interface BoardingService {
+    type: string;
     id: number;
     name: string;
     description: string;
@@ -43,14 +44,13 @@ export interface BoardingUserDetails {
 }
 
 export interface NewBoardingServiceRequest {
+  type: string;
   name: string;
   price: number;
   maxday: number;
   status?: string;
   image?: string;
-  details?: {
-    included: string[];
-  };
+  details?: string[];
 }
 
 export interface NewBoardingServiceResponse {
