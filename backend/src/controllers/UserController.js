@@ -464,7 +464,13 @@ const UserController  = {
                     }
                 ]
             });
-    
+            if(!userServices){
+                return res.status(404).json({ 
+                    data: [],
+                    success: true,
+                    message: 'No services found' 
+                });
+            }
             res.status(200).json({
                 success: true,
                 message: 'User services fetched successfully',

@@ -49,6 +49,7 @@ const Services = () => {
     // Lắng nghe sự kiện cập nhật dịch vụ từ WebSocket
     socket.on("serviceUpdated", (updatedService) => {
       console.log("📢 Received updated service:", updatedService);
+      alert("Có service mới, ấn OK để xem")
       window.location.reload()
     });
     
