@@ -46,7 +46,6 @@ export interface NewBoardingServiceRequest {
   name: string;
   price: number;
   maxday: number;
-  duration: string;
   status?: string;
   image?: string;
   details?: {
@@ -89,21 +88,35 @@ export const fetchBoardingUserDetails = async (token: string): Promise<BoardingU
 // Add new boarding service
 export const addNewBoardingService = async (
   token: string,
-  serviceData: NewBoardingServiceRequest, 
+  serviceData: NewBoardingServiceRequest,
   image: string
 ): Promise<NewBoardingServiceResponse> => {
   try {
     console.log("Executing addNewBoardingService API call...");
-    const payload = {...serviceData, image: image}
+
+    // Ensure default values for optional fields
+    const payload = {
+      ...serviceData,
+      image: image || null, // Default to null if no image is provided
+      details: serviceData.details || { included: [] }, // Default to an empty array if details are missing
+    };
+
+    console.log("Payload being sent:", payload);
+
     const response = await axios.post(`${API_BASE_URL}/staff/boarding-services/new`, payload, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
     });
+
+    // Emit socket event to notify other clients
     socket.emit("updateService", response.data);
+
     return response.data;
   } catch (error: any) {
-    console.error('Error adding new boarding service:', error.message);
-    throw new Error(error.response?.data?.message || error.message || 'Failed to add new boarding service');
+    console.error("Error adding new boarding service:", error.message);
+    console.error("Error details:", error.response?.data || error);
+
+    throw new Error(error.response?.data?.message || error.message || "Failed to add new boarding service");
   }
 };

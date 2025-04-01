@@ -531,7 +531,7 @@ const StaffController = {
             // Fetch boarding services with status 'available'
             const boardingServices = await Boarding.findAll({
                 where: { status: 'available' },
-                attributes: ['id', 'price', 'maxday', 'image', 'status', 'details', 'created_at', 'name'],
+                attributes: ['id', 'price', 'maxday', 'image', 'status', 'details', 'created_at', 'name',],
                 order: [['created_at', 'DESC']], // Sort by creation date
             });
 
@@ -543,17 +543,33 @@ const StaffController = {
             }
 
             // Format the data for frontend
-            const formattedBoardingServices = boardingServices.map(service => ({
-                id: service.id,
-                name: service.name,
-                description: service.details?.description || '',
-                pricePerDay: service.price,
-                maxStay: service.maxday,
-                status: service.status,
-                createdAt: service.created_at,
-                image: service.image || null,
-                amenities: service.details?.included || [], 
-            }));
+            const formattedBoardingServices = boardingServices.map(service => {
+                let amenities = [];
+                let description = "";
+
+                // Parse details if it's a string
+                if (service.details) {
+                    try {
+                        const parsedDetails = typeof service.details === "string" ? JSON.parse(service.details) : service.details;
+                        amenities = parsedDetails.included || [];
+                        description = parsedDetails.description || "";
+                    } catch (err) {
+                        console.error("Error parsing details for service ID:", service.id, err.message);
+                    }
+                }
+
+                return {
+                    id: service.id,
+                    name: service.name,
+                    description: service.type, // Use 'type' as description,
+                    pricePerDay: service.price,
+                    maxStay: service.maxday,
+                    status: service.status,
+                    createdAt: service.created_at,
+                    image: service.image || null,
+                    amenities: service.details || [], // Correctly extract amenities
+                };
+            });
 
             res.status(200).json({
                 success: true,
@@ -573,7 +589,8 @@ const StaffController = {
     async addNewBoardingService(req, res) {
         try {
             const { name, price, maxday, image, status, details } = req.body;
-            const type = "null"
+            const parsedDetails = details ? JSON.parse(details) : [];  // Ensure parsedDetails is defined here
+
             // Kiểm tra dữ liệu đầu vào
             if (!name || !price || !type || !maxday) {
                 return res.status(400).json({ message: "Missing required fields" });
@@ -583,11 +600,11 @@ const StaffController = {
             const newBoarding = await Boarding.create({
                 name,
                 price,
-                type,
+              type, //description
                 maxday,
                 image,
                 status: status || 'available',
-                details
+                details: parsedDetails,
             });
     
             return res.status(201).json({ message: "Boarding service added successfully", boarding: newBoarding });
