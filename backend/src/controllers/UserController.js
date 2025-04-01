@@ -1,4 +1,4 @@
-const { Pet, Appointment, Payment, Service, User, ServiceUser} = require('../models');
+const { Pet, Appointment, Payment, Service, User, ServiceUser, Boarding} = require('../models');
 const sendMail = require('../util/sendMail'); // Import sendMail utility
 const { Op, fn, col } = require("sequelize");
 const UserController  = { 
@@ -455,7 +455,7 @@ const UserController  = {
                     {
                         model: Service,
                         as: 'service',
-                        attributes: ['id', 'name', 'description', 'price', 'duration'],
+                        attributes: ['id', 'name', 'description', 'price', 'duration', 'type'],
                     },
                     {
                         model: Pet,
@@ -483,7 +483,30 @@ const UserController  = {
                 error: err.message
             });
         }
-    }
+    },
+    async getAllBoarding(req, res){
+        try {
+            const { type } = req.query; 
+                    // Truy vấn dịch vụ theo loại (type)
+            const boarding = await Boarding.findAll({
+              where: type ? { type } : {}, 
+            });
+        
+            // Kiểm tra nếu không có dịch vụ
+            if (boarding.length === 0) {
+              return res.status(404).json({ message: 'No boarding found.' });
+            }
+        
+            // Trả về danh sách dịch vụ
+            return res.status(200).json({
+              message: 'boarding retrieved successfully',
+              boarding,
+            });
+          } catch (error) {
+            console.error('Error fetching boarding:', error);
+            return res.status(500).json({ message: 'An error occurred while fetching boarding.' });
+          }
+    },
 }
 
 module.exports =  UserController;
