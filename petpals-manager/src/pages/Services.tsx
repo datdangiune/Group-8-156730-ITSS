@@ -72,11 +72,19 @@ const Services = () => {
   })
   return (
     <div className="container mx-auto px-4 animate-fade-in">
-      <div className="mb-8">
-        <h1 className="text-3xl md:text-4xl font-bold mb-2">Pet Services</h1>
-        <p className="text-gray-600 dark:text-gray-400">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+        <div>
+          <h1 className="text-3xl md:text-4xl font-bold mb-2">Pet Services</h1>
+          <p className="text-gray-600 dark:text-gray-400">
           Book grooming, boarding, and training services for your pets
-        </p>
+          </p>
+        </div>
+        
+        <Button asChild className="flex items-center gap-2">
+          <a href="/services/me">
+            My Service
+          </a>
+        </Button>
       </div>
       
       <div className="mb-8 glass-card dark:glass-card-dark rounded-xl p-6">

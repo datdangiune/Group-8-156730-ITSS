@@ -19,6 +19,8 @@ import PetRegistration from "./pages/PetRegister";
 import PetSetup from "./pages/PetSetup";
 import ProtectedRoute from "./components/ProtectedRoute";
 import ServiceDetail from "./pages/ServiceDetail";
+import MyService from "@/pages/MyServcice"
+import Boarding from "@/pages/Boarding"
 const queryClient = new QueryClient();
 
 const MainLayout = () => (
@@ -52,7 +54,9 @@ const App = () => (
                 <Route path="/appointments" element={<Appointments />} />
                 <Route path="/appointments/book" element={<AppointmentBooking />} />
                 <Route path="/services" element={<Services />} />
+                <Route path="/services/me" element={<MyService/>} />
                 <Route path="/services/:id" element={<ServiceDetail />} />
+                <Route path="/boardings" element={<Boarding />} />
                 <Route path="/history" element={<History />} />
                 <Route path="*" element={<NotFound />} />
               </Route>

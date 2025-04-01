@@ -1,4 +1,5 @@
 import Cookies from "js-cookie";
+
 export interface ServiceDetail {
     included: string[];
   }
@@ -24,6 +25,8 @@ export interface GetServicesResponse {
     message: string;
     services: Service[];
   }
+
+  type ServiceStatusUser = 'Scheduled' | 'Done' | 'In Progess';
 export interface UserService {
     id: number;
     serviceId: number;
@@ -31,7 +34,7 @@ export interface UserService {
     petId: number;
     date: string;
     hour: string;
-    status: string;
+    status: ServiceStatusUser;
     service: Service;
     pet: Pet;
   }
@@ -44,17 +47,11 @@ export interface UserService {
             'Authorization': `Bearer ${token}`
         }
       });
-      
+      if (response.status === 401){
+        Cookies.remove("token", { path: '/' });  // Add the correct path if needed
+      }
       if (!response.ok) {
         throw new Error('Failed to fetch services');
-      }
-      console.log(response.status)
-      if (response.status === 401) {
-        console.warn("Token expired. Removing token and redirecting to login...");
-        Cookies.remove("token", { path: "/" }); // Đảm bảo xóa đúng path
-        localStorage.removeItem("user");
-        window.location.href = "/login";
-        return null;
       }
       const data: GetServicesResponse = await response.json();
   
@@ -74,17 +71,12 @@ export interface UserService {
             'Authorization': `Bearer ${token}`
         }
       });
-      
+      if (response.status === 401){
+        Cookies.remove("token", { path: '/' });  // Add the correct path if needed
+      }
       if (!response.ok) {
         throw new Error('Failed to fetch services');
       }
-        if (response.status === 401) {
-            console.warn("Token expired. Removing token and redirecting to login...");
-            Cookies.remove("token", { path: "/" }); // Đảm bảo xóa đúng path
-            localStorage.removeItem("user");
-            window.location.href = "/login";
-            return null;
-          }
       const data: GetServicesResponse = await response.json();
       
       // Trả về dữ liệu dịch vụ
@@ -128,7 +120,9 @@ export interface UserService {
         },
         body: JSON.stringify(requestData),
       });
-  
+      if (response.status === 401){
+        Cookies.remove("token", { path: '/' });  // Add the correct path if needed
+      }
       if (!response.ok) {
         throw new Error(`Failed to register service: ${response.statusText}`);
       }
@@ -149,12 +143,15 @@ export interface UserService {
           Authorization: `Bearer ${token}`,
         },
       });
-  
+      console.log("Unauthorized - removing token");
+      if (response.status === 401){
+        Cookies.remove("token", { path: '/' });  // Add the correct path if needed
+      }
       if (!response.ok) {
         const result = await response.json();
         throw new Error(result.message || "Failed to fetch user services.");
       }
-  
+
       const { data } = await response.json();
       return data as UserService[];
     } catch (error) {

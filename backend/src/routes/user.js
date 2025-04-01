@@ -21,12 +21,13 @@ router.get('/services/history/:petId', verifyToken, UserController.getPetService
 // Lịch sử thanh toán
 router.get('/payments', verifyToken, UserController.getPaymentHistory); // Xem lịch sử thanh toán
 
-// Đặt phòng lưu trú
-router.post('/boarding', verifyToken, UserController.createBoarding);
+
 
 router.get('/get-all-service', verifyToken, UserController.getAllService)
 router.get('/get-service/:id', verifyToken, UserController.getServiceById)
 router.post('/service', verifyToken, UserController.registerService)
 router.get('/service', verifyToken, UserController.getUserServices)
+
+router.get('/get-all-boarding', verifyToken, UserController.getAllBoarding)
 router.post('/image', verifyToken, fileUploader.single('file'), UserController.uploadImage)
 module.exports = router;
