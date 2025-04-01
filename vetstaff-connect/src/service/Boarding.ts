@@ -2,7 +2,7 @@ import axios from "axios";
 import { io } from "socket.io-client";
 
 const socket = io("http://localhost:3000");
-const API_BASE_URL = "http://localhost:3000/api/v1"; // Adjusted base URL if necessary
+const API_BASE_URL = "http://localhost:3000/api/v1";
 
 socket.on("connect", () => {
   console.log("Connected to WebSocket server with ID:", socket.id);
@@ -22,7 +22,7 @@ export interface BoardingService {
     status: "available" | "unavailable";  // Giới hạn giá trị status để tránh lỗi
     createdAt: string;
     image?: string;
-    amenities?: string[];  // Thêm trường amenities (danh sách tiện ích)
+    details?: string[];  // Thêm trường amenities (danh sách tiện ích)
   }
 
 export interface BoardingUserDetails {
@@ -43,12 +43,15 @@ export interface BoardingUserDetails {
 }
 
 export interface NewBoardingServiceRequest {
-  serviceName: string;
-  pricePerDay: number;
-  maxStayDays: number;
-  status: string;
+  name: string;
+  price: number;
+  maxday: number;
+  duration: string;
+  status?: string;
   image?: string;
-  amenities: string[];
+  details?: {
+    included: string[];
+  };
 }
 
 export interface NewBoardingServiceResponse {
@@ -86,32 +89,18 @@ export const fetchBoardingUserDetails = async (token: string): Promise<BoardingU
 // Add new boarding service
 export const addNewBoardingService = async (
   token: string,
-  serviceData: NewBoardingServiceRequest
+  serviceData: NewBoardingServiceRequest, 
+  image: string
 ): Promise<NewBoardingServiceResponse> => {
   try {
-    const formData = new FormData();
-
-    // Ensure all required fields are properly formatted
-    formData.append('serviceName', serviceData.serviceName.trim() || 'Unnamed Service');
-    formData.append('pricePerDay', serviceData.pricePerDay.toString());
-    formData.append('maxStayDays', serviceData.maxStayDays.toString());
-    formData.append('status', serviceData.status || 'unavailable');
-
-    if (serviceData.image) {
-      formData.append('image', serviceData.image); // Ensure image is a File object
-    }
-
-    if (serviceData.amenities && Array.isArray(serviceData.amenities)) {
-      formData.append('amenities', JSON.stringify(serviceData.amenities)); // Send amenities as a JSON string
-    }
-
-    const response = await axios.post(`${API_BASE_URL}/staff/boarding-services/new`, formData, {
+    console.log("Executing addNewBoardingService API call...");
+    const payload = {...serviceData, image: image}
+    const response = await axios.post(`${API_BASE_URL}/staff/boarding-services/new`, payload, {
       headers: {
         Authorization: `Bearer ${token}`,
-        'Content-Type': 'multipart/form-data',
       },
     });
-
+    socket.emit("updateService", response.data);
     return response.data;
   } catch (error: any) {
     console.error('Error adding new boarding service:', error.message);

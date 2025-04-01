@@ -48,7 +48,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import BoardingServiceForm from "@/components/boarding/BoardingServiceForm";
 import { BoardingService, BoardingServiceFormValues } from "@/types/boardingService";
-import { addNewBoardingService, fetchAvailableBoardingServices } from "@/service/Boarding";
+import { addNewBoardingService, fetchAvailableBoardingServices, NewBoardingServiceRequest} from "@/service/Boarding";
 
 const ClinicBoarding: React.FC = () => {
   const navigate = useNavigate();
@@ -58,7 +58,7 @@ const ClinicBoarding: React.FC = () => {
   const [selectedService, setSelectedService] = useState<BoardingService | null>(null);
   const [boardingServices, setBoardingServices] = useState<BoardingService[]>([]);
   const token = localStorage.getItem("token");
-
+  const [image, setImage] = useState("")
   // Fetch all boarding services on component mount
   useEffect(() => {
     const fetchServices = async () => {
@@ -73,8 +73,8 @@ const ClinicBoarding: React.FC = () => {
           id: service.id,
           name: service.name,
           description: service.description || "",
-          pricePerDay: service.pricePerDay, // Ensure pricePerDay is a number
-          maxStay: service.maxStay, // Use maxStay to match the BoardingService type
+          pricePerDay: service.pricePerDay,
+          maxStay: service.maxStay, 
           status: service.status,
           createdAt: service.createdAt,
           image: service.image || "",
@@ -96,7 +96,8 @@ const ClinicBoarding: React.FC = () => {
   );
 
   // Handle creating a new boarding service
-  const handleCreateService = async (formData: BoardingServiceFormValues) => {
+  const handleCreateService = async (formData: NewBoardingServiceRequest) => {
+    console.log("Calling API with data:", formData);
     if (!token) {
       toast.error("Authentication token is missing. Please log in.");
       return;
@@ -107,11 +108,11 @@ const ClinicBoarding: React.FC = () => {
       toast.error("Service name is required.");
       return;
     }
-    if (!formData.pricePerDay || formData.pricePerDay <= 0) {
+    if (!formData.price || formData.price <= 0) {
       toast.error("Price per day must be greater than 0.");
       return;
     }
-    if (!formData.maxStay || formData.maxStay <= 0) {
+    if (!formData.maxday || formData.maxday <= 0) {
       toast.error("Maximum stay must be greater than 0.");
       return;
     }
@@ -119,16 +120,18 @@ const ClinicBoarding: React.FC = () => {
       toast.error("Status is required.");
       return;
     }
-
+    console.log("Submitting Form Data:", formData);
     try {
-      const response = await addNewBoardingService(token, {
-        serviceName: formData.name.trim(),
-        pricePerDay: formData.pricePerDay,
-        maxStayDays: formData.maxStay, // Use maxStay directly
+      const requestData = {
+        name: formData.name.trim(),
+        price: formData.price,
+        maxday: formData.maxday,
+        duration: "1 day", // Hoặc giá trị phù hợp
         status: formData.status,
-        image: formData.image || undefined,
-        amenities: formData.amenities || [],
-      });
+        details: formData.details ? { included: formData.details.included || [] } : { included: [] },
+      }
+      const response = await addNewBoardingService(token, requestData, image);
+      
 
       const newService: BoardingService = {
         id: response.data.id,
@@ -139,7 +142,7 @@ const ClinicBoarding: React.FC = () => {
         status: response.data.status || "unavailable",
         createdAt: response.data.createdAt || new Date().toISOString(),
         image: response.data.image || "",
-        amenities: response.data.amenities || [],
+        amenities: response.data.details || [],
       };
 
       setBoardingServices([newService, ...boardingServices]);
@@ -325,7 +328,7 @@ const ClinicBoarding: React.FC = () => {
       <BoardingServiceForm
         open={formOpen}
         onClose={() => setFormOpen(false)}
-        onSubmit={selectedService ? undefined : handleCreateService}
+        onSubmit={handleCreateService}
         initialData={selectedService || undefined}
       />
       

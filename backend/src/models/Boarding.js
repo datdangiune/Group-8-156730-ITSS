@@ -7,11 +7,19 @@ const Boarding = sequelize.define('Boarding', {
         primaryKey: true,
         autoIncrement: true,
     },
+    name: {
+        type: DataTypes.STRING,
+        allowNull: false,
+    },
     price: {  // giá trên ngày
         type: DataTypes.FLOAT,
         allowNull: false,
     },
-    maxday: {  //Số ngày nhiều nhất có thể hỗ trợ
+    type: {
+        type: DataTypes.STRING,
+        allowNull: false,
+    },
+    maxday: {  
         type: DataTypes.INTEGER,
         allowNull: false,
     },

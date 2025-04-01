@@ -33,14 +33,14 @@ import {
 import { X, Upload, Plus, Minus } from "lucide-react";
 import { toast } from "sonner";
 import { BoardingServiceFormValues } from "@/types/boardingService";
-
+import {NewBoardingServiceRequest} from "@/service/Boarding"
 const MAX_FILE_SIZE = 5000000; // 5MB
 const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
 
 const boardingServiceSchema = z.object({
   name: z.string().min(2, { message: "Service name is required" }),
-  pricePerDay: z.coerce.number().positive({ message: "Price must be positive" }),
-  maxDayStay: z.coerce.number().int().positive({ message: "Maximum stay must be a positive integer" }),
+  price: z.coerce.number().positive({ message: "Price must be positive" }),
+  maxday: z.coerce.number().int().positive({ message: "Maximum stay must be a positive integer" }),
   status: z.enum(["available", "unavailable"]),
   details: z.object({
     amenities: z.array(z.string()),
@@ -61,7 +61,7 @@ const boardingServiceSchema = z.object({
 interface BoardingServiceFormProps {
   open: boolean;
   onClose: () => void;
-  onSubmit: (data: BoardingServiceFormValues) => void;
+  onSubmit: (data: NewBoardingServiceRequest) => void;
   initialData?: Partial<BoardingServiceFormValues>;
 }
 
@@ -80,10 +80,10 @@ const BoardingServiceForm: React.FC<BoardingServiceFormProps> = ({
     resolver: zodResolver(boardingServiceSchema),
     defaultValues: {
       name: initialData?.name || "",
-      pricePerDay: initialData?.pricePerDay || 0,
-      maxDayStay: initialData?.maxDayStay || 7,
+      price: initialData?.pricePerDay|| 0,
+      maxday: initialData?.maxStay|| 7,
       status: initialData?.status || "available",
-      details: initialData?.details || {
+      details: initialData || {
         amenities: ["Food", "Water", "Daily Walks"],
       },
       image: initialData?.image,
@@ -127,17 +127,31 @@ const BoardingServiceForm: React.FC<BoardingServiceFormProps> = ({
   };
 
   // Handle form submission
-  const handleSubmit = (data: z.infer<typeof boardingServiceSchema>) => {
-    onSubmit(data as BoardingServiceFormValues);
+  const handleSubmit = async (data: z.infer<typeof boardingServiceSchema>) => {
+    console.log("Submitting data:", data); 
+  
+    if (!onSubmit) {
+      console.error("onSubmit function is missing!");
+      return;
+    }
+  
+    try {
+      onSubmit(data as NewBoardingServiceRequest);
+      console.log("Form submission successful!");
+    } catch (error) {
+      console.error("Error during form submission:", error);
+    }
+  
     form.reset();
     setImagePreview(null);
     onClose();
     toast.success(`Boarding service ${isEditMode ? "updated" : "created"} successfully`);
   };
+  
 
   return (
     <Drawer open={open} onOpenChange={onClose}>
-      <DrawerContent className="h-[85%] sm:max-w-xl sm:mx-auto">
+      <DrawerContent className="h-[100%] sm:max-w-xl sm:mx-auto">
         <DrawerHeader className="border-b px-6 py-4">
           <DrawerTitle className="text-xl font-semibold">
             {isEditMode ? "Edit Boarding Service" : "New Boarding Service"}
@@ -173,7 +187,7 @@ const BoardingServiceForm: React.FC<BoardingServiceFormProps> = ({
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <FormField
                   control={form.control}
-                  name="pricePerDay"
+                  name="price"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Price Per Day ($)</FormLabel>
@@ -193,7 +207,7 @@ const BoardingServiceForm: React.FC<BoardingServiceFormProps> = ({
                 
                 <FormField
                   control={form.control}
-                  name="maxDayStay"
+                  name="maxday"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Maximum Stay (days)</FormLabel>

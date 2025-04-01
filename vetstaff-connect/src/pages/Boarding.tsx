@@ -174,9 +174,9 @@ const Boarding = () => {
                         <p className="text-sm text-muted-foreground">Status</p>
                         <div className="flex items-center gap-2 mt-1">
                           <StatusBadge status={
-                            pet.status === "active" ? "In progress" :
-                            pet.status === "inactive" ? "completed" :
-                            pet.status === "all" ? "upcoming" : undefined
+                            pet.status === "active" ? "In progess" :
+                            pet.status === "inactive" ? "Done" :
+                            pet.status === "all" ? "Scheduled" : undefined
                           } />
                           <div className="flex items-center text-xs text-muted-foreground">
                             <Clock className="h-3 w-3 mr-1" />
