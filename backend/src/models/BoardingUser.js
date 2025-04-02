@@ -19,6 +19,14 @@ const BoardingUser = sequelize.define('BoardingUser', {
         type: DataTypes.DATE,
         allowNull: false,
     },
+    boardingId: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        references: {
+          model: 'boarding',
+          key: 'id',
+        },
+      },
     userId: {
         type: DataTypes.INTEGER,
         allowNull: false,
@@ -39,6 +47,10 @@ const BoardingUser = sequelize.define('BoardingUser', {
         type: DataTypes.DATE,
         defaultValue: DataTypes.NOW,
     },
+    notes: {
+        type: DataTypes.STRING,
+        allowNull: true,
+    }
 }, {
     tableName: 'boarding_user',
     timestamps: false,

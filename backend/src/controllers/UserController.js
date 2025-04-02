@@ -1,4 +1,4 @@
-const { Pet, Appointment, Payment, Service, User, ServiceUser, Boarding} = require('../models');
+const { Pet, Appointment, Payment, Service, User, ServiceUser, Boarding, BoardingUser} = require('../models');
 const sendMail = require('../util/sendMail'); // Import sendMail utility
 const { Op, fn, col } = require("sequelize");
 const UserController  = { 
@@ -527,6 +527,38 @@ const UserController  = {
             console.error('Error fetching boardings:', error);
             return res.status(500).json({ message: 'An error occurred while fetching boardings.' });
           }
+    },
+    async registerBoarding(req, res){
+        const { petId, boardingId, start_date, end_date, notes, total_price} = req.body;
+        const {id} = req.user
+        try {
+          const service = await Boarding.findByPk(boardingId);
+          const user = await User.findByPk(id);
+          const pet = await Pet.findByPk(petId);
+      
+          if (!service || !user || !pet) {
+            return res.status(404).json({ message: 'Service, User, or Pet not found' });
+          }
+      
+          // Tạo bản ghi mới trong bảng ServiceUser
+          const serviceUser = await BoardingUser.create({
+            boardingId,
+            userId: id,
+            petId,
+            start_date,
+            end_date,
+            notes,
+            total_price,
+          });
+      
+          return res.status(201).json({
+            message: 'Service registration successful',
+            serviceUser,
+          });
+        } catch (error) {
+          console.error('Error registering service:', error);
+          return res.status(500).json({ message: 'Internal server error' });
+        }
     },
 }
 

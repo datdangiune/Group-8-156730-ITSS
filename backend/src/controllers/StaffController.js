@@ -612,7 +612,48 @@ const StaffController = {
             console.error("Error adding boarding service:", error);
             return res.status(500).json({ message: "Internal server error" });
         }
-    }
+    },
+    async getUsersBoardings(req, res){
+        try {
+            const userBoardings = await BoardingUser.findAll({
+                include: [
+                    {
+                        model: Boarding,
+                        as: 'boarding',
+                        attributes: ['id', 'name', 'type', 'price', 'maxday'],
+                    },
+                    {
+                        model: Pet,
+                        as: 'pet',
+                        attributes: ['id', 'name', 'type', 'breed', 'health_status', 'diet_plan', 'medical_history', 'vaccination_history'],
+                    },
+                    {
+                        model: User,
+                        as: 'user',
+                        attributes: ['id', 'name', 'email'],
+                    }
+                ]
+            });
+            if(!userBoardings){
+                return res.status(404).json({ 
+                    data: [],
+                    success: true,
+                    message: 'No services found' 
+                });
+            }
+            res.status(200).json({
+                success: true,
+                message: 'User services fetched successfully',
+                data: userBoardings
+            });
+        } catch (err) {
+            res.status(500).json({
+                success: false,
+                message: 'Error fetching user services',
+                error: err.message
+            });
+        }
+    },
 };    
 
 module.exports = StaffController;

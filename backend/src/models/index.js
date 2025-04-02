@@ -52,16 +52,16 @@ ServiceUser.belongsTo(Pet, { foreignKey: 'petId', as: 'pet' });
 Pet.hasMany(ServiceUser, { foreignKey: 'petId', as: 'serviceUsers' });
 
 // Quan hệ giữa User và BoardingUser (1:N)
-User.hasMany(BoardingUser, { foreignKey: 'userId' });
-BoardingUser.belongsTo(User, { foreignKey: 'userId' });
+User.hasMany(BoardingUser, { foreignKey: 'userId', as: 'boardingUser'});
+BoardingUser.belongsTo(User, { foreignKey: 'userId', as: 'user' }); 
 
 // Quan hệ giữa Pet và BoardingUser (1:N)
-Pet.hasMany(BoardingUser, { foreignKey: 'petId' });
-BoardingUser.belongsTo(Pet, { foreignKey: 'petId' });
+Pet.hasMany(BoardingUser, { foreignKey: 'petId', as: 'boardingUser'});
+BoardingUser.belongsTo(Pet, { foreignKey: 'petId', as: 'pet'});
 
 // Quan hệ giữa Boarding và BoardingUser (1:N)
-Boarding.hasMany(BoardingUser, { foreignKey: 'boarding_id' });
-BoardingUser.belongsTo(Boarding, { foreignKey: 'boarding_id' });
+Boarding.hasMany(BoardingUser, { foreignKey: 'boardingId', as: 'boardingUser'});
+BoardingUser.belongsTo(Boarding, { foreignKey: 'boardingId', as: 'boarding'});
 
 module.exports = {
     User,

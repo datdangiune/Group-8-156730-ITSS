@@ -17,5 +17,5 @@ router.get('/clinic-services', verifyTokenStaff, StaffController.getServices); /
 router.get('/user-services', verifyTokenStaff, StaffController.getUserServices); // Fetch services
 router.get('/boarding-services/available', verifyTokenStaff, StaffController.getAvailableBoardingServices);
 router.post('/boarding-services/new', verifyTokenStaff, StaffController.addNewBoardingService); // Add route for adding new boarding service
-
+router.get('/user-boarding', verifyTokenStaff, StaffController.getUsersBoardings); // Fetch services
 module.exports = router;

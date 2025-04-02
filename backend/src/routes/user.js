@@ -30,5 +30,6 @@ router.get('/service', verifyToken, UserController.getUserServices)
 
 router.get('/get-all-boarding', verifyToken, UserController.getAllBoarding)
 router.get('/get-boarding/:id', verifyToken, UserController.getBoardingById)
+router.post('/boarding', verifyToken, UserController.registerBoarding)
 router.post('/image', verifyToken, fileUploader.single('file'), UserController.uploadImage)
 module.exports = router;
