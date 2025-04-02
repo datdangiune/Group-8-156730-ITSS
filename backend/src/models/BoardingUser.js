@@ -50,7 +50,11 @@ const BoardingUser = sequelize.define('BoardingUser', {
     notes: {
         type: DataTypes.STRING,
         allowNull: true,
-    }
+    },
+    status_payment: {
+        type: DataTypes.ENUM('pending', 'paid', 'canceled'),
+        defaultValue: 'pending',
+    },
 }, {
     tableName: 'boarding_user',
     timestamps: false,
