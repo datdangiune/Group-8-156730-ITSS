@@ -1,382 +1,260 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { useParams, useNavigate, Link } from 'react-router-dom';
+import { 
+  ArrowLeft, 
+  Clock, 
+  DollarSign, 
+  Calendar, 
+  ClipboardList,
+  Scissors, 
+  BedDouble, 
+  Sparkles,
+  Award,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
-import { BadgeCheck, CalendarDays, Clock, DollarSign, Home, MapPin } from 'lucide-react';
-import { BoardingService } from '@/types/service';
 import { toast } from 'sonner';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { fetchBoardingServiceById, BoardingResponse} from '@/service/boarding';
-import { getTokenFromCookies } from '@/service/auth';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import BookingForm from '@/components/service/BookingForm';
+import { fetchBoardingServiceById, BoardingResponseID} from '@/service/boarding';
+import { getTokenFromCookies} from '@/service/auth';
+import { BoardingService } from '@/types/service';
 
 const BoardingDetail = () => {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
-    const [service, setService] = useState<BoardingService[]>([]);
-    const [numDays, setNumDays] = useState(1);
-    const [selectedPet, setSelectedPet] = useState('');
-    const [startDate, setStartDate] = useState('');
-    const [totalPrice, setTotalPrice] = useState(0);
+    const [service, setService] = useState<BoardingService | null>(null);
+    const [isLoading, setIsLoading] = useState(true);
     const [bookingDialogOpen, setBookingDialogOpen] = useState(false);
-    const [isBooked, setIsBooked] = useState(false);
     const token = getTokenFromCookies();
-    const [loading, setLoading] = useState<boolean>(true);
-    const [error, setError] = useState<string | null>(null);
-  // Mock pets data for select dropdown
-    const pets = [
-        { id: 'pet1', name: 'Max' },
-        { id: 'pet2', name: 'Bella' },
-        { id: 'pet3', name: 'Oliver' }
-    ];
 
-    useEffect(() => {
-        if (!token) {
-            navigate('/login');
-        }
-      const loadServices = async () => {
+  useEffect(() => {
+    const fetchData = async () => {
         try {
-          const data: BoardingResponse = await fetchBoardingServiceById(token, id);
-          setService(data.boarding);
-          setLoading(false);
+          setIsLoading(true);
+          if (id) {
+            const serviceData: BoardingResponseID = await fetchBoardingServiceById(token, id);
+            console.log(serviceData.boardings)
+            // Gán dữ liệu chính xác
+            setService(serviceData.boardings);
+            console.log("Service loaded:", serviceData.boardings[0].name);
+          }
         } catch (error) {
-          setError('Failed to load services');
-          setLoading(false);
+          console.error("Error fetching service details:", error);
+          toast.error("Failed to load service details. Please try again.");
+        } finally {
+          setIsLoading(false);
         }
       };
-    
-      loadServices(); // Fetch dữ liệu khi component mount
-    }, [token, id]);
+      
 
-    useEffect(() => {
-        if (service) {
-        setTotalPrice(service.pricePerDay * numDays);
-        }
-    }, [numDays, service]);
-
-    const handleBookNow = () => {
-        if (!selectedPet || !startDate) {
-        toast.error("Please select a pet and start date");
-        return;
-        }
-        
-        setBookingDialogOpen(true);
-    };
-
-    const confirmBooking = () => {
-        // In a real app, this would be an API call to save the booking
-        toast.success("Booking confirmed! Redirecting to payment page...");
-        setBookingDialogOpen(false);
-        
-        // Navigate to payment page with some delay to show the toast
-        setTimeout(() => {
-        navigate(`/payment/${id}`);
-        }, 1500);
-    };
-
-    if (!service) {
-        return (
-        <div className="container mx-auto px-4 py-8 flex flex-col items-center justify-center min-h-[60vh]">
-            <div className="animate-pulse w-full max-w-4xl">
-            <div className="h-72 bg-muted rounded-lg mb-8"></div>
-            <div className="h-10 bg-muted rounded-lg mb-4 w-1/2"></div>
-            <div className="h-4 bg-muted rounded-lg mb-2 w-3/4"></div>
-            <div className="h-4 bg-muted rounded-lg mb-2 w-2/3"></div>
-            </div>
-        </div>
-        );
+    fetchData();
+  }, [id, token]);
+  useEffect(() => {
+    if (service) {
+      console.log("Updated service:", service);
+    } else {
+      console.log("Service is undefined or null");
     }
+  }, [service]);
+  
+  if (isLoading) {
     return (
-        <div className="container mx-auto px-4 py-8 animate-fade-in">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Left column: Image and Details */}
-            <div className="lg:col-span-2">
-            <div className="mb-6">
-                <Button 
-                variant="outline"
-                onClick={() => navigate(-1)}
-                className="mb-4"
-                >
-                ← Back
-                </Button>
-                
-                {service[0].status && (
-                <Badge 
-                    variant={service[0].status === 'available' ? 'outline' : 'secondary'}
-                    className="ml-2"
-                >
-                    {service[0].status.charAt(0).toUpperCase() + service[0].status.slice(1)}
-                </Badge>
-                )}
-                
-                {isBooked && service[0].paymentStatus && (
-                <Badge 
-                    variant={service.paymentStatus === 'paid' ? 'default' : 'destructive'}
-                    className="ml-2"
-                >
-                    {service.paymentStatus.charAt(0).toUpperCase() + service.paymentStatus.slice(1)}
-                </Badge>
-                )}
-            </div>
-            
-            {/* Image */}
-            <div className="aspect-[16/9] bg-gray-100 dark:bg-gray-800 rounded-lg overflow-hidden mb-6">
-                {service[0].image && (
-                <img
-                    src={service[0].image}
-                    alt={service[0].name}
-                    className="w-full h-full object-cover"
-                    loading="lazy"
-                />
-                )}
-            </div>
-            
-            {/* Title and Description */}
-            <h1 className="text-3xl font-bold mb-2">{service[0].name}</h1>
-            <p className="text-lg text-gray-600 dark:text-gray-400 mb-6">
-                {service[0].type}
-            </p>
-            
-            {/* Details */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-                <Card>
-                <CardContent className="pt-6">
-                    <div className="flex items-center mb-4">
-                    <DollarSign className="h-5 w-5 mr-3 text-primary" />
-                    <div>
-                        <div className="font-medium">Price per day</div>
-                        <div className="text-xl font-bold">{service[0].price.toFixed(2)} VNĐ</div>
-                    </div>
-                    </div>
-                </CardContent>
-                </Card>
-                
-                <Card>
-                <CardContent className="pt-6">
-                    <div className="flex items-center mb-4">
-                    <Clock className="h-5 w-5 mr-3 text-primary" />
-                    <div>
-                        <div className="font-medium">Maximum stay</div>
-                        <div className="text-xl font-bold">{service[0].maxday}</div>
-                    </div>
-                    </div>
-                </CardContent>
-                </Card>
-                
-                {isBooked && service.date && (
-                <Card>
-                    <CardContent className="pt-6">
-                    <div className="flex items-center mb-4">
-                        <CalendarDays className="h-5 w-5 mr-3 text-primary" />
-                        <div>
-                        <div className="font-medium">Booked dates</div>
-                        <div className="text-xl font-bold">{service.date}</div>
-                        </div>
-                    </div>
-                    </CardContent>
-                </Card>
-                )}
-                
-                {isBooked && service.petName && (
-                <Card>
-                    <CardContent className="pt-6">
-                    <div className="flex items-center mb-4">
-                        <Home className="h-5 w-5 mr-3 text-primary" />
-                        <div>
-                        <div className="font-medium">Pet</div>
-                        <div className="text-xl font-bold">{service.petName}</div>
-                        </div>
-                    </div>
-                    </CardContent>
-                </Card>
-                )}
-            </div>
-            
-            {/* Amenities */}
-            {service[0].details && service[0].details.length > 0 && (
-                <div className="mb-8">
-                <h2 className="text-xl font-semibold mb-4">Included Amenities</h2>
-                <div className="flex flex-wrap gap-3">
-                    {service[0]?.details?.map((amenity, index) => (
-                    <div key={index} className="flex items-center bg-muted px-3 py-2 rounded-md">
-                        <BadgeCheck className="h-4 w-4 mr-2 text-primary" />
-                        <span>{amenity}</span>
-                    </div>
-                    ))}
-                </div>
-                </div>
-            )}
-            </div>
-            
-            {/* Right column: Booking Form or Booking Details */}
-            <div>
-            <div className="sticky top-24">
-                <Card className="w-full">
-                <CardContent className="pt-6">
-                    <h2 className="text-xl font-bold mb-6">
-                    {isBooked ? 'Booking Details' : 'Book This Service'}
-                    </h2>
-                    
-                    {!isBooked ? (
-                    /* Booking Form */
-                    <div className="space-y-4">
-                        <div>
-                        <Label htmlFor="pet">Select Pet</Label>
-                        <Select value={selectedPet} onValueChange={setSelectedPet}>
-                            <SelectTrigger id="pet" className="w-full">
-                            <SelectValue placeholder="Select a pet" />
-                            </SelectTrigger>
-                            <SelectContent>
-                            {pets.map(pet => (
-                                <SelectItem key={pet.id} value={pet.id}>{pet.name}</SelectItem>
-                            ))}
-                            </SelectContent>
-                        </Select>
-                        </div>
-                        
-                        <div>
-                        <Label htmlFor="start-date">Start Date</Label>
-                        <Input
-                            id="start-date"
-                            type="date"
-                            value={startDate}
-                            onChange={(e) => setStartDate(e.target.value)}
-                        />
-                        </div>
-                        
-                        <div>
-                        <Label htmlFor="days">Number of Days</Label>
-                        <Select 
-                            value={String(numDays)}
-                            onValueChange={(value) => setNumDays(parseInt(value))}
-                        >
-                            <SelectTrigger id="days" className="w-full">
-                            <SelectValue placeholder="Select days" />
-                            </SelectTrigger>
-                            <SelectContent>
-                            {Array.from({length: maxDays}, (_, i) => i + 1).map(num => (
-                                <SelectItem key={num} value={String(num)}>{num} {num === 1 ? 'day' : 'days'}</SelectItem>
-                            ))}
-                            </SelectContent>
-                        </Select>
-                        </div>
-                        
-                        <div className="pt-4 border-t border-border">
-                        <div className="flex justify-between mb-2">
-                            <span>Price per day:</span>
-                            <span>${service.pricePerDay.toFixed(2)}</span>
-                        </div>
-                        <div className="flex justify-between mb-2">
-                            <span>Days:</span>
-                            <span>× {numDays}</span>
-                        </div>
-                        <div className="flex justify-between text-lg font-bold mt-4">
-                            <span>Total price:</span>
-                            <span>${totalPrice.toFixed(2)}</span>
-                        </div>
-                        </div>
-                        
-                        <Button 
-                        className="w-full mt-4" 
-                        size="lg"
-                        onClick={handleBookNow}
-                        disabled={!selectedPet || !startDate || service.status !== 'available'}
-                        >
-                        Book Now
-                        </Button>
-                    </div>
-                    ) : (
-                    /* Booked Service Details */
-                    <div className="space-y-4">
-                        <div className="space-y-2">
-                        <div className="flex justify-between">
-                            <span className="text-muted-foreground">Pet:</span>
-                            <span className="font-medium">{service.petName}</span>
-                        </div>
-                        <div className="flex justify-between">
-                            <span className="text-muted-foreground">Dates:</span>
-                            <span className="font-medium">{service.date}</span>
-                        </div>
-                        <div className="flex justify-between">
-                            <span className="text-muted-foreground">Duration:</span>
-                            <span className="font-medium">{service.duration}</span>
-                        </div>
-                        <div className="flex justify-between">
-                            <span className="text-muted-foreground">Price per day:</span>
-                            <span className="font-medium">${service.pricePerDay.toFixed(2)}</span>
-                        </div>
-                        <div className="flex justify-between text-lg font-bold mt-4 pt-4 border-t border-border">
-                            <span>Total price:</span>
-                            <span>${service.price.toFixed(2)}</span>
-                        </div>
-                        </div>
-                        
-                        {service.paymentStatus === 'unpaid' && (
-                        <Button 
-                            className="w-full mt-4" 
-                            size="lg"
-                            onClick={() => navigate(`/payment/${service.id}`)}
-                        >
-                            Pay Now
-                        </Button>
-                        )}
-                    </div>
-                    )}
-                </CardContent>
-                </Card>
-            </div>
-            </div>
+      <div className="container mx-auto px-4 animate-fade-in">
+        <div className="h-96 flex items-center justify-center">
+          <div className="animate-pulse text-lg">Loading boarding details...</div>
         </div>
-        
-        <Dialog open={bookingDialogOpen} onOpenChange={setBookingDialogOpen}>
-            <DialogContent>
-            <DialogHeader>
-                <DialogTitle>Confirm Your Booking</DialogTitle>
-                <DialogDescription>
-                Please review the details of your booking below.
-                </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                <div>
-                    <p className="text-sm text-muted-foreground">Service</p>
-                    <p className="font-medium">{service.name}</p>
-                </div>
-                <div>
-                    <p className="text-sm text-muted-foreground">Pet</p>
-                    <p className="font-medium">{pets.find(p => p.id === selectedPet)?.name}</p>
-                </div>
-                <div>
-                    <p className="text-sm text-muted-foreground">Start Date</p>
-                    <p className="font-medium">{new Date(startDate).toLocaleDateString()}</p>
-                </div>
-                <div>
-                    <p className="text-sm text-muted-foreground">Duration</p>
-                    <p className="font-medium">{numDays} {numDays === 1 ? 'day' : 'days'}</p>
-                </div>
-                </div>
-                <div className="border-t border-border pt-4 mt-4">
-                <div className="flex justify-between font-bold">
-                    <span>Total Price:</span>
-                    <span>${totalPrice.toFixed(2)}</span>
-                </div>
-                </div>
-            </div>
-            <DialogFooter>
-                <Button variant="outline" onClick={() => setBookingDialogOpen(false)}>
-                Go Back
-                </Button>
-                <Button onClick={confirmBooking}>
-                Confirm & Proceed to Payment
-                </Button>
-            </DialogFooter>
-            </DialogContent>
-        </Dialog>
-        </div>
+      </div>
     );
+  }
+
+  if (!service) {
+    return (
+      <div className="container mx-auto px-4 animate-fade-in">
+        <div className="h-96 flex flex-col items-center justify-center">
+          <p className="text-xl text-gray-600 dark:text-gray-400 mb-6">
+            Boarding not found. The service you're looking for doesn't exist or has been removed.
+          </p>
+          <Button asChild>
+            <Link to="/boardings">Return to Boardings</Link>
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  const getStatusDisplay = (status:  "available" | "unavailable") => {
+    switch (status) {
+      case 'available':
+        return {
+          color: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
+          text: 'Available'
+        };
+      case 'unavailable':
+        return {
+          color: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300',
+          text: 'Unavailable'
+        };
+      default:
+        return {
+          color: 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-300',
+          text: status
+        };
+    }
+  };
+
+  const statusDisplay = getStatusDisplay(service[0]?.status);
+
+  return (
+    <div className="container mx-auto px-4 animate-fade-in">
+      <div className="flex items-center mb-6">
+        <Button 
+          variant="ghost" 
+          className="mr-4" 
+          onClick={() => navigate("/boardings")}
+        >
+          <ArrowLeft className="h-5 w-5 mr-1" />
+          Back to Boardings
+        </Button>
+        <h1 className="text-3xl font-bold">Boarding Details</h1>
+      </div>
+
+      <div className="max-w-4xl mx-auto">
+        <Card>
+          <CardHeader className="pb-4">
+            <div className="flex justify-between items-start">
+              <div className="flex items-start gap-3">
+                <div>
+                  <CardTitle className="text-2xl">{service[0].name}</CardTitle>
+                  <CardDescription className="flex items-center mt-1 capitalize">
+                    {service[0].status} Boarding
+                  </CardDescription>
+                </div>
+              </div>
+              <div className={`px-3 py-1 rounded-full text-xs font-medium ${statusDisplay.color}`}>
+                {statusDisplay.text}
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="relative aspect-video overflow-hidden rounded-lg mb-6">
+                <img 
+                  src={service[0].image || '/placeholder.svg'} 
+                  alt={service[0].image} 
+                  className="w-full h-full object-cover"
+                />
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="glass-card dark:glass-card-dark rounded-lg p-4">
+                <div className="flex items-center text-primary mb-2">
+                  <DollarSign className="h-5 w-5 mr-2" />
+                  <h3 className="font-medium">Price per day</h3>
+                </div>
+                <p className="text-2xl font-semibold">{service[0].price} VNĐ</p>
+              </div>
+              
+              <div className="glass-card dark:glass-card-dark rounded-lg p-4">
+                <div className="flex items-center text-primary mb-2">
+                  <Clock className="h-5 w-5 mr-2" />
+                  <h3 className="font-medium">You can stay</h3>
+                </div>
+                <p className="text-2xl font-semibold">{service[0].maxday} days</p>
+                <p className="text-sm text-gray-500">Estimated time</p>
+              </div>
+            </div>
+            
+            <div>
+              <div className="flex items-center text-primary mb-2">
+                <ClipboardList className="h-5 w-5 mr-2" />
+                <h3 className="font-medium">Description</h3>
+              </div>
+              <p className="text-gray-600 dark:text-gray-400 whitespace-pre-line">
+                {service[0].type}
+              </p>
+            </div>
+            <div className="border rounded-lg p-4">
+                <h3 className="font-medium mb-3">What's Included</h3>
+                <ul className="space-y-2">
+                {service[0].details?.amenities?.map((item: string, index: number) => (
+                    <li key={index} className="flex items-center">
+                    <span className="bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 p-1 rounded-full mr-2">
+                        <Sparkles className="h-3 w-3" />
+                    </span>
+                    {item}
+                    </li>
+                ))}
+                </ul>
+
+            </div>
+          </CardContent>
+          <CardFooter className="flex-col md:flex-row gap-4">
+            {service[0].status === 'available' && (
+              <>
+                <Button 
+                  className="w-full md:w-auto"
+                  onClick={() => setBookingDialogOpen(true)}
+                >
+                  <Calendar className="h-4 w-4 mr-2" />
+                  Book Now
+                </Button>
+                
+                <Button 
+                  variant="outline" 
+                  className="w-full md:w-auto" 
+                  onClick={() => {
+                    // In a real app, this might open a contact form or start a chat
+                    toast.info('Our team will reach out to you soon!');
+                  }}
+                >
+                  Request More Information
+                </Button>
+              </>
+            )}
+            
+            {service[0].status === 'unavailable' && (
+              <Button 
+                variant="outline" 
+                className="w-full md:w-auto"
+                onClick={() => {
+                  toast.info('You will be notified when this service becomes available again.');
+                }}
+              >
+                Notify Me When Available
+              </Button>
+            )}
+          </CardFooter>
+        </Card>
+      </div>
+
+      <Dialog open={bookingDialogOpen} onOpenChange={setBookingDialogOpen}>
+        <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Book {service[0].name}</DialogTitle>
+            <DialogDescription>
+              Schedule an appointment for your pet.
+            </DialogDescription>
+          </DialogHeader>
+          <BookingForm 
+            service={service[0]}
+            onSuccess={() => setBookingDialogOpen(false)}  
+          />
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
 };
 
 export default BoardingDetail;

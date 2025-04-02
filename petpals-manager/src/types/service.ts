@@ -39,5 +39,7 @@ export interface BoardingService {
   maxday: number;  // Số ngày tối đa
   image?: string;  // Hình ảnh có thể là null
   status: 'available' | 'unavailable';  // Trạng thái có thể là available hoặc unavailable
-  details?: string[];  // Có thể có hoặc không, lưu thông tin chi tiết trong dạng JSON
+  details?: {
+    amenities: string[]
+  }; 
 }

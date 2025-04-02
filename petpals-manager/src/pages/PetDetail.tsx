@@ -38,41 +38,6 @@ import AppointmentCard, { Appointment } from '@/components/ui/appointment-card';
 import { Pet} from '@/types/pets';
 import { getPet } from '@/service/pet';
 import { getTokenFromCookies } from '@/service/auth';
-
-
-// Mock function to get pet appointments
-const getPetAppointments = async (petId: string): Promise<Appointment[]> => {
-  // Simulate API fetch
-  const mockAppointments = [
-    {
-      id: '1',
-      petId: '1',
-      petName: 'Buddy',
-      date: 'Apr 12, 2024',
-      time: '10:30 AM',
-      type: 'Annual Checkup',
-      reason: 'Routine health examination and vaccinations',
-      veterinarian: 'Dr. Smith',
-      location: 'Main Pet Clinic',
-      status: 'scheduled' as const,
-    },
-    {
-      id: '2',
-      petId: '1',
-      petName: 'Buddy',
-      date: 'Mar 15, 2024',
-      time: '2:15 PM',
-      type: 'Dental Cleaning',
-      reason: 'Preventative dental care',
-      veterinarian: 'Dr. Johnson',
-      location: 'Main Pet Clinic',
-      status: 'completed' as const,
-    },
-  ];
-  
-  return mockAppointments.filter(appointment => appointment.petId === petId);
-};
-
 const PetDetail = () => {
     const { id } = useParams();
     const navigate = useNavigate();

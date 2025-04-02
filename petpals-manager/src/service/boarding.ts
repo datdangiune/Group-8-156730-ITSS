@@ -1,18 +1,24 @@
- interface BoardingService {
-  id: number;
-  name: string;
-  price: number; // giá trên ngày
-  type: string;
-  maxday: number;  // Số ngày tối đa
-  image?: string;  // Hình ảnh có thể là null
-  status: 'available' | 'unavailable';  // Trạng thái có thể là available hoặc unavailable
-  details?: string[];  // Có thể có hoặc không, lưu thông tin chi tiết trong dạng JSON
+interface BoardingService {
+    id: number;
+    name: string;
+    price: number; // giá trên ngày
+    type: string;
+    maxday: number;  // Số ngày tối đa
+    image?: string;  // Hình ảnh có thể là null
+    status: 'available' | 'unavailable';  // Trạng thái có thể là available hoặc unavailable
+    details?: {
+        amenities: string[]
+    };  // Có thể có hoặc không, lưu thông tin chi tiết trong dạng JSON
 }
 
 import Cookies from "js-cookie";
 export interface BoardingResponse {
     message: string;
     boarding: BoardingService[];
+  }
+  export interface BoardingResponseID {
+    message: string;
+    boardings: BoardingService;
   }
 // Function to fetch the boarding services
 export const fetchBoardingServices = async (token: string): Promise<BoardingResponse> => {
@@ -39,7 +45,7 @@ export const fetchBoardingServices = async (token: string): Promise<BoardingResp
       throw error;
     }
 };
-export const fetchBoardingServiceById = async (token: string, id: string): Promise<BoardingResponse> => {
+export const fetchBoardingServiceById = async (token: string, id: string): Promise<BoardingResponseID> => {
     try {
       const response = await fetch(`http://localhost:3000/api/v1/user/get-boarding/${id}`, {
         method: 'GET',
@@ -56,7 +62,8 @@ export const fetchBoardingServiceById = async (token: string, id: string): Promi
         throw new Error(result.message || 'Failed to fetch boarding services');
       }
   
-      const data: BoardingResponse = await response.json(); // Assuming the response has 'boarding' key
+      const data: BoardingResponseID = await response.json();
+      console.log(data) // Assuming the response has 'boarding' key
       return data; 
     } catch (error) {
       console.error('Error fetching boarding services:', error);

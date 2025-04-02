@@ -41,21 +41,18 @@ const BoardingCard: React.FC<BoardingCardProps> = ({
   isPreview = false, 
   onClick, 
   className,
-  isBooked = false 
 }) => {
-  const isPayable = service.status === 'unpaid' && isBooked;
+
   
   return (
     <Card 
       className={cn(
         "overflow-hidden transition-all duration-300",
-        isPreview || isPayable ? "hover:shadow-md" : "",
-        isPayable ? "cursor-pointer hover:ring-1 hover:ring-primary" : "",
         className
       )}
-      onClick={isPayable || isPreview ? onClick : undefined}
+      onClick={ isPreview ? onClick : undefined}
     >
-      {service.image && (
+    
         <div className="aspect-video bg-gray-100 dark:bg-gray-800 overflow-hidden">
           <img
             src={service.image}
@@ -64,7 +61,7 @@ const BoardingCard: React.FC<BoardingCardProps> = ({
             loading="lazy"
           />
         </div>
-      )}
+   
       
       <CardHeader>
         <div className="flex justify-between items-start">
@@ -77,18 +74,8 @@ const BoardingCard: React.FC<BoardingCardProps> = ({
               {service.status.charAt(0).toUpperCase() + service.status.slice(1).replace('-', ' ')}
             </div>
           )}
-          {isBooked && service.status && (
-            <div className={cn(
-              "px-3 py-1 rounded-full text-xs font-medium ml-2",
-              getPaymentStatusColor(service.paymentStatus)
-            )}>
-              {service.paymentStatus.charAt(0).toUpperCase() + service.paymentStatus.slice(1)}
-            </div>
-          )}
+
         </div>
-        {!isPreview && service.petName && (
-          <CardDescription>For {service.petName}</CardDescription>
-        )}
       </CardHeader>
       
       <CardContent className="space-y-4">
@@ -113,32 +100,23 @@ const BoardingCard: React.FC<BoardingCardProps> = ({
               <span>Max stay:</span>
             </div>
             <span>{service.maxday}</span>
-          </div>
-          
-          {isBooked && service.date && (
-            <div className="flex justify-between items-center text-sm text-gray-600 dark:text-gray-400">
-              <div className="flex items-center">
-                <CalendarDays className="h-4 w-4 mr-1" />
-                <span>Booked for:</span>
-              </div>
-              <span>{service.date}</span>
-            </div>
-          )}
+          </div>   
         </div>
         
-        {service.details && (
-          <div className="mt-4">
-            <p className="text-sm font-medium mb-2">Amenities:</p>
-            <div className="flex flex-wrap gap-2">
-              {service?.details?.map((amenity, index) => (
-                <div key={index} className="flex items-center text-xs bg-muted px-2 py-1 rounded-md">
-                  <BadgeCheck className="h-3 w-3 mr-1 text-primary" />
-                  {amenity}
+        {service.details && typeof service.details === "object" && (
+            <div className="mt-4">
+                <p className="text-sm font-medium mb-2">Amenities:</p>
+                <div className="flex flex-wrap gap-2">
+                {service.details.amenities?.map((amenity, index) => (
+                    <div key={index} className="flex items-center text-xs bg-muted px-2 py-1 rounded-md">
+                    <BadgeCheck className="h-3 w-3 mr-1 text-primary" />
+                    {amenity}
+                    </div>
+                ))}
                 </div>
-              ))}
             </div>
-          </div>
         )}
+
       </CardContent>
       
       {isPreview && (
@@ -151,20 +129,6 @@ const BoardingCard: React.FC<BoardingCardProps> = ({
             className="w-full"
           >
             View Details
-          </Button>
-        </CardFooter>
-      )}
-      
-      {isBooked && service.paymentStatus === 'unpaid' && (
-        <CardFooter>
-          <Button 
-            onClick={(e) => {
-              e.stopPropagation();
-              if (onClick) onClick();
-            }} 
-            className="w-full"
-          >
-            Proceed to Payment
           </Button>
         </CardFooter>
       )}
