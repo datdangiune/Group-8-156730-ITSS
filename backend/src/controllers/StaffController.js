@@ -474,7 +474,7 @@ const StaffController = {
                     {
                         model: User,
                         as: 'user',
-                        attributes: ['id', 'username', 'phone'], // Include owner details
+                        attributes: ['id', 'username'], // Removed 'phone'
                     },
                     {
                         model: Pet,
@@ -482,8 +482,7 @@ const StaffController = {
                         attributes: ['id', 'name', 'type', 'breed'], // Include pet details
                     },
                 ],
-                attributes: ['id', 'start_date', 'end_date', 'total_price', 'status', 'updated_at'], // Include boarding details
-                order: [['updated_at', 'DESC']], // Sort by last updated
+                attributes: ['id', 'start_date', 'end_date', 'total_price', 'status'], // Include boarding details
             });
 
             if (!boardingUsers.length) {
@@ -501,13 +500,11 @@ const StaffController = {
                     breed: boarding.pet.breed,
                 },
                 owner: {
-                    name: boarding.user.username,
-                    phone: boarding.user.phone,
+                    name: boarding.user.username, // Removed 'phone'
                 },
                 checkIn: boarding.start_date,
                 checkOut: boarding.end_date,
                 status: boarding.status || 'In progress',
-                lastUpdated: boarding.updated_at,
                 medications: boarding.details?.medications || [], // Include medications if available
             }));
 

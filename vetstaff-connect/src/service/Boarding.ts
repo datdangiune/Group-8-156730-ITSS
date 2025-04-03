@@ -59,6 +59,7 @@ export interface NewBoardingServiceResponse {
   data: BoardingService;
 }
 
+
 // Fetch available boarding services
 export const fetchAvailableBoardingServices = async (token: string): Promise<BoardingService[]> => {
   try {
@@ -84,6 +85,7 @@ export const fetchBoardingUserDetails = async (token: string): Promise<BoardingU
     throw new Error(error.message || "Failed to fetch boarding user details");
   }
 };
+
 
 // Add new boarding service
 export const addNewBoardingService = async (
