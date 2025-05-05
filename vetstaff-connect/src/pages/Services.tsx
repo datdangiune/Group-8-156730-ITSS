@@ -46,7 +46,7 @@ const Services: React.FC = () => {
   // Filter services based on search query and filters
   const filteredServices = services.filter((service) => {
     const matchesSearch =
-      service.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      service?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       service.pet?.name.toLowerCase().includes(searchQuery.toLowerCase());
 
     const matchesStatus =
@@ -202,9 +202,9 @@ const Services: React.FC = () => {
                     </td>
                   </tr>
                 ) : (
-                  filteredServices.map((service) => (
+                  filteredServices.map((service, i) => (
                     <tr
-                      key={service.id}
+                      key={service.id || i}
                       className="hover:bg-muted/50"
                     >
                       <td className="px-4 py-4">

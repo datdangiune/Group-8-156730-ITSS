@@ -1,6 +1,9 @@
 const { Pet, Appointment, Payment, Service, User, ServiceUser, Boarding, BoardingUser} = require('../models');
 const sendMail = require('../util/sendMail'); // Import sendMail utility
-const { Op, fn, col } = require("sequelize");
+const { Op, fn, col, where } = require("sequelize");
+const moment = require('moment');
+
+require('dotenv').config()
 const UserController  = { 
     async createPet(req, res) {
         console.log("Received pet data:", req.body);
