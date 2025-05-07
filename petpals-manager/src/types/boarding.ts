@@ -1,0 +1,1 @@
+export type BoardingStatusUser = 'pending'| 'paid' | 'canceled';

@@ -26,7 +26,7 @@ export interface GetServicesResponse {
     services: Service[];
   }
 
-  type ServiceStatusUser = 'In Progess' | 'Complete';
+type ServiceStatusUser = 'In Progess' | 'Complete';
 export interface UserService {
     id: number;
     serviceId: number;

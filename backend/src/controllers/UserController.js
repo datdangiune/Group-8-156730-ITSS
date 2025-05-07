@@ -1,7 +1,7 @@
 const { Pet, Appointment, Payment, Service, User, ServiceUser, Boarding, BoardingUser} = require('../models');
 const sendMail = require('../util/sendMail'); 
 const { Op, fn, col, where } = require("sequelize");
-const moment = require('moment');
+const { differenceInDays } = require('date-fns');
 const {VNPay} = require('vnpay');
 const {HashAlgorithm, ProductCode} = require('../enums');
 const { encrypt, decrypt } = require('../util/encryption');
@@ -548,24 +548,37 @@ const UserController  = {
           }
     },
     async registerBoarding(req, res){
-        const { petId, boardingId, start_date, end_date, notes, total_price} = req.body;
-        const {id} = req.user
+        const { petId, boardingId, start_date, end_date, notes } = req.body;
+        const { id } = req.user;
+      
         try {
           const service = await Boarding.findByPk(boardingId);
           const user = await User.findByPk(id);
           const pet = await Pet.findByPk(petId);
       
           if (!service || !user || !pet) {
-            return res.status(404).json({ message: 'Service, User, or Pet not found' });
+            return res.status(404).json({ message: 'Boarding, User, or Pet not found' });
           }
       
-          // Tạo bản ghi mới trong bảng ServiceUser
+          // Tính số ngày giữa start_date và end_date
+          const startDate = new Date(start_date);
+          const endDate = new Date(end_date);
+          const numberOfDays = differenceInDays(endDate, startDate);
+      
+          if (numberOfDays <= 0) {
+            return res.status(400).json({ message: 'End date must be after start date' });
+          }
+      
+          // Tính tổng giá
+          const total_price = numberOfDays * service.price;
+      
+          // Tạo bản ghi mới trong bảng BoardingUser
           const serviceUser = await BoardingUser.create({
             boardingId,
             userId: id,
             petId,
-            start_date,
-            end_date,
+            start_date: startDate,
+            end_date: endDate,
             notes,
             total_price,
           });
@@ -577,6 +590,51 @@ const UserController  = {
         } catch (error) {
           console.error('Error registering service:', error);
           return res.status(500).json({ message: 'Internal server error' });
+        }
+    },
+    async getUserBoarding(req, res){
+        try {
+            const userId = req.user.id; 
+            const { status } = req.query;
+    
+            const whereCondition = { userId };
+            if (status) {
+                whereCondition.status = { [Op.eq]: status };
+            }
+    
+            const userBoarding = await BoardingUser.findAll({
+                where: whereCondition,
+                include: [
+                    {
+                        model: Boarding,
+                        as: 'boarding',
+                        attributes: ['id', 'name', 'price', 'maxday', 'image', 'type'],
+                    },
+                    {
+                        model: Pet,
+                        as: 'pet',
+                        attributes: ['id', 'name', 'type', 'breed'],
+                    }
+                ]
+            });
+            if(!userBoarding){
+                return res.status(404).json({ 
+                    data: [],
+                    success: true,
+                    message: 'No services found' 
+                });
+            }
+            res.status(200).json({
+                success: true,
+                message: 'User services fetched successfully',
+                data: userBoarding
+            });
+        } catch (err) {
+            res.status(500).json({
+                success: false,
+                message: 'Error fetching user boarding',
+                error: err.message
+            });
         }
     },
     async userPaymentService(req, res) {
@@ -643,7 +701,59 @@ const UserController  = {
             });
         }
     },
+    async userPaymentBoarding(req, res) {
+        try {
+            const { id } = req.params;
     
+            const boarding_user = await BoardingUser.findByPk(id);
+    
+            if (!boarding_user) {
+                return res.status(404).json({
+                    success: false,
+                    message: "BoardingUser not found"
+                });
+            }
+    
+            if (boarding_user.status_payment === 'paid') {
+                return res.status(400).json({
+                    success: false,
+                    message: "ServiceUser đã thanh toán trước đó"
+                });
+            }
+    
+            const vnp_Amount = boarding_user.total_price;
+            const encryptedId = encrypt(boarding_user.id.toString());
+            console.log(encryptedId);
+    
+            const urlString = vnpay.buildPaymentUrl(
+                {
+                    vnp_Amount: vnp_Amount,
+                    vnp_IpAddr: '1.1.1.1',
+                    vnp_TxnRef: encryptedId,
+                    vnp_OrderInfo: `Payment for order ${encryptedId}`,
+                    vnp_OrderType: ProductCode.Other,
+                    vnp_ReturnUrl: "http://localhost:3000/vnpay-return",
+                },
+                {
+                    logger: {
+                        type: 'pick',
+                        fields: ['createdAt', 'method', 'paymentUrl'],
+                    },
+                }
+            );
+    
+            return res.redirect(urlString);
+    
+        } catch (error) {
+            console.error("Payment error:", error);
+            return res.status(500).json({
+                success: false,
+                message: "Internal server error",
+            });
+        }
+    },
+
+
     async callbackURL(req, res) {
         let verify;
         try {
@@ -651,42 +761,69 @@ const UserController  = {
             if (!verify.isVerified) {
                 return res.send('Xác thực tính toàn vẹn dữ liệu thất bại');
             }
-    
+
             const encryptedId = req.query.vnp_TxnRef;
-            let serviceUserId;
+            let id;
             try {
-                serviceUserId = decrypt(encryptedId);
+                id = decrypt(encryptedId);
             } catch (err) {
                 return res.send('Không thể giải mã ID đơn hàng');
             }
-    
+
             if (!verify.isSuccess) {
                 return res.send('Đơn hàng thanh toán thất bại');
             }
-    
-            // Lấy ServiceUser kèm thông tin User và Service
-            const serviceUser = await ServiceUser.findByPk(serviceUserId, {
+
+            // ⚙️ Thử kiểm tra ServiceUser trước
+            let serviceUser = await ServiceUser.findByPk(id, {
                 include: [
                     { model: User, as: 'user', attributes: ['email', 'name'] },
                     { model: Service, as: 'service', attributes: ['name', 'price'] }
                 ]
             });
-    
-            if (!serviceUser || !serviceUser.user) {
-                return res.send('Không tìm thấy người dùng hoặc đơn hàng');
+
+            if (serviceUser) {
+                await serviceUser.update({ status: 'Complete' });
+
+                const emailContent = `
+                    <div style="font-family: Arial, sans-serif; padding: 20px;">
+                        <h2 style="color: #4CAF50;">Thanh toán thành công</h2>
+                        <p>Xin chào <strong>${serviceUser.user.name}</strong>,</p>
+                        <p>Bạn đã thanh toán thành công cho dịch vụ <strong>${serviceUser.service.name}</strong>.</p>
+                        <ul>
+                            <li><strong>Mã đơn hàng:</strong> ${req.query.vnp_TxnRef}</li>
+                            <li><strong>Số tiền:</strong> ${(serviceUser.service.price).toLocaleString()} VND</li>
+                            <li><strong>Thời gian thanh toán:</strong> ${new Date().toLocaleString()}</li>
+                            <li><strong>Trạng thái:</strong> Thành công</li>
+                        </ul>
+                        <p>Cảm ơn bạn đã tin tưởng và sử dụng dịch vụ!</p>
+                        <p><strong>PetCare Team</strong></p>
+                    </div>
+                `;
+                await sendMail({
+                    email: serviceUser.user.email,
+                    html: emailContent
+                });
+
+                return res.redirect('http://localhost:8080/services/me');
             }
-    
-            // Cập nhật trạng thái
-            await serviceUser.update({ status: 'Complete' });
-    
-            const emailContent = `
+            const boardingUser = await BoardingUser.findByPk(id, {
+                include: [
+                    { model: User, as: 'user', attributes: ['email', 'name'] },
+                    { model: Boarding, as: 'boarding', attributes: ['name'] }
+                ]
+            });
+
+            if (boardingUser) {
+                await boardingUser.update({ status_payment: 'paid' });
+                const emailContentBoarding = `
                 <div style="font-family: Arial, sans-serif; padding: 20px;">
                     <h2 style="color: #4CAF50;">Thanh toán thành công</h2>
-                    <p>Xin chào <strong>${serviceUser.user.name}</strong>,</p>
-                    <p>Bạn đã thanh toán thành công cho dịch vụ <strong>${serviceUser.service.name}</strong>.</p>
+                    <p>Xin chào <strong>${boardingUser.user.name}</strong>,</p>
+                    <p>Bạn đã thanh toán thành công cho dịch vụ <strong>${boardingUser.boarding.name}</strong>.</p>
                     <ul>
                         <li><strong>Mã đơn hàng:</strong> ${req.query.vnp_TxnRef}</li>
-                        <li><strong>Số tiền:</strong> ${(serviceUser.service.price).toLocaleString()} VND</li>
+                        <li><strong>Số tiền:</strong> ${(boardingUser.total_price).toLocaleString()} VND</li>
                         <li><strong>Thời gian thanh toán:</strong> ${new Date().toLocaleString()}</li>
                         <li><strong>Trạng thái:</strong> Thành công</li>
                     </ul>
@@ -694,19 +831,22 @@ const UserController  = {
                     <p><strong>PetCare Team</strong></p>
                 </div>
             `;
-    
             await sendMail({
-                email: serviceUser.user.email,
-                html: emailContent
+                email: boardingUser.user.email,
+                html: emailContentBoarding
             });
-    
-            return res.redirect('http://localhost:8080/services/me');
+                // Tùy ý: Gửi mail nếu có trường userId/email trong BoardingUser
+                return res.redirect('http://localhost:8080/boardings/me');
+            }
+
+            return res.send('Không tìm thấy đơn hàng hợp lệ');
+
         } catch (error) {
             console.error('Lỗi xử lý vnpay-return:', error);
             return res.send('Dữ liệu không hợp lệ');
         }
     }
-    
+
 }
 
 module.exports =  UserController;

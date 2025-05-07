@@ -7,6 +7,8 @@ import { Calendar as CalendarIcon, Clock, User, Check, Loader2 } from 'lucide-re
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
+import { Textarea } from "@/components/ui/textarea";
+
 import {
   Form,
   FormControl,
@@ -32,21 +34,17 @@ import { BoardingService } from '@/types/service';
 import { Pet } from '@/types/pets';
 import { getPets } from '@/service/pet';
 import { getTokenFromCookies } from '@/service/auth';
-import { fetchRegisterService } from '@/service/service';
+import { fetchRegisterBaording } from '@/service/boarding';
 
-// Available time slots
-const timeSlots = [
-  '09:00 AM', '10:00 AM', '11:00 AM', 
-  '01:00 PM', '02:00 PM', '03:00 PM', '04:00 PM'
-];
 
 // Form schema
 interface BookingFormValues {
-    id: string;
-    date: Date; // Dùng string để lưu định dạng YYYY-MM-DD
-    time: string; // Dùng string cho giờ HH:mm
+  id: string;
+  start_date: Date;
+  end_date: Date;
+  note: string;
 }
-  
+
 
 type BookingFormProps = {
   service: BoardingService;
@@ -54,18 +52,19 @@ type BookingFormProps = {
 };
 
 const BookingFormBoarding = ({ service, onSuccess }: BookingFormProps) => {
-    const navigate = useNavigate();
-    const [step, setStep] = useState(1);
-    const token = getTokenFromCookies();
-    const [loading, setLoading] = useState(false);
-    const [pets, setPets] = useState<Pet[]>([]);
-    const form = useForm<BookingFormValues>({
-        defaultValues: {
-          id: "",
-          date: new Date,
-          time: "",
-        },
-    });
+  const navigate = useNavigate();
+  const [step, setStep] = useState(1);
+  const token = getTokenFromCookies();
+  const [loading, setLoading] = useState(false);
+  const [pets, setPets] = useState<Pet[]>([]);
+  const form = useForm<BookingFormValues>({
+    defaultValues: {
+      id: "",
+      start_date: new Date,
+      end_date: new Date,
+      note: "",
+    },
+  });
 
   async function onSubmit(values: BookingFormValues) {
     if (step < 3) {
@@ -73,68 +72,70 @@ const BookingFormBoarding = ({ service, onSuccess }: BookingFormProps) => {
       return;
     }
     try {
-        setLoading(true);
-        // Gửi dữ liệu lên backend để đặt lịch dịch vụ
-        const response = await fetchRegisterService(token, {
-            petId: Number(values.id), // Chuyển id thành số nếu cần
-            serviceId: service.id,
-            date: values.date,
-            hour: values.time,
-          });
-    
-        if (response) {
-          toast.success("Service booked successfully!", {
-            description: `Your appointment for ${service.name} has been confirmed.`,
-          });
+      setLoading(true);
+      // Gửi dữ liệu lên backend để đặt lịch dịch vụ
+      const response = await fetchRegisterBaording(token, {
+        petId: Number(values.id), // Chuyển id thành số nếu cần
+        boardingId: service.id,
+        start_date: values.start_date,
+        end_date: values.end_date,
+        notes: values.note,
+      });
 
-          onSuccess();
-          
-          navigate("/appointments");
-        } else {
-          toast.error("Booking failed", {
-            description: response.message || "Something went wrong.",
-          });
-        }
-      } catch (error) {
-        console.error("Error booking service:", error);
+      if (response) {
+        toast.success("Service booked successfully!", {
+          description: `Your appointment for ${service.name} has been confirmed.`,
+        });
+
+        onSuccess();
+
+        navigate("/appointments");
+      } else {
         toast.error("Booking failed", {
-          description: "Please try again later.",
+          description: response.message || "Something went wrong.",
         });
       }
+    } catch (error) {
+      console.error("Error booking service:", error);
+      toast.error("Booking failed", {
+        description: "Please try again later.",
+      });
+    }
     // In a real app, this would send data to your backend
     console.log('Booking submitted:', { service, ...values });
 
     // Show success notification
-    toast.success('Service booked successfully!', {
+    toast.success('Boarding booked successfully!', {
       description: `Your appointment for ${service.name} has been confirmed.`,
     });
-    
+
     onSuccess();
     setLoading(false)
     // Navigate to appointments page
     navigate('/services');
   }
 
-  const selectedPet = form.watch('id') 
-  ? pets.find(pet => pet.id === Number(form.watch('id'))) 
-  : null;
-    useEffect(() => {
-        async function fetchPets() {
-          if (!token) return;
-            const data = await getPets(token);
-      
-          const formattedPets: Pet[] = data.map(pet => ({
-            ...pet,
-            id: Number(pet.id), // Đảm bảo id là số
-            name: pet.name,
-            image: pet.image || null, // Đảm bảo image có thể là null
-          }));
-      
-          setPets(formattedPets);
-        }
-      
-        fetchPets();
-    }, [token]);
+  const selectedPet = form.watch('id')
+    ? pets.find(pet => pet.id === Number(form.watch('id')))
+    : null;
+  useEffect(() => {
+    async function fetchPets() {
+      if (!token) return;
+      const data = await getPets(token);
+
+      const formattedPets: Pet[] = data.map(pet => ({
+        ...pet,
+        id: Number(pet.id), // Đảm bảo id là số
+        name: pet.name,
+        image: pet.image || null, // Đảm bảo image có thể là null
+      }));
+
+      setPets(formattedPets);
+    }
+
+    fetchPets();
+  }, [token]);
+  const startDate = form.watch("start_date");
   return (
     <div className="space-y-4">
       <div className="mb-6">
@@ -173,11 +174,11 @@ const BookingFormBoarding = ({ service, onSuccess }: BookingFormProps) => {
           {step === 1 && (
             <div className="space-y-4 animate-fade-in">
               <h3 className="text-lg font-medium">Select a Pet</h3>
-              
+
               {pets.length === 0 ? (
                 <div className="text-center p-6 border rounded-lg">
                   <p className="mb-4 text-gray-600 dark:text-gray-400">You don't have any pets registered.</p>
-                  <Button 
+                  <Button
                     onClick={() => navigate('/pets/add')}
                     variant="outline"
                   >
@@ -191,8 +192,8 @@ const BookingFormBoarding = ({ service, onSuccess }: BookingFormProps) => {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Pet</FormLabel>
-                      <Select 
-                        onValueChange={field.onChange} 
+                      <Select
+                        onValueChange={field.onChange}
                         defaultValue={field.value}
                       >
                         <FormControl>
@@ -218,22 +219,22 @@ const BookingFormBoarding = ({ service, onSuccess }: BookingFormProps) => {
               )}
 
               <div className="pt-4 flex justify-between">
-                <Button 
+                <Button
                   type="button"
-                  variant="outline" 
+                  variant="outline"
                   onClick={() => navigate('/services')}
                 >
                   Cancel
                 </Button>
-                <Button 
-                    type="button"
-                    onClick={() => {
-                        const isValid = form.trigger('id');
-                        if (isValid) setStep(2);
-                    }}
-                    disabled={!form.watch("id")} // Disable nếu pet chưa được chọn
-                    >
-                    Next
+                <Button
+                  type="button"
+                  onClick={() => {
+                    const isValid = form.trigger('id');
+                    if (isValid) setStep(2);
+                  }}
+                  disabled={!form.watch("id")} // Disable nếu pet chưa được chọn
+                >
+                  Next
                 </Button>
 
               </div>
@@ -243,14 +244,16 @@ const BookingFormBoarding = ({ service, onSuccess }: BookingFormProps) => {
           {step === 2 && (
             <div className="space-y-4 animate-fade-in">
               <h3 className="text-lg font-medium">Select Date & Time</h3>
-              
+
               <div className="grid gap-6">
+             
+
                 <FormField
                   control={form.control}
-                  name="date"
+                  name="start_date"
                   render={({ field }) => (
                     <FormItem className="flex flex-col">
-                      <FormLabel>Date</FormLabel>
+                      <FormLabel>Start Date</FormLabel>
                       <Popover>
                         <PopoverTrigger asChild>
                           <FormControl>
@@ -275,8 +278,8 @@ const BookingFormBoarding = ({ service, onSuccess }: BookingFormProps) => {
                             mode="single"
                             selected={field.value}
                             onSelect={field.onChange}
-                            disabled={(date) => 
-                              date < new Date() || 
+                            disabled={(date) =>
+                              date < new Date() ||
                               date > new Date(new Date().setMonth(new Date().getMonth() + 2))
                             }
                             initialFocus
@@ -290,143 +293,183 @@ const BookingFormBoarding = ({ service, onSuccess }: BookingFormProps) => {
 
                 <FormField
                   control={form.control}
-                  name="time"
+                  name="end_date"
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Time</FormLabel>
-                      <Select 
-                        onValueChange={field.onChange} 
-                        defaultValue={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select a time" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {timeSlots.map(time => (
-                            <SelectItem key={time} value={time}>
-                              {time}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                    <FormItem className="flex flex-col">
+                      <FormLabel>End Date</FormLabel>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <FormControl>
+                            <Button
+                              variant={"outline"}
+                              className={cn(
+                                "pl-3 text-left font-normal",
+                                !field.value && "text-muted-foreground"
+                              )}
+                            >
+                              {field.value ? (
+                                format(field.value, "PPP")
+                              ) : (
+                                <span>Select a date</span>
+                              )}
+                              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                            </Button>
+                          </FormControl>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={field.value}
+                            onSelect={field.onChange}
+                            disabled={(date) => {
+                              const today = new Date();
+                              const twoMonthsLater = new Date();
+                              twoMonthsLater.setMonth(today.getMonth() + 2);
+                              return (
+                                date < today || // Không chọn ngày trong quá khứ
+                                date > twoMonthsLater || // Không chọn ngày sau 2 tháng
+                                (startDate && date <= startDate) // Ngăn chọn ngày cùng hoặc trước start_date
+                              );
+                            }}
+                            initialFocus
+                          />
+                        </PopoverContent>
+                      </Popover>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
+
+                <FormField
+                  control={form.control}
+                  name="note"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Notes</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          placeholder="Any important notes (e.g. allergies, behavior)..."
+                          className="resize-none"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
               </div>
 
               <div className="pt-4 flex justify-between">
-                <Button 
+                <Button
                   type="button"
-                  variant="outline" 
+                  variant="outline"
                   onClick={() => setStep(1)}
                 >
                   Back
                 </Button>
-                <Button 
-                    type="button"
-                    onClick={async () => {
-                        const isDateValid = await form.trigger('date');
-                        const isTimeValid = await form.trigger('time');
-                        if (isDateValid && isTimeValid) {
-                        setStep(3);
-                        }
-                    }}
-                    disabled={!form.watch('date') || !form.watch('time')} // Sử dụng form.watch() để kiểm tra giá trị
-                    >
-                    Next
+                <Button
+                  type="button"
+                  onClick={async () => {
+                    const isEndDateValid = await form.trigger('end_date');
+                    const isStartDateValid = await form.trigger('start_date');
+                    if (isEndDateValid && isStartDateValid) {
+                      setStep(3);
+                    }
+                  }}
+                  disabled={!form.watch('end_date') || !form.watch('start_date')} // Sử dụng form.watch() để kiểm tra giá trị
+                >
+                  Next
                 </Button>
 
-              </div>    
+              </div>
             </div>
           )}
 
-            {step === 3 && (
-                
-                <div className="space-y-6 animate-fade-in">
-                <h3 className="text-lg font-medium">Confirm Booking</h3>
-                
-                <div className="space-y-4">
-                    <div className="glass-card dark:glass-card-dark p-4 rounded-lg">
-                    <h4 className="font-medium mb-2">Service</h4>
+          {step === 3 && (
+
+            <div className="space-y-6 animate-fade-in">
+              <h3 className="text-lg font-medium">Confirm Booking</h3>
+
+              <div className="space-y-4">
+                <div className="glass-card dark:glass-card-dark p-4 rounded-lg">
+                  <h4 className="font-medium mb-2">Boarding</h4>
+                  <div className="flex items-center">
+                    <div className="bg-primary/10 text-primary p-2 rounded-full mr-3">
+                      {/* Icon based on service type would go here */}
+                    </div>
+                    <div>
+                      <p className="font-medium">{service.name}</p>
+                      <p className="text-sm text-gray-500">
+                        ${service.price} · {service.maxday}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {selectedPet && (
+                  <div className="glass-card dark:glass-card-dark p-4 rounded-lg">
+                    <h4 className="font-medium mb-2">Pet</h4>
                     <div className="flex items-center">
-                        <div className="bg-primary/10 text-primary p-2 rounded-full mr-3">
-                        {/* Icon based on service type would go here */}
-                        </div>
-                        <div>
-                        <p className="font-medium">{service.name}</p>
-                        <p className="text-sm text-gray-500">
-                            ${service.price} · {service.maxday}
+                      <div className="bg-primary/10 text-primary p-2 rounded-full mr-3">
+                        <User className="h-4 w-4" />
+                      </div>
+                      <div>
+                        <p className="font-medium">{selectedPet.name}</p>
+                        <p className="text-sm text-gray-500 capitalize">
+                          {selectedPet.type} • {selectedPet.breed}
                         </p>
-                        </div>
+                      </div>
                     </div>
-                    </div>
+                  </div>
+                )}
 
-                    {selectedPet && (
-                    <div className="glass-card dark:glass-card-dark p-4 rounded-lg">
-                        <h4 className="font-medium mb-2">Pet</h4>
-                        <div className="flex items-center">
-                        <div className="bg-primary/10 text-primary p-2 rounded-full mr-3">
-                            <User className="h-4 w-4" />
-                        </div>
-                        <div>
-                            <p className="font-medium">{selectedPet.name}</p>
-                            <p className="text-sm text-gray-500 capitalize">
-                            {selectedPet.type} • {selectedPet.breed}
-                            </p>
-                        </div>
-                        </div>
+                <div className="glass-card dark:glass-card-dark p-4 rounded-lg">
+                  <h4 className="font-medium mb-2">Appointment</h4>
+                  <div className="space-y-2">
+                    <div className="flex items-center">
+                      <div className="bg-primary/10 text-primary p-2 rounded-full mr-3">
+                        <CalendarIcon className="h-4 w-4" />
+                      </div>
+                      <div>
+                        <p className="font-medium">{form.getValues('start_date') ? format(form.getValues('start_date'), "PPP") : "No date selected"}</p>
+                      </div>
                     </div>
-                    )}
-
-                    <div className="glass-card dark:glass-card-dark p-4 rounded-lg">
-                    <h4 className="font-medium mb-2">Appointment</h4>
-                    <div className="space-y-2">
-                        <div className="flex items-center">
-                        <div className="bg-primary/10 text-primary p-2 rounded-full mr-3">
-                            <CalendarIcon className="h-4 w-4" />
-                        </div>
-                        <div>
-                            <p className="font-medium">{form.getValues('date') ? format(form.getValues('date'), "PPP") : "No date selected"}</p>
-                        </div>
-                        </div>
-                        <div className="flex items-center">
-                        <div className="bg-primary/10 text-primary p-2 rounded-full mr-3">
-                            <Clock className="h-4 w-4" />
-                        </div>
-                        <div>
-                            <p className="font-medium">{form.getValues('time') || "No time selected"}</p>
-                        </div>
-                        </div>
+                    <div className="flex items-center">
+                      <div className="bg-primary/10 text-primary p-2 rounded-full mr-3">
+                        <CalendarIcon className="h-4 w-4" />
+                      </div>
+                      <div>
+                        <p className="font-medium">{form.getValues('end_date') ? format(form.getValues('end_date'), "PPP") : "No date selected"}</p>
+                      </div>
                     </div>
-                    </div>
+                  </div>
                 </div>
+              </div>
 
-                <div className="pt-4 flex justify-between">
-                    <Button 
-                    type="button"
-                    variant="outline" 
-                    onClick={() => setStep(2)}
-                    >
-                    Back
-                    </Button>
-                    <Button type="submit" disabled={loading}>
-                        {loading ? (
-                            <>
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Booking...
-                            </>
-                        ) : (
-                            <>
-                            <Check className="mr-2 h-4 w-4" /> Confirm Booking
-                            </>
-                        )}
-                    </Button>
+              <div className="pt-4 flex justify-between">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setStep(2)}
+                >
+                  Back
+                </Button>
+                <Button type="submit" disabled={loading}>
+                  {loading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Booking...
+                    </>
+                  ) : (
+                    <>
+                      <Check className="mr-2 h-4 w-4" /> Confirm Booking
+                    </>
+                  )}
+                </Button>
 
-                </div>
-                </div>
-            )}
+              </div>
+            </div>
+          )}
         </form>
       </Form>
     </div>

@@ -22,6 +22,7 @@ import ServiceDetail from "./pages/ServiceDetail";
 import MyService from "@/pages/MyServcice";
 import Boarding from "@/pages/Boarding";
 import BoardingDetail from "@/pages/BoardingDetail";
+import MyBoarding from "./pages/MyBoarding";
 const queryClient = new QueryClient();
 
 const MainLayout = () => (
@@ -59,6 +60,7 @@ const App = () => (
                 <Route path="/services/:id" element={<ServiceDetail />} />
                 <Route path="/boardings" element={<Boarding />} />
                 <Route path="/boarding/:id" element={<BoardingDetail />} />
+                <Route path="/boardings/me" element={<MyBoarding />} />
                 <Route path="/history" element={<History />} />
                 <Route path="*" element={<NotFound />} />
               </Route>

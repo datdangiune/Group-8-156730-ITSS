@@ -10,7 +10,12 @@ interface BoardingService {
         amenities: string[]
     };  // Có thể có hoặc không, lưu thông tin chi tiết trong dạng JSON
 }
-
+interface Pet {
+  id: number;
+  name: string;
+  type: string;
+  breed: string;
+}
 import Cookies from "js-cookie";
 export interface BoardingResponse {
     message: string;
@@ -70,4 +75,84 @@ export const fetchBoardingServiceById = async (token: string, id: string): Promi
       throw error;
     }
 };
+
+interface RegisterBoardingRequest {
+  petId: number;
+  boardingId: number;
+  start_date: Date; // Định dạng YYYY-MM-DD
+  end_date: Date;
+  notes: string;
+}
+
+interface RegisterBoardingResponse {
+  message: string;
+}
+
+export async function fetchRegisterBaording(
+  token: string,
+  requestData: RegisterBoardingRequest
+): Promise<RegisterBoardingResponse> {
+  try {
+    const response = await fetch('http://localhost:3000/api/v1/user/boarding', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`, // Truyền token vào header
+      },
+      body: JSON.stringify(requestData),
+    });
+    if (response.status === 401){
+      Cookies.remove("token", { path: '/' });  // Add the correct path if needed
+    }
+    if (!response.ok) {
+      throw new Error(`Failed to register service: ${response.statusText}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Error registering service:', error);
+    throw error;
+  }
+}
+
+type BoardingStatusUser = 'pending'| 'paid' | 'canceled';
+export interface UserBoarding {
+    id: number;
+    boardingId: number;
+    userId: number;
+    petId: number;
+    start_date: string;
+    end_date: string;
+    notes: string;
+    status_payment: BoardingStatusUser;
+    boarding: BoardingService;
+    pet: Pet;
+    total_price: number;
+  }
+
+  export const fetchUserBoarding = async (token: string, status: string): Promise<UserBoarding[]> => {
+    try {
+      const response = await fetch(`http://localhost:3000/api/v1/user/boarding?status=${status}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      console.log("Unauthorized - removing token");
+      if (response.status === 401){
+        Cookies.remove("token", { path: '/' });  // Add the correct path if needed
+      }
+      if (!response.ok) {
+        const result = await response.json();
+        throw new Error(result.message || "Failed to fetch user services.");
+      }
+
+      const { data } = await response.json();
+      return data as UserBoarding[];
+    } catch (error) {
+      console.error("Error fetching user services:", error);
+      throw error;
+    }
+  };
   

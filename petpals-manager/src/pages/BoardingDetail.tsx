@@ -28,7 +28,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import BookingForm from '@/components/service/BookingForm';
+import BookingFormBoarding from '@/components/service/BookingFormBoarding';
 import { fetchBoardingServiceById, BoardingResponseID} from '@/service/boarding';
 import { getTokenFromCookies} from '@/service/auth';
 import { BoardingService } from '@/types/service';
@@ -247,7 +247,7 @@ const BoardingDetail = () => {
               Schedule an appointment for your pet.
             </DialogDescription>
           </DialogHeader>
-          <BookingForm 
+          <BookingFormBoarding 
             service={service[0]}
             onSuccess={() => setBookingDialogOpen(false)}  
           />
