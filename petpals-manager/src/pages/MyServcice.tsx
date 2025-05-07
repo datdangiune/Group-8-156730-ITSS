@@ -37,7 +37,8 @@ const MyServices = () => {
     const handleServiceClick = (service: UserService) => {
         if (service.status === 'In Progess') {
         // Navigate to payment page for the service
-        navigate(`/payment/${service.id}`);
+        window.location.href = `http://localhost:3000/api/v1/user/pay/${service.id}`;
+
         }
         // Do nothing for paid services as they should remain static
     };
@@ -57,12 +58,10 @@ const MyServices = () => {
 
   const getStatusBadge = (status: ServiceStatusUser) => {
     switch (status) {
-      case 'Done':
+      case 'Complete':
         return <Badge variant="outline">Available</Badge>;
       case 'In Progess':
         return <Badge variant="destructive">Unavailable</Badge>;
-      case 'Scheduled':
-        return <Badge variant="secondary">Scheduled</Badge>;
       default:
         return null;
     }
@@ -70,10 +69,8 @@ const MyServices = () => {
 
   const getPaymentStatusBadge = (status?: ServiceStatusUser) => {
     switch (status) {
-      case 'Scheduled':
+      case 'Complete':
         return <Badge>Paid</Badge>;
-        case 'Done':
-            return <Badge>Paid</Badge>;
       case 'In Progess':
         return <Badge variant="destructive">Unpaid</Badge>;
       default:

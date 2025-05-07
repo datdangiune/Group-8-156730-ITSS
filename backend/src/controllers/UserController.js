@@ -1,9 +1,25 @@
 const { Pet, Appointment, Payment, Service, User, ServiceUser, Boarding, BoardingUser} = require('../models');
-const sendMail = require('../util/sendMail'); // Import sendMail utility
+const sendMail = require('../util/sendMail'); 
 const { Op, fn, col, where } = require("sequelize");
 const moment = require('moment');
-
-require('dotenv').config()
+const {VNPay} = require('vnpay');
+const {HashAlgorithm, ProductCode} = require('../enums');
+const { encrypt, decrypt } = require('../util/encryption');
+require('dotenv').config();
+const vnpay = new VNPay({
+    tmnCode: process.env.vnp_TmnCode,
+    secureSecret: process.env.vnp_HashSecret,
+    vnpayHost: 'https://sandbox.vnpayment.vn',
+    testMode: true, // optional
+    hashAlgorithm: HashAlgorithm.SHA512, // optional
+    enableLog: true, // optional
+    //loggerFn: ignoreLogger, // optional
+    endpoints: {
+      paymentEndpoint: 'paymentv2/vpcpay.html',
+      queryDrRefundEndpoint: 'merchant_webapi/api/transaction',
+      getBankListEndpoint: 'qrpayauth/api/merchant/get_bank_list',
+  },
+  })
 const UserController  = { 
     async createPet(req, res) {
         console.log("Received pet data:", req.body);
@@ -563,6 +579,134 @@ const UserController  = {
           return res.status(500).json({ message: 'Internal server error' });
         }
     },
+    async userPaymentService(req, res) {
+        try {
+            const { id } = req.params;
+    
+            const service_user = await ServiceUser.findByPk(id, {
+                include: {
+                    model: Service,
+                    as: 'service',
+                    attributes: ['price'],
+                },
+            });
+    
+            if (!service_user) {
+                return res.status(404).json({
+                    success: false,
+                    message: "ServiceUser not found"
+                });
+            }
+    
+            if (!service_user.service) {
+                return res.status(404).json({
+                    success: false,
+                    message: "Service not found for this ServiceUser"
+                });
+            }
+    
+            if (service_user.status === 'Complete') {
+                return res.status(400).json({
+                    success: false,
+                    message: "ServiceUser đã thanh toán trước đó"
+                });
+            }
+    
+            const vnp_Amount = service_user.service.price;
+            const encryptedId = encrypt(service_user.id.toString());
+            console.log(encryptedId);
+    
+            const urlString = vnpay.buildPaymentUrl(
+                {
+                    vnp_Amount: vnp_Amount,
+                    vnp_IpAddr: '1.1.1.1',
+                    vnp_TxnRef: encryptedId,
+                    vnp_OrderInfo: `Payment for order ${encryptedId}`,
+                    vnp_OrderType: ProductCode.Other,
+                    vnp_ReturnUrl: "http://localhost:3000/vnpay-return",
+                },
+                {
+                    logger: {
+                        type: 'pick',
+                        fields: ['createdAt', 'method', 'paymentUrl'],
+                    },
+                }
+            );
+    
+            return res.redirect(urlString);
+    
+        } catch (error) {
+            console.error("Payment error:", error);
+            return res.status(500).json({
+                success: false,
+                message: "Internal server error",
+            });
+        }
+    },
+    
+    async callbackURL(req, res) {
+        let verify;
+        try {
+            verify = vnpay.verifyReturnUrl(req.query);
+            if (!verify.isVerified) {
+                return res.send('Xác thực tính toàn vẹn dữ liệu thất bại');
+            }
+    
+            const encryptedId = req.query.vnp_TxnRef;
+            let serviceUserId;
+            try {
+                serviceUserId = decrypt(encryptedId);
+            } catch (err) {
+                return res.send('Không thể giải mã ID đơn hàng');
+            }
+    
+            if (!verify.isSuccess) {
+                return res.send('Đơn hàng thanh toán thất bại');
+            }
+    
+            // Lấy ServiceUser kèm thông tin User và Service
+            const serviceUser = await ServiceUser.findByPk(serviceUserId, {
+                include: [
+                    { model: User, as: 'user', attributes: ['email', 'name'] },
+                    { model: Service, as: 'service', attributes: ['name', 'price'] }
+                ]
+            });
+    
+            if (!serviceUser || !serviceUser.user) {
+                return res.send('Không tìm thấy người dùng hoặc đơn hàng');
+            }
+    
+            // Cập nhật trạng thái
+            await serviceUser.update({ status: 'Complete' });
+    
+            const emailContent = `
+                <div style="font-family: Arial, sans-serif; padding: 20px;">
+                    <h2 style="color: #4CAF50;">Thanh toán thành công</h2>
+                    <p>Xin chào <strong>${serviceUser.user.name}</strong>,</p>
+                    <p>Bạn đã thanh toán thành công cho dịch vụ <strong>${serviceUser.service.name}</strong>.</p>
+                    <ul>
+                        <li><strong>Mã đơn hàng:</strong> ${req.query.vnp_TxnRef}</li>
+                        <li><strong>Số tiền:</strong> ${(serviceUser.service.price).toLocaleString()} VND</li>
+                        <li><strong>Thời gian thanh toán:</strong> ${new Date().toLocaleString()}</li>
+                        <li><strong>Trạng thái:</strong> Thành công</li>
+                    </ul>
+                    <p>Cảm ơn bạn đã tin tưởng và sử dụng dịch vụ!</p>
+                    <p><strong>PetCare Team</strong></p>
+                </div>
+            `;
+    
+            await sendMail({
+                email: serviceUser.user.email,
+                html: emailContent
+            });
+    
+            return res.redirect('http://localhost:8080/services/me');
+        } catch (error) {
+            console.error('Lỗi xử lý vnpay-return:', error);
+            return res.send('Dữ liệu không hợp lệ');
+        }
+    }
+    
 }
 
 module.exports =  UserController;

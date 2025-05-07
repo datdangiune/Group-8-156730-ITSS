@@ -33,5 +33,6 @@ router.get('/get-boarding/:id', verifyToken, UserController.getBoardingById)
 router.post('/boarding', verifyToken, UserController.registerBoarding)
 router.post('/image', verifyToken, fileUploader.single('file'), UserController.uploadImage)
 
-//router.post('/pay/:order_id', UserController.payments)
+router.get('/pay/:id', UserController.userPaymentService)
+router.get('/vnpay-return', UserController.callbackURL)
 module.exports = router;
