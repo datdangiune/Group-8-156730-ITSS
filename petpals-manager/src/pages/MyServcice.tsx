@@ -24,7 +24,7 @@ import { CalendarDays, Clock, CreditCard, Package, ShieldCheck, Sparkles, Stetho
 import {fetchUserServices, UserService} from "@/service/service"
 import { getTokenFromCookies } from '@/service/auth';
 // Mock services data - in a real app, this would come from an API
-
+import { getPaymentUrl } from '@/service/service';
 
 const MyServices = () => {
     const [search, setSearch] = useState('');
@@ -34,10 +34,15 @@ const MyServices = () => {
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState<boolean>(true);
     const token = getTokenFromCookies();
-    const handleServiceClick = (service: UserService) => {
+    const handleServiceClick = async (service: UserService) => {
         if (service.status === 'In Progess') {
         // Navigate to payment page for the service
-        window.location.href = `http://localhost:3000/api/v1/user/pay/${service.id}`;
+        const paymentUrl = await getPaymentUrl(service.id, token);
+        if (paymentUrl) {
+          window.location.href = paymentUrl;
+        } else {
+          alert('Không lấy được link thanh toán.');
+        }
 
         }
         // Do nothing for paid services as they should remain static

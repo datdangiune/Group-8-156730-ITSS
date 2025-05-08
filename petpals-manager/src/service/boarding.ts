@@ -156,3 +156,23 @@ export interface UserBoarding {
     }
   };
   
+
+  export const getPaymentUrl = async (boardingId: number, token: string): Promise<string | null> => {
+    try {
+      const response = await fetch(`http://localhost:3000/api/v1/user/pay-boarding/${boardingId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+  
+      if (!response.ok) {
+        throw new Error('Failed to fetch payment URL');
+      }
+  
+      const data = await response.json();
+      return data.url || null;
+    } catch (error) {
+      console.error('Error fetching payment URL:', error);
+      return null;
+    }
+  };

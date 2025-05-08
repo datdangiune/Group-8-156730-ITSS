@@ -24,7 +24,7 @@ import { CalendarDays, Clock, CreditCard, PawPrint, DollarSign } from 'lucide-re
 import {fetchUserBoarding, UserBoarding} from '@/service/boarding'
 import { getTokenFromCookies } from '@/service/auth';
 // Mock services data - in a real app, this would come from an API
-
+import { getPaymentUrl } from '@/service/boarding';
 
 const MyBoarding = () => {
     const [search, setSearch] = useState('');
@@ -33,11 +33,16 @@ const MyBoarding = () => {
     const [services, setServices] = useState<UserBoarding[]>([]);
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState<boolean>(true);
+    
     const token = getTokenFromCookies();
-    const handleServiceClick = (boarding: UserBoarding) => {
+    const handleServiceClick = async (boarding: UserBoarding) => {
         if (boarding.status_payment === 'pending') {
-        window.location.href = `http://localhost:3000/api/v1/user/pay-boarding/${boarding.id}`;
-
+                  const paymentUrl = await getPaymentUrl(boarding.id, token);
+                  if (paymentUrl) {
+                    window.location.href = paymentUrl;
+                  } else {
+                    alert('Không lấy được link thanh toán.');
+                  }
         }
     };
 

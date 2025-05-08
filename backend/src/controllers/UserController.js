@@ -672,14 +672,15 @@ const UserController  = {
     
             const vnp_Amount = service_user.service.price;
             const encryptedId = encrypt(service_user.id.toString());
+            const vnp_TxnRef = `SU-${encryptedId}`;
             console.log(encryptedId);
     
             const urlString = vnpay.buildPaymentUrl(
                 {
                     vnp_Amount: vnp_Amount,
                     vnp_IpAddr: '1.1.1.1',
-                    vnp_TxnRef: encryptedId,
-                    vnp_OrderInfo: `Payment for order ${encryptedId}`,
+                    vnp_TxnRef: vnp_TxnRef,
+                    vnp_OrderInfo: `Payment for order ${vnp_TxnRef}`,
                     vnp_OrderType: ProductCode.Other,
                     vnp_ReturnUrl: "http://localhost:3000/vnpay-return",
                 },
@@ -691,7 +692,7 @@ const UserController  = {
                 }
             );
     
-            return res.redirect(urlString);
+            return res.status(200).json({url: urlString});
     
         } catch (error) {
             console.error("Payment error:", error);
@@ -723,14 +724,16 @@ const UserController  = {
     
             const vnp_Amount = boarding_user.total_price;
             const encryptedId = encrypt(boarding_user.id.toString());
+            const vnp_TxnRef = `BU-${encryptedId}`;
+
             console.log(encryptedId);
     
             const urlString = vnpay.buildPaymentUrl(
                 {
                     vnp_Amount: vnp_Amount,
                     vnp_IpAddr: '1.1.1.1',
-                    vnp_TxnRef: encryptedId,
-                    vnp_OrderInfo: `Payment for order ${encryptedId}`,
+                    vnp_TxnRef: vnp_TxnRef,
+                    vnp_OrderInfo: `Payment for order ${vnp_TxnRef}`,
                     vnp_OrderType: ProductCode.Other,
                     vnp_ReturnUrl: "http://localhost:3000/vnpay-return",
                 },
@@ -742,7 +745,7 @@ const UserController  = {
                 }
             );
     
-            return res.redirect(urlString);
+            return res.status(200).json({url: urlString});
     
         } catch (error) {
             console.error("Payment error:", error);
@@ -755,43 +758,48 @@ const UserController  = {
 
 
     async callbackURL(req, res) {
-        let verify;
         try {
-            verify = vnpay.verifyReturnUrl(req.query);
+            const verify = vnpay.verifyReturnUrl(req.query);
             if (!verify.isVerified) {
                 return res.send('Xác thực tính toàn vẹn dữ liệu thất bại');
             }
-
-            const encryptedId = req.query.vnp_TxnRef;
+    
+            const rawRef = req.query.vnp_TxnRef;
+            const [type, encryptedId] = rawRef.split('-');
+            if (!type || !encryptedId) {
+                return res.send('Định dạng TxnRef không hợp lệ');
+            }
+    
             let id;
             try {
                 id = decrypt(encryptedId);
             } catch (err) {
                 return res.send('Không thể giải mã ID đơn hàng');
             }
-
+    
             if (!verify.isSuccess) {
                 return res.send('Đơn hàng thanh toán thất bại');
             }
-
-            // ⚙️ Thử kiểm tra ServiceUser trước
-            let serviceUser = await ServiceUser.findByPk(id, {
-                include: [
-                    { model: User, as: 'user', attributes: ['email', 'name'] },
-                    { model: Service, as: 'service', attributes: ['name', 'price'] }
-                ]
-            });
-
-            if (serviceUser) {
+    
+            if (type === 'SU') {
+                const serviceUser = await ServiceUser.findByPk(id, {
+                    include: [
+                        { model: User, as: 'user', attributes: ['email', 'name'] },
+                        { model: Service, as: 'service', attributes: ['name', 'price'] }
+                    ]
+                });
+    
+                if (!serviceUser) return res.send('Không tìm thấy ServiceUser');
+    
                 await serviceUser.update({ status: 'Complete' });
-
+    
                 const emailContent = `
                     <div style="font-family: Arial, sans-serif; padding: 20px;">
                         <h2 style="color: #4CAF50;">Thanh toán thành công</h2>
                         <p>Xin chào <strong>${serviceUser.user.name}</strong>,</p>
                         <p>Bạn đã thanh toán thành công cho dịch vụ <strong>${serviceUser.service.name}</strong>.</p>
                         <ul>
-                            <li><strong>Mã đơn hàng:</strong> ${req.query.vnp_TxnRef}</li>
+                            <li><strong>Mã đơn hàng:</strong> ${rawRef}</li>
                             <li><strong>Số tiền:</strong> ${(serviceUser.service.price).toLocaleString()} VND</li>
                             <li><strong>Thời gian thanh toán:</strong> ${new Date().toLocaleString()}</li>
                             <li><strong>Trạng thái:</strong> Thành công</li>
@@ -800,52 +808,51 @@ const UserController  = {
                         <p><strong>PetCare Team</strong></p>
                     </div>
                 `;
-                await sendMail({
-                    email: serviceUser.user.email,
-                    html: emailContent
-                });
-
+                await sendMail({ email: serviceUser.user.email, html: emailContent });
+    
                 return res.redirect('http://localhost:8080/services/me');
             }
-            const boardingUser = await BoardingUser.findByPk(id, {
-                include: [
-                    { model: User, as: 'user', attributes: ['email', 'name'] },
-                    { model: Boarding, as: 'boarding', attributes: ['name'] }
-                ]
-            });
-
-            if (boardingUser) {
+    
+            if (type === 'BU') {
+                const boardingUser = await BoardingUser.findByPk(id, {
+                    include: [
+                        { model: User, as: 'user', attributes: ['email', 'name'] },
+                        { model: Boarding, as: 'boarding', attributes: ['name'] }
+                    ]
+                });
+    
+                if (!boardingUser) return res.send('Không tìm thấy BoardingUser');
+    
                 await boardingUser.update({ status_payment: 'paid' });
-                const emailContentBoarding = `
-                <div style="font-family: Arial, sans-serif; padding: 20px;">
-                    <h2 style="color: #4CAF50;">Thanh toán thành công</h2>
-                    <p>Xin chào <strong>${boardingUser.user.name}</strong>,</p>
-                    <p>Bạn đã thanh toán thành công cho dịch vụ <strong>${boardingUser.boarding.name}</strong>.</p>
-                    <ul>
-                        <li><strong>Mã đơn hàng:</strong> ${req.query.vnp_TxnRef}</li>
-                        <li><strong>Số tiền:</strong> ${(boardingUser.total_price).toLocaleString()} VND</li>
-                        <li><strong>Thời gian thanh toán:</strong> ${new Date().toLocaleString()}</li>
-                        <li><strong>Trạng thái:</strong> Thành công</li>
-                    </ul>
-                    <p>Cảm ơn bạn đã tin tưởng và sử dụng dịch vụ!</p>
-                    <p><strong>PetCare Team</strong></p>
-                </div>
-            `;
-            await sendMail({
-                email: boardingUser.user.email,
-                html: emailContentBoarding
-            });
-                // Tùy ý: Gửi mail nếu có trường userId/email trong BoardingUser
+    
+                const emailContent = `
+                    <div style="font-family: Arial, sans-serif; padding: 20px;">
+                        <h2 style="color: #4CAF50;">Thanh toán thành công</h2>
+                        <p>Xin chào <strong>${boardingUser.user.name}</strong>,</p>
+                        <p>Bạn đã thanh toán thành công cho dịch vụ <strong>${boardingUser.boarding.name}</strong>.</p>
+                        <ul>
+                            <li><strong>Mã đơn hàng:</strong> ${rawRef}</li>
+                            <li><strong>Số tiền:</strong> ${(boardingUser.total_price).toLocaleString()} VND</li>
+                            <li><strong>Thời gian thanh toán:</strong> ${new Date().toLocaleString()}</li>
+                            <li><strong>Trạng thái:</strong> Thành công</li>
+                        </ul>
+                        <p>Cảm ơn bạn đã tin tưởng và sử dụng dịch vụ!</p>
+                        <p><strong>PetCare Team</strong></p>
+                    </div>
+                `;
+                await sendMail({ email: boardingUser.user.email, html: emailContent });
+    
                 return res.redirect('http://localhost:8080/boardings/me');
             }
-
-            return res.send('Không tìm thấy đơn hàng hợp lệ');
-
+    
+            return res.send('Loại đơn hàng không xác định');
+    
         } catch (error) {
-            console.error('Lỗi xử lý vnpay-return:', error);
-            return res.send('Dữ liệu không hợp lệ');
+            console.error('Lỗi xử lý callbackURL:', error);
+            return res.send('Đã xảy ra lỗi trong quá trình xử lý callback');
         }
     }
+    
 
 }
 
