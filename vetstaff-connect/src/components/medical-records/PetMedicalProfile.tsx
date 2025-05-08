@@ -13,21 +13,19 @@ type Examination = {
   follow_up_date?: string;
 };
 
+
+
 type PetMedicalProfileProps = {
   pet: {
     id: string;
-    petName: string;
-    petType: string;
-    petBreed?: string;
-    ownername: string;
+    name: string;
+    type: string;
+    breed?: string;
+    owner: {
+      name: string
+    },
     age?: number;
     weight?: number;
-    gender?: string;
-    furColor?: string;
-    healthStatus?: string;
-    dietPlan?: string;
-    medicalHistory?: string;
-    vaccinationHistory?: string;
     examinations: Examination[];
   };
 };
@@ -45,20 +43,20 @@ const PetMedicalProfile: React.FC<PetMedicalProfileProps> = ({ pet }) => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <p className="text-sm font-medium">Pet Name</p>
-              <p className="text-lg">{pet.petName}</p>
+              <p className="text-lg">{pet.name}</p>
             </div>
             <div>
               <p className="text-sm font-medium">Owner</p>
-              <p className="text-lg">{pet.ownername}</p>
+              <p className="text-lg">{pet.owner.name}</p>
             </div>
             <div>
               <p className="text-sm font-medium">Type</p>
-              <p className="text-lg">{pet.petType}</p>
+              <p className="text-lg">{pet.type}</p>
             </div>
-            {pet.petBreed && (
+            {pet.breed && (
               <div>
                 <p className="text-sm font-medium">Breed</p>
-                <p className="text-lg">{pet.petBreed}</p>
+                <p className="text-lg">{pet.breed}</p>
               </div>
             )}
             {pet.age && (
@@ -71,42 +69,6 @@ const PetMedicalProfile: React.FC<PetMedicalProfileProps> = ({ pet }) => {
               <div>
                 <p className="text-sm font-medium">Weight</p>
                 <p className="text-lg">{pet.weight} kg</p>
-              </div>
-            )}
-            {pet.gender && (
-              <div>
-                <p className="text-sm font-medium">Gender</p>
-                <p className="text-lg">{pet.gender}</p>
-              </div>
-            )}
-            {pet.furColor && (
-              <div>
-                <p className="text-sm font-medium">Fur Color</p>
-                <p className="text-lg">{pet.furColor}</p>
-              </div>
-            )}
-            {pet.healthStatus && (
-              <div>
-                <p className="text-sm font-medium">Health Status</p>
-                <p className="text-lg">{pet.healthStatus}</p>
-              </div>
-            )}
-            {pet.dietPlan && (
-              <div>
-                <p className="text-sm font-medium">Diet Plan</p>
-                <p className="text-lg">{pet.dietPlan}</p>
-              </div>
-            )}
-            {pet.medicalHistory && (
-              <div>
-                <p className="text-sm font-medium">Medical History</p>
-                <p className="text-lg">{pet.medicalHistory}</p>
-              </div>
-            )}
-            {pet.vaccinationHistory && (
-              <div>
-                <p className="text-sm font-medium">Vaccination History</p>
-                <p className="text-lg">{pet.vaccinationHistory}</p>
               </div>
             )}
           </div>
