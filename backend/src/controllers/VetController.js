@@ -1,52 +1,132 @@
-const { MedicalRecord, Notification } = require('../models');
+const { MedicalRecord, Notification, Appointment, Pet, User, AppointmentResult } = require('../models');
 
 const VetController = {
-    // Quản lý hồ sơ y tế
-    async updateMedicalRecord(req, res) {
+    async getMedicalRecordsByAppointment(req, res) {
         try {
-            const { id } = req.params; // Lấy medical record ID từ URL
-            const { diagnosis, treatment, medication, follow_up_date } = req.body;
+            const { appointment_id } = req.params;
 
-            const record = await MedicalRecord.update(
-                { diagnosis, treatment, medication, follow_up_date },
-                { where: { id } }
-            );
+            const medicalRecords = await MedicalRecord.findAll({
+                where: { appointment_id },
+                include: [
+                    {
+                        model: Pet,
+                        attributes: ['name'],
+                    },
+                    {
+                        model: User,
+                        attributes: ['name'],
+                    },
+                    {
+                        model: Appointment,
+                        attributes: ['appointment_date'],
+                    },
+                ],
+            });
 
-            if (!record[0]) {
-                return res.status(404).json({ success: false, message: 'Medical record not found' });
+            if (!medicalRecords.length) {
+                return res.status(404).json({
+                    success: false,
+                    message: 'No medical records found for the given appointment',
+                });
             }
 
-            res.status(200).json({ success: true, message: 'Medical record updated successfully' });
+            const formattedRecords = medicalRecords.map((record) => ({
+                petName: record.Pet.name,
+                ownerName: record.User.name,
+                appointmentDate: record.Appointment.appointment_date,
+                diagnosis: record.diagnosis,
+                treatment: record.treatment,
+                medication: record.medication,
+            }));
+
+            res.status(200).json({
+                success: true,
+                message: 'Medical records fetched successfully',
+                data: formattedRecords,
+            });
         } catch (err) {
-            res.status(500).json({ success: false, message: 'Error updating medical record', error: err.message });
+            res.status(500).json({
+                success: false,
+                message: 'Error fetching medical records',
+                error: err.message,
+            });
         }
     },
 
-    // Kê đơn thuốc
-    async addPrescription(req, res) {
+    // Update diagnosis and test results
+    async updateDiagnosisAndTests(req, res) {
         try {
-            const { id } = req.params; // Lấy medical record ID từ URL
-            const { medication } = req.body;
+            const { appointment_id } = req.params;
+            const { diagnosis, tests } = req.body;
 
-            const record = await MedicalRecord.update(
-                { medication },
-                { where: { id } }
-            );
+            const result = await AppointmentResult.upsert({
+                appointment_id,
+                diagnosis,
+                tests,
+            });
 
-            if (!record[0]) {
-                return res.status(404).json({ success: false, message: 'Medical record not found' });
-            }
-
-            res.status(200).json({ success: true, message: 'Prescription added successfully' });
+            res.status(200).json({
+                success: true,
+                message: 'Diagnosis and test results updated successfully',
+                data: result,
+            });
         } catch (err) {
-            res.status(500).json({ success: false, message: 'Error adding prescription', error: err.message });
+            res.status(500).json({
+                success: false,
+                message: 'Error updating diagnosis and test results',
+                error: err.message,
+            });
         }
     },
 
-    // Gửi nhắc lịch tái khám
-    async sendFollowUpReminder(req, res) {
+    // Store prescription
+    async storePrescription(req, res) {
         try {
-            const { user_id, pet_id, follow_up_date } = req.body;
+            const { appointment_id } = req.params;
+            const { prescription } = req.body;
+
+            const result = await AppointmentResult.update(
+                { prescription },
+                { where: { appointment_id } }
+            );
+
+            if (!result[0]) {
+                return res.status(404).json({
+                    success: false,
+                    message: 'Appointment result not found',
+                });
+            }
+
+            res.status(200).json({
+                success: true,
+                message: 'Prescription stored successfully',
+            });
+        } catch (err) {
+            res.status(500).json({
+                success: false,
+                message: 'Error storing prescription',
+                error: err.message,
+            });
+        }
+    },
+
+    // Schedule follow-up reminder
+    async scheduleFollowUp(req, res) {
+        try {
+            const { appointment_id } = req.params;
+            const { follow_up_date, user_id } = req.body;
+
+            const result = await AppointmentResult.update(
+                { follow_up_date },
+                { where: { appointment_id } }
+            );
+
+            if (!result[0]) {
+                return res.status(404).json({
+                    success: false,
+                    message: 'Appointment result not found',
+                });
+            }
 
             const notification = await Notification.create({
                 user_id,
@@ -54,86 +134,19 @@ const VetController = {
                 message: `Your pet has a follow-up appointment scheduled on ${follow_up_date}.`,
             });
 
-            res.status(201).json({ success: true, message: 'Follow-up reminder sent successfully', notification });
-        } catch (err) {
-            res.status(500).json({ success: false, message: 'Error sending follow-up reminder', error: err.message });
-        }
-    },
-
-    // Gửi cảnh báo sức khỏe
-    async sendHealthAlert(req, res) {
-        try {
-            const { user_id, pet_id, message } = req.body;
-
-            const notification = await Notification.create({
-                user_id,
-                title: 'Health Alert',
-                message,
-            });
-
-            res.status(201).json({ success: true, message: 'Health alert sent successfully', notification });
-        } catch (err) {
-            res.status(500).json({ success: false, message: 'Error sending health alert', error: err.message });
-        }
-    },
-
-    async getVetAppointments(req, res) {
-        try {
-            const vetId = req.user.id; // Lấy ID của bác sĩ từ token
-            const appointments = await Appointment.findAll({
-                where: { staff_id: vetId },
-                include: [
-                    {
-                        model: Pet,
-                        as: 'pet',
-                        attributes: ['id', 'name', 'breed', 'age'],
-                    },
-                    {
-                        model: User,
-                        as: 'owner',
-                        attributes: ['id', 'username', 'email'],
-                    },
-                ],
-            });
-
             res.status(200).json({
                 success: true,
-                message: 'Appointments fetched successfully',
-                data: appointments,
-            });
-        } catch (err) {
-            res.status(500).json({
-                success: false,
-                message: 'Error fetching appointments',
-                error: err.message,
-            });
-        }
-    },
-
-    async sendRoutineReminder(req, res) {
-        try {
-            const { user_id, pet_id, message } = req.body;
-
-            const notification = await Notification.create({
-                user_id,
-                title: 'Routine Reminder',
-                message: message || 'It is time for your pet\'s vaccination or grooming.',
-            });
-
-            res.status(201).json({
-                success: true,
-                message: 'Routine reminder sent successfully',
+                message: 'Follow-up reminder scheduled successfully',
                 data: notification,
             });
         } catch (err) {
             res.status(500).json({
                 success: false,
-                message: 'Error sending routine reminder',
+                message: 'Error scheduling follow-up reminder',
                 error: err.message,
             });
         }
     },
-
 };
 
 module.exports = VetController;

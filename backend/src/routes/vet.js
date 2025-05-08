@@ -3,18 +3,13 @@ const VetController = require('../controllers/VetController');
 const { verifyTokenVet } = require('../middleware/veritify'); // Chỉ bác sĩ hoặc admin được phép
 const router = express.Router();
 
-// Quản lý hồ sơ y tế
-router.patch('/medical-records/:id', verifyTokenVet, VetController.updateMedicalRecord); // Cập nhật hồ sơ y tế
-router.patch('/medical-records/:id/prescription', verifyTokenVet, VetController.addPrescription); // Lưu trữ đơn thuốc
+// Cập nhật chẩn đoán và xét nghiệm
+router.patch('/appointments/:appointment_id/diagnosis', verifyTokenVet, VetController.updateDiagnosisAndTests);
 
-// Gửi thông báo
-router.post('/notifications/reminder', verifyTokenVet, VetController.sendFollowUpReminder); // Gửi nhắc lịch tái khám
-router.post('/notifications/health-alert', verifyTokenVet, VetController.sendHealthAlert); // Gửi cảnh báo sức khỏe
+// Lưu trữ đơn thuốc
+router.patch('/appointments/:appointment_id/prescription', verifyTokenVet, VetController.storePrescription);
 
-// Lấy danh sách lịch hẹn của bác sĩ
-router.get('/appointments', verifyTokenVet, VetController.getVetAppointments); // Lấy danh sách lịch hẹn của bác sĩ
-
-router.post('/notifications/routine-reminder', verifyTokenVet, VetController.sendRoutineReminder); // Gửi nhắc lịch tái khám định kỳ
-
+// Lên lịch nhắc tái khám
+router.post('/appointments/:appointment_id/follow-up', verifyTokenVet, VetController.scheduleFollowUp);
 
 module.exports = router;

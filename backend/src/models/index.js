@@ -5,10 +5,11 @@ const Service = require('./Service');
 const Boarding = require('./Boarding');
 const MedicalRecord = require('./MedicalRecord');
 const Notification = require('./Notification');
-const Payment = require('./Payment');
 const Room = require('./Room');
-const ServiceUser = require('./ServiceUser')
-const BoardingUser = require('./BoardingUser')
+const ServiceUser = require('./ServiceUser');
+const BoardingUser = require('./BoardingUser');
+const AppointmentResult = require('./AppointmentResult');
+
 Pet.belongsTo(User, { foreignKey: 'owner_id', as: 'owner' });
 Pet.hasMany(Service, { foreignKey: 'pet_id', as: 'services' });
 Pet.hasMany(Boarding, { foreignKey: 'pet_id', as: 'boarding' });
@@ -17,8 +18,9 @@ Appointment.belongsTo(Pet, { foreignKey: 'pet_id', as: 'pet' });
 Appointment.belongsTo(User, { foreignKey: 'owner_id', as: 'owner' });
 Appointment.belongsTo(User, { foreignKey: 'staff_id', as: 'staff' });
 
-
-
+// Relationship between Appointment and AppointmentResult
+Appointment.hasOne(AppointmentResult, { foreignKey: 'appointment_id', as: 'result' });
+AppointmentResult.belongsTo(Appointment, { foreignKey: 'appointment_id', as: 'appointment' });
 
 // Thiết lập quan hệ giữa Pet và MedicalRecord
 Pet.hasMany(MedicalRecord, { foreignKey: 'pet_id' });
@@ -32,13 +34,7 @@ MedicalRecord.belongsTo(Appointment, { foreignKey: 'appointment_id' });
 User.hasMany(MedicalRecord, { foreignKey: 'user_id' });
 MedicalRecord.belongsTo(User, { foreignKey: 'user_id' });
 
-
 Notification.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
-
-Payment.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
-Payment.belongsTo(Appointment, { foreignKey: 'appointment_id', as: 'appointment' });
-Payment.belongsTo(Service, { foreignKey: 'service_id', as: 'service' });
-
 
 ServiceUser.belongsTo(Service, { foreignKey: 'serviceId', as: 'service' });
 Service.hasMany(ServiceUser, { foreignKey: 'serviceId', as: 'serviceUsers' });
@@ -71,8 +67,8 @@ module.exports = {
     Boarding,
     MedicalRecord,
     Notification,
-    Payment,
     Room,
     ServiceUser,
-    BoardingUser
+    BoardingUser,
+    AppointmentResult
 };
