@@ -71,6 +71,7 @@ const BookingFormBoarding = ({ service, onSuccess }: BookingFormProps) => {
       setStep(step + 1);
       return;
     }
+    console.log("Form values before submission:", values);
     try {
       setLoading(true);
       // Gửi dữ liệu lên backend để đặt lịch dịch vụ
@@ -83,13 +84,13 @@ const BookingFormBoarding = ({ service, onSuccess }: BookingFormProps) => {
       });
 
       if (response) {
-        toast.success("Service booked successfully!", {
+        toast.success("Boarding booked successfully!", {
           description: `Your appointment for ${service.name} has been confirmed.`,
         });
 
         onSuccess();
 
-        navigate("/appointments");
+        navigate("/boardings/me");
       } else {
         toast.error("Booking failed", {
           description: response.message || "Something went wrong.",
@@ -112,7 +113,7 @@ const BookingFormBoarding = ({ service, onSuccess }: BookingFormProps) => {
     onSuccess();
     setLoading(false)
     // Navigate to appointments page
-    navigate('/services');
+    navigate('/boardings/me');
   }
 
   const selectedPet = form.watch('id')

@@ -25,6 +25,9 @@ import {fetchUserBoarding, UserBoarding} from '@/service/boarding'
 import { getTokenFromCookies } from '@/service/auth';
 // Mock services data - in a real app, this would come from an API
 import { getPaymentUrl } from '@/service/boarding';
+import { format } from 'date-fns';
+import { toZonedTime } from 'date-fns-tz';
+
 
 const MyBoarding = () => {
     const [search, setSearch] = useState('');
@@ -45,18 +48,12 @@ const MyBoarding = () => {
                   }
         }
     };
-
-  const getStatusBadge = (status: BoardingStatusUser) => {
-    switch (status) {
-      case 'paid':
-        return <Badge variant="outline">Available</Badge>;
-      case 'pending':
-        return <Badge variant="destructive">Unavailable</Badge>;
-      default:
-        return null;
-    }
-  };
-
+    const formatToVietnamTime = (dateStr: string) => {
+      const timezone = 'Asia/Ho_Chi_Minh';
+      const date = new Date(dateStr);
+      const zonedDate = toZonedTime(date, timezone);
+      return format(zonedDate, 'dd/MM/yyyy HH:mm');
+    };
   const getPaymentStatusBadge = (status?: BoardingStatusUser) => {
     switch (status) {
       case 'paid':
@@ -96,13 +93,13 @@ const MyBoarding = () => {
         {service.start_date && (
           <div className="flex items-center text-sm text-muted-foreground">
             <CalendarDays className="h-4 w-4 mr-2" />
-            <span>{new Date(service.start_date).toLocaleDateString()}</span>
+            <span>{formatToVietnamTime(service.start_date)}</span>
           </div>
         )}
         {service.end_date && (
           <div className="flex items-center text-sm text-muted-foreground">
             <CalendarDays className="h-4 w-4 mr-2" />
-            <span>{new Date(service.end_date).toLocaleDateString()}</span>
+            <span>{formatToVietnamTime(service.end_date)}</span>
           </div>
         )}
         {service.boarding.type && (

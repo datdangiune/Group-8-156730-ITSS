@@ -778,7 +778,7 @@ const UserController  = {
             }
     
             if (!verify.isSuccess) {
-                return res.send('Đơn hàng thanh toán thất bại');
+                return res.redirect('http://localhost:8080');
             }
     
             if (type === 'SU') {
