@@ -164,3 +164,37 @@ export const fetchPetsByOwner = async (ownerId: number): Promise<{ id: number; n
   }
 };
 
+export const submitExaminationRecord = async (
+  appointmentId: string,
+  data: {
+    diagnosis: string;
+    medications: { name: string; dosage: string; instructions: string }[];
+    needsFollowUp: boolean;
+    followUpDate?: string;
+  }
+): Promise<void> => {
+  const token = getAuthToken();
+  if (!token) throw new Error("Authentication token is missing.");
+  try {
+    const response = await axios.patch(
+      `${API_BASE_URL}/vet/appointments/${appointmentId}/examination`,
+      {
+        diagnosis: data.diagnosis,
+        medications: data.medications.map((med) => ({
+          name: med.name,
+          dosage: med.dosage,
+          instructions: med.instructions,
+        })),
+        follow_up_date: data.needsFollowUp ? data.followUpDate : null,
+      },
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    );
+    console.log("Examination record submitted successfully:", response.data);
+  } catch (error: any) {
+    console.error("Error submitting examination record:", error.message);
+    throw new Error(error.message || "Failed to submit examination record");
+  }
+};
+

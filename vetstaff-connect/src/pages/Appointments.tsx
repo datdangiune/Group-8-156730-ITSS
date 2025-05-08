@@ -13,6 +13,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "@/components/ui/use-toast";
+import ExaminationForm from "@/components/appointments/ExaminationForm";
 import MultiStepAppointmentForm from "@/components/appointments/MultiStepAppointmentForm";
 import { 
   Pagination, 
@@ -49,7 +50,8 @@ const Appointments = () => {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-
+  const [isExaminationModalOpen, setIsExaminationModalOpen] = useState(false);
+  const [selectedAppointment, setSelectedAppointment] = useState<AppointmentType | null>(null);
   useEffect(() => {
     const fetchData = async () => {
       const token = localStorage.getItem("token");
@@ -110,7 +112,13 @@ const Appointments = () => {
   const handleSaveAppointment = (newAppointment: AppointmentType) => {
     setAppointments((prevList) => [newAppointment, ...prevList]);
   };
-  
+
+  // Handle opening examination modal
+  const handleUpdateExamination = (appointment: AppointmentType) => {
+    setSelectedAppointment(appointment);
+    setIsExaminationModalOpen(true);
+  };
+
   // Handle status update
   const handleStatusUpdate = async (appointmentId: string, newStatus: string) => {
     const token = localStorage.getItem("token");
@@ -411,7 +419,7 @@ const Appointments = () => {
                             />
 
                             </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-right text-sm">
+                            {/* <td className="px-6 py-4 whitespace-nowrap text-right text-sm">
                               <Select
                                 value={appointment.status}
                                 onValueChange={(value) => handleStatusUpdate(appointment.id, value)}
@@ -426,7 +434,40 @@ const Appointments = () => {
                                   <SelectItem value="Cancel">Cancel</SelectItem>
                                 </SelectContent>
                               </Select>
+                            </td> */}
+
+                            <td className="px-6 py-4 whitespace-nowrap text-right text-sm">
+                              <div className="flex items-center justify-end space-x-2">
+                                {/* Add Update Examination button */}
+                                {appointment.status === "In progess" && (
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => handleUpdateExamination(appointment)}
+                                    className="text-primary border-primary hover:bg-primary/10"
+                                  >
+                                    Update Examination
+                                  </Button>
+                                )}
+                                
+                                <Select 
+                                  defaultValue={appointment.status}
+                                  onValueChange={(value) => handleStatusUpdate(appointment.id, value)}
+                                >
+                                  <SelectTrigger className="h-8 w-24">
+                                    <SelectValue placeholder="Update" />
+                                  </SelectTrigger>
+                                  <SelectContent align="end">
+                                    <SelectItem value="Scheduled">Scheduled</SelectItem>
+                                    <SelectItem value="In progess">In progess</SelectItem>
+                                    <SelectItem value="Done">Done</SelectItem>
+                                    <SelectItem value="Cancel">Cancel</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </div>
                             </td>
+
+                            
                           </tr>
                         ))
                       ) : (
@@ -484,6 +525,18 @@ const Appointments = () => {
           onClose={() => setIsFormOpen(false)} 
           onSave={handleSaveAppointment} 
         />
+
+                {/* Add the examination form modal */}
+                {selectedAppointment && (
+          <ExaminationForm
+            open={isExaminationModalOpen}
+            onClose={() => setIsExaminationModalOpen(false)}
+            appointmentId={selectedAppointment.id}
+            petName={selectedAppointment.petName}
+            petType={selectedAppointment.petType}
+            ownerName={selectedAppointment.ownerName}
+          />
+        )}
       </div>
     </PageTransition>
   );

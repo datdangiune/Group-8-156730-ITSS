@@ -83,7 +83,7 @@ const registerStaff = async(req, res) => {
             email,
             password,
             name: name, // Use 'username' as the default value for 'name'
-            role: 'staff', // Set the role to 'staff' for staff registration
+            role: 'vet', // Set the role to 'staff' for staff registration
         });
         res.status(201).json({ message: 'User registered successfully', success: true });
     } catch (err) {
