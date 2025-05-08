@@ -1,4 +1,4 @@
-const { MedicalRecord, Pet, User } = require('../models');
+const { MedicalRecord, Pet, User, AppointmentResult, Appointment  } = require('../models');
 
 const PetController = {
   async getPets(req, res) {
@@ -20,15 +20,39 @@ const PetController = {
 
   async getMedicalHistory(req, res) {
     try {
-      const { petId } = req.params;
-      const records = await MedicalRecord.findAll({
-        where: { pet_id: petId },
-        attributes: ['id', 'appointment_id', 'created_at', 'diagnosis', 'description', 'treatment', 'status'],
-      });
-      res.status(200).json({ success: true, message: 'Medical history fetched successfully', data: records });
-    } catch (err) {
-      res.status(500).json({ success: false, message: 'Error fetching medical history', error: err.message });
-    }
+        const { petId } = req.params;
+  
+        const records = await AppointmentResult.findAll({
+          include: [
+            {
+              model: Appointment,
+              as: 'appointment',
+              where: { pet_id: petId },
+              attributes: [], // Không cần lấy dữ liệu từ Appointment
+            },
+          ],
+          attributes: [
+            'id',
+            'appointment_id',
+            'created_at',
+            'diagnosis',
+            'prescription',
+            'follow_up_date',
+          ],
+        });
+  
+        res.status(200).json({
+          success: true,
+          message: 'Medical history fetched successfully',
+          data: records,
+        });
+      } catch (err) {
+        res.status(500).json({
+          success: false,
+          message: 'Error fetching medical history',
+          error: err.message,
+        });
+      }
   },
 };
 
