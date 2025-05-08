@@ -15,7 +15,7 @@ router.get('/analytics', verifyTokenAdmin, AdminController.getAnalyticsData);
 // Quản lý user
 router.get('/users', verifyTokenAdmin, AdminController.getAllUsers);
 router.post('/users', verifyTokenAdmin, AdminController.addUser);
-router.patch('/users/:id/role', verifyTokenAdmin, AdminController.updateUserRole); // (bạn cần viết hàm này trong AdminController nếu chưa có)
+//router.patch('/users/:id/role', verifyTokenAdmin, AdminController.updateUserRole); // (bạn cần viết hàm này trong AdminController nếu chưa có)
 
 // Quản lý cuộc hẹn
 router.get('/appointments', verifyTokenAdmin, AdminController.getAppointments);
