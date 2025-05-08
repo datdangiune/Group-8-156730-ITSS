@@ -1,6 +1,6 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const { User, Service, Appointment, MedicalRecord, Boarding, Room, Notification, Payment, Pet, ServiceUser} = require('../models');
+const { Appointment, AppointmentResult, Boarding, BoardingUser, MedicalRecord, Notification, Pet, Report, Room, Service, ServiceUser, User} = require('../models');
 const { Op, Sequelize } = require('sequelize');
 require("dotenv").config();
 const AdminController = {
@@ -37,38 +37,30 @@ const AdminController = {
             res.status(500).json({ message: 'Error logging in', error: err.message });
         }
     },    
-    // Lấy thông tin bảng ở trang dashboard => test thành công, lưu ý tính tổng revenue 
-    getDashboardStats: async (req, res) => {
+    
+    async getDashboardStats(req, res) {
         try {
-            const totalUsers = await User.count({ where: { role: 'pet_owner' } });
-            const ongoingBoarders = await Boarding.count({ where: { status: 'ongoing' } });
-            const availableServices = await Service.count({ where: { status: 'available' } });
+          const [totalUsers, activeBoarders, pendingServices, unreadNotifications] = await Promise.all([
+            User.count(),
+            BoardingUser.count({ where: { status_payment: 'paid' } }),
+            ServiceUser.count({ where: { status: 'In Progess' } }),
+            Notification.count({ where: { is_read: false } }),
+          ]);
     
-            const revenueOverview = await Payment.findAll({
-                attributes: [
-                    [Sequelize.fn('SUM', Sequelize.col('amount')), 'totalRevenue'],
-                    [Sequelize.literal("EXTRACT(MONTH FROM payment_date)"), 'month']
-                ],
-                where: { 
-                    payment_date: { [Op.gte]: new Date(new Date().getFullYear(), 0, 1) }
-                },
-                group: [Sequelize.literal("EXTRACT(MONTH FROM payment_date)")],
-                order: [[Sequelize.literal("EXTRACT(MONTH FROM payment_date)"), 'ASC']]
-            });
-    
-            const servicesByCategory = await Service.findAll({
-                attributes: ['type', [Sequelize.fn('COUNT', Sequelize.col('id')), 'count']],
-                group: ['type'],
-            });
-    
-            res.json({ totalUsers, ongoingBoarders, availableServices, revenueOverview, servicesByCategory });
-        } catch (error) {
-            res.status(500).json({ error: error.message });
+          res.json({
+            totalUsers,
+            activeBoarders,
+            pendingServices,
+            unreadNotifications,
+          });
+        } catch (err) {
+          console.error('Dashboard stats error:', err);
+          res.status(500).json({ error: 'Failed to fetch dashboard statistics', details: err });
         }
-    },
+      },
     
 
-    // Lấy danh sách user => test thành công
+    //Lấy danh sách user => test thành công
 getAllUsers: async (req, res) => {
     try {
         const users = await User.findAll({
