@@ -310,10 +310,97 @@ getAllUsers: async (req, res) => {
     //     } catch (error) {
     //         res.status(500).json({ message: "Error deleting services", error });
     //     }
-    // }
-    
+    // },
+
+    async updateUserRole(req, res) {
+        // Ensure this method is implemented
+        // ...existing code...
+    },
+
+    async getAllServices(req, res) {
+        // Ensure this method is implemented
+        // ...existing code...
+    },
+
+    async createService(req, res) {
+        // Ensure this method is implemented
+        // ...existing code...
+    },
+
+    async updateService(req, res) {
+        // Ensure this method is implemented
+        // ...existing code...
+    },
+
+    async deleteService(req, res) {
+        // Ensure this method is implemented
+        // ...existing code...
+    },
+
+    async getAllBoarding(req, res) {
+        // Ensure this method is implemented
+        // ...existing code...
+    },
+
+    async getDashboard(req, res) {
+        // Ensure this method is implemented
+        // ...existing code...
+    },
+
+    async getUsersByRole(req, res) {
+        // Ensure this method is implemented
+        // ...existing code...
+    },
+
+    async getRevenueReport(req, res) {
+        // Ensure this method is implemented
+        // ...existing code...
+    },
+
+    async getHealthTrends(req, res) {
+        // Ensure this method is implemented
+        // ...existing code...
+    },
+
+    async getPetRegistrationStats(req, res) {
+        // Ensure this method is implemented
+        // ...existing code...
+    },
+
+    async getServiceUsageStats(req, res) {
+        // Ensure this method is implemented
+        // ...existing code...
+    },
+
+    async getAllAppointments(req, res) {
+        // Ensure this method is implemented
+        // ...existing code...
+    },
+
+    async deleteAppointment(req, res) {
+        // Ensure this method is implemented
+        // ...existing code...
+    },
+
+    async getAllMedicalRecords(req, res) {
+        // Ensure this method is implemented
+        // ...existing code...
+    },
+
+    async deleteMedicalRecord(req, res) {
+        // Ensure this method is implemented
+        // ...existing code...
+    },
+
+    async registerAdmin(req, res) {
+        // Ensure this method is implemented
+        // ...existing code...
+    },
+
+    async loginAdmin(req, res) {
+        // Ensure this method is implemented
+        // ...existing code...
+    },
 };
-
-
 
 module.exports = AdminController;

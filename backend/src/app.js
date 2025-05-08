@@ -4,6 +4,7 @@ const sequelize = require('./database');
 const router = require('./routes/route');
 const adminRoutes = require('./routes/admin'); // Import admin routes
 const authRoutes = require('./routes/auth'); // Import auth routes
+const vetRoutes = require('./routes/vet'); // Import vet routes
 const cors = require('cors');
 const http = require("http");
 const { Server } = require("socket.io");
@@ -37,6 +38,7 @@ io.on("connection", (socket) => {
   });
 app.use('/api/admin', adminRoutes); // Register admin routes under /api prefix
 app.use('/api/auth', authRoutes); // Register auth routes under /api prefix
+app.use('/api/v1/vet', vetRoutes); // Register vet routes under /api/v1/vet
 router(app);
 
 app.get('/', (req, res) => {

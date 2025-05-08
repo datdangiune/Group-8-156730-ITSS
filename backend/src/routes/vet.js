@@ -3,7 +3,7 @@ const VetController = require('../controllers/VetController');
 const { verifyTokenVet } = require('../middleware/veritify'); // Chỉ bác sĩ hoặc admin được phép
 const router = express.Router();
 
-// Check if all required controller methods are defined
+// Ensure all required controller methods are defined
 if (
     !VetController.updateDiagnosisAndTests ||
     !VetController.storePrescription ||

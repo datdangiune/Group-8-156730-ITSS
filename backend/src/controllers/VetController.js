@@ -94,10 +94,13 @@ const VetController = {
                 });
             }
 
+            // Filter out null values from the result
+            const filteredResult = result.filter((record) => record !== null);
+
             res.status(200).json({
                 success: true,
                 message: 'Examination record updated successfully',
-                data: result,
+                data: filteredResult,
             });
         } catch (err) {
             res.status(500).json({

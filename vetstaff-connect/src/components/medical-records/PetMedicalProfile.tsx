@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -20,14 +19,22 @@ type PetMedicalProfileProps = {
     petName: string;
     petType: string;
     petBreed?: string;
-    ownerName: string;
+    ownername: string;
     age?: number;
     weight?: number;
+    gender?: string;
+    furColor?: string;
+    healthStatus?: string;
+    dietPlan?: string;
+    medicalHistory?: string;
+    vaccinationHistory?: string;
     examinations: Examination[];
   };
 };
 
 const PetMedicalProfile: React.FC<PetMedicalProfileProps> = ({ pet }) => {
+  const examinations = pet.examinations || []; // Ensure examinations is always an array
+
   return (
     <div className="space-y-6">
       <Card>
@@ -42,7 +49,7 @@ const PetMedicalProfile: React.FC<PetMedicalProfileProps> = ({ pet }) => {
             </div>
             <div>
               <p className="text-sm font-medium">Owner</p>
-              <p className="text-lg">{pet.ownerName}</p>
+              <p className="text-lg">{pet.ownername}</p>
             </div>
             <div>
               <p className="text-sm font-medium">Type</p>
@@ -66,6 +73,42 @@ const PetMedicalProfile: React.FC<PetMedicalProfileProps> = ({ pet }) => {
                 <p className="text-lg">{pet.weight} kg</p>
               </div>
             )}
+            {pet.gender && (
+              <div>
+                <p className="text-sm font-medium">Gender</p>
+                <p className="text-lg">{pet.gender}</p>
+              </div>
+            )}
+            {pet.furColor && (
+              <div>
+                <p className="text-sm font-medium">Fur Color</p>
+                <p className="text-lg">{pet.furColor}</p>
+              </div>
+            )}
+            {pet.healthStatus && (
+              <div>
+                <p className="text-sm font-medium">Health Status</p>
+                <p className="text-lg">{pet.healthStatus}</p>
+              </div>
+            )}
+            {pet.dietPlan && (
+              <div>
+                <p className="text-sm font-medium">Diet Plan</p>
+                <p className="text-lg">{pet.dietPlan}</p>
+              </div>
+            )}
+            {pet.medicalHistory && (
+              <div>
+                <p className="text-sm font-medium">Medical History</p>
+                <p className="text-lg">{pet.medicalHistory}</p>
+              </div>
+            )}
+            {pet.vaccinationHistory && (
+              <div>
+                <p className="text-sm font-medium">Vaccination History</p>
+                <p className="text-lg">{pet.vaccinationHistory}</p>
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -76,7 +119,7 @@ const PetMedicalProfile: React.FC<PetMedicalProfileProps> = ({ pet }) => {
           <CardDescription>Examination records and treatment history</CardDescription>
         </CardHeader>
         <CardContent>
-          {pet.examinations.length > 0 ? (
+          {examinations.length > 0 ? ( // Use the local `examinations` variable
             <Table>
               <TableHeader>
                 <TableRow>
@@ -87,7 +130,7 @@ const PetMedicalProfile: React.FC<PetMedicalProfileProps> = ({ pet }) => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {pet.examinations.map((exam) => exam && (
+                {examinations.map((exam) => exam && (
                   <TableRow key={exam.id}>
                     <TableCell>
                       {format(new Date(exam.created_at), 'MMM dd, yyyy')}
