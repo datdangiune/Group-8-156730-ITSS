@@ -3,43 +3,38 @@ const AdminController = require('../controllers/AdminController');
 const { verifyTokenAdmin} = require('../middleware/veritify'); // Chỉ admin được phép
 const router = express.Router();
 
-// Quản lý tài khoản
-// router.get('/users', verifyTokenAdmin, AdminController.getAllUsers); // Ensure this route exists
-// router.patch('/users/:id/role', verifyTokenAdmin, AdminController.updateUserRole); // Cập nhật vai trò người dùng
+// Đăng nhập admin
+router.post('/auth/login', AdminController.login);
 
-// // Quản lý dịch vụ
-// router.get('/services', verifyTokenAdmin, AdminController.getAllServices); // Ensure this route exists
-// router.post('/services', verifyTokenAdmin, AdminController.createService); // Tạo dịch vụ mới
-// router.put('/services/:id', verifyTokenAdmin, AdminController.updateService); // Cập nhật dịch vụ
-// router.delete('/services/:id', verifyTokenAdmin, AdminController.deleteService); // Xóa dịch vụ
+// Dashboard stats
+router.get('/dashboard/stats', verifyTokenAdmin, AdminController.getDashboardStats);
 
-// // Quản lý lưu trú
-// router.get('/boarding', verifyTokenAdmin, AdminController.getAllBoarding); // Lấy danh sách lưu trú
+// Analytics data
+router.get('/analytics', verifyTokenAdmin, AdminController.getAnalyticsData);
 
-// // Báo cáo và thống kê
-// router.get('/dashboard', verifyTokenAdmin, AdminController.getDashboard); // Lấy dữ liệu dashboard
+// Quản lý user
+router.get('/users', verifyTokenAdmin, AdminController.getAllUsers);
+router.post('/users', verifyTokenAdmin, AdminController.addUser);
+router.patch('/users/:id/role', verifyTokenAdmin, AdminController.updateUserRole); // (bạn cần viết hàm này trong AdminController nếu chưa có)
 
-// router.get('/users/by-role', verifyTokenAdmin, AdminController.getUsersByRole);
+// Quản lý cuộc hẹn
+router.get('/appointments', verifyTokenAdmin, AdminController.getAppointments);
 
-// router.get('/reports/revenue', verifyTokenAdmin, AdminController.getRevenueReport);
-// router.get('/reports/health-trends', verifyTokenAdmin, AdminController.getHealthTrends);
-// router.get('/reports/pet-registration', verifyTokenAdmin, AdminController.getPetRegistrationStats);
+// Quản lý hồ sơ y tế
+router.get('/medical-records', verifyTokenAdmin, AdminController.getMedicalRecords);
 
-// router.get('/reports/service-usage', verifyTokenAdmin, AdminController.getServiceUsageStats);
+// Quản lý lưu trú
+router.get('/boarding-info', verifyTokenAdmin, AdminController.getBoardingInfo);
 
-// // // Quản lý cuộc hẹn
-// // router.get('/appointments', verifyTokenAdmin, AdminController.getAllAppointments); // Fetch all appointments
-// // router.delete('/appointments/:id', verifyTokenAdmin, AdminController.deleteAppointment); // Delete an appointment
+// Quản lý thông báo
+router.get('/notifications', verifyTokenAdmin, AdminController.getNotifications);
+router.patch('/notifications/mark-all-read', verifyTokenAdmin, AdminController.markAllNotificationsAsRead);
 
-// // // Quản lý hồ sơ y tế
-// // router.get('/medical-records', verifyTokenAdmin, AdminController.getAllMedicalRecords); // Fetch all medical records
-// // router.delete('/medical-records/:id', verifyTokenAdmin, AdminController.deleteMedicalRecord); // Delete a medical record
-
-// // Đăng nhập và đăng ký admin
-// router.post('/auth/register', AdminController.registerAdmin); // Đăng ký admin
-// router.post('/auth/login', AdminController.loginAdmin); // Đăng nhập admin
-
-router.get('/analytics', verifyTokenAdmin, AdminController.getAnalyticsData); // Fetch analytics data
+// Quản lý hồ sơ admin
+router.put('/profile', verifyTokenAdmin, AdminController.updateProfile);
+router.put('/profile/password', verifyTokenAdmin, AdminController.updatePassword);
+router.put('/profile/notification-preferences', verifyTokenAdmin, AdminController.updateNotificationPreferences);
+router.put('/profile/system-settings', verifyTokenAdmin, AdminController.updateSystemSettings);
 
 
 // router.delete('/del', AdminController.deleteService)
