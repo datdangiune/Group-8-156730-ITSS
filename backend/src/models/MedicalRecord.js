@@ -36,6 +36,10 @@ const MedicalRecord = sequelize.define('MedicalRecord', {
         allowNull: false,
         defaultValue: DataTypes.NOW,  // Ngày ghi nhận bản ghi y tế
     },
+    diagnosis: {
+        type: DataTypes.TEXT,
+        allowNull: true,  // Chẩn đoán bệnh
+    },
     description: {
         type: DataTypes.TEXT,
         allowNull: false,  // Mô tả chi tiết về tình trạng và điều trị

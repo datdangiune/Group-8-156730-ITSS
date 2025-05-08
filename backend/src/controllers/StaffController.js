@@ -651,6 +651,11 @@ const StaffController = {
             });
         }
     },
+
+    async getPets(req, res) {
+        // Ensure this method is implemented
+        // ...existing code...
+    },
 };    
 
 module.exports = StaffController;

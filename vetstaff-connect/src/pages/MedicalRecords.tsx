@@ -1,11 +1,9 @@
-
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { ArrowLeft, ArrowRight, Clock, File, FileText, Folder, Plus, Search } from "lucide-react";
 import PageTransition from "@/components/animations/PageTransition";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { medicalRecords } from "@/lib/data";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import MedicalRecordForm from "@/components/medical-records/MedicalRecordForm";
@@ -14,97 +12,39 @@ import { toast } from "sonner";
 import PetMedicalProfile from "@/components/medical-records/PetMedicalProfile";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-
-// Mock data for pet list and examinations
-const petsList = [
-  {
-    id: "1",
-    petName: "Max",
-    petType: "Dog",
-    petBreed: "Golden Retriever",
-    ownerName: "John Smith",
-    age: 5,
-    weight: 32,
-    examinations: [
-      {
-        created_at: "2025-05-08T08:30:17.583Z",
-        id: 1,
-        appointment_id: 1,
-        diagnosis: "Healthy annual checkup",
-        prescription: "Heartgard Plus (10mg): Once monthly",
-        follow_up_date: "2025-11-08T08:30:00.000Z"
-      },
-      {
-        created_at: "2024-12-15T14:20:00.000Z",
-        id: 2,
-        appointment_id: 2,
-        diagnosis: "Ear infection",
-        prescription: "Otomax (0.5ml): Twice daily for 7 days",
-        follow_up_date: undefined
-      }
-    ]
-  },
-  {
-    id: "2",
-    petName: "Bella",
-    petType: "Cat",
-    petBreed: "Siamese",
-    ownerName: "Emily Johnson",
-    age: 3,
-    weight: 4.5,
-    examinations: [
-      {
-        created_at: "2025-04-22T10:15:00.000Z",
-        id: 3,
-        appointment_id: 3,
-        diagnosis: "Dental cleaning",
-        prescription: "No medication required",
-        follow_up_date: undefined
-      }
-    ]
-  },
-  {
-    id: "3",
-    petName: "Charlie",
-    petType: "Dog",
-    petBreed: "Beagle",
-    ownerName: "Michael Brown",
-    age: 7,
-    weight: 12,
-    examinations: []
-  }
-];
+import { fetchPets } from "@/service/Pets";
+import { fetchPetMedicalHistory } from "@/service/MedicalRecords";
 
 const MedicalRecords = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const [selectedPet, setSelectedPet] = useState<typeof petsList[0] | null>(null);
+  const [petsList, setPetsList] = useState<any[]>([]); // Dynamically fetched pets
+  const [selectedPet, setSelectedPet] = useState<any | null>(null);
   const [view, setView] = useState<"records" | "pets">("pets");
-  
-  // Filter pets based on search query
-  const filteredPets = petsList.filter(pet => {
-    if (!searchQuery) return true;
-    
-    const query = searchQuery.toLowerCase();
-    return (
-      pet.petName.toLowerCase().includes(query) ||
-      pet.ownerName.toLowerCase().includes(query) ||
-      pet.petType.toLowerCase().includes(query) ||
-      (pet.petBreed && pet.petBreed.toLowerCase().includes(query))
-    );
-  });
 
-  // Filter medical records based on search query (original functionality)
-  const filteredRecords = medicalRecords.filter(record => {
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const pets = await fetchPets();
+        setPetsList(pets);
+      } catch (error: any) {
+        console.error("Error fetching pets:", error.message);
+        toast.error("Failed to fetch pets. Please try again.");
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  const filteredPets = petsList.filter((pet) => {
     if (!searchQuery) return true;
-    
+
     const query = searchQuery.toLowerCase();
     return (
-      record.petName.toLowerCase().includes(query) ||
-      record.ownerName.toLowerCase().includes(query) ||
-      record.diagnosis.toLowerCase().includes(query) ||
-      record.treatments.some(treatment => treatment.toLowerCase().includes(query)) ||
-      record.prescriptions.some(prescription => prescription.toLowerCase().includes(query))
+      pet.name.toLowerCase().includes(query) ||
+      pet.owner.name.toLowerCase().includes(query) ||
+      pet.type.toLowerCase().includes(query) ||
+      (pet.breed && pet.breed.toLowerCase().includes(query))
     );
   });
 
@@ -114,12 +54,12 @@ const MedicalRecords = () => {
     toast.success("Medical record created successfully!");
     setIsFormOpen(false);
   };
-  
+
   // Get initials from pet name for avatar
   const getInitials = (name: string) => {
     return name.charAt(0).toUpperCase();
   };
-  
+
   // Generate avatar background color based on pet name
   const getAvatarColor = (name: string) => {
     const colors = [
@@ -131,25 +71,36 @@ const MedicalRecords = () => {
       "bg-pink-100 text-pink-600",
       "bg-indigo-100 text-indigo-600",
     ];
-    
+
     const index = name.charCodeAt(0) % colors.length;
     return colors[index];
   };
-  
-  const handlePetSelect = (pet: typeof petsList[0]) => {
+
+  const handlePetSelect = async (pet: any) => {
     setSelectedPet(pet);
     setView("records");
+
+    try {
+      const medicalHistory = await fetchPetMedicalHistory(pet.id);
+      setSelectedPet((prev) => ({
+        ...prev,
+        examinations: medicalHistory,
+      }));
+    } catch (error: any) {
+      console.error("Error fetching medical history:", error.message);
+      toast.error("Failed to fetch medical history. Please try again.");
+    }
   };
-  
+
   return (
     <PageTransition>
       <div className="container px-4 py-6 max-w-7xl mx-auto">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
           <div className="flex items-center">
             {view === "records" && selectedPet && (
-              <Button 
-                variant="ghost" 
-                className="mr-2" 
+              <Button
+                variant="ghost"
+                className="mr-2"
                 onClick={() => {
                   setView("pets");
                   setSelectedPet(null);
@@ -160,10 +111,10 @@ const MedicalRecords = () => {
               </Button>
             )}
             <h1 className="text-2xl font-medium">
-              {view === "pets" ? "Medical Records" : `${selectedPet?.petName}'s Medical Profile`}
+              {view === "pets" ? "Medical Records" : `${selectedPet?.name}'s Medical Profile`}
             </h1>
           </div>
-          
+
           <div className="flex flex-col sm:flex-row gap-2 mt-4 md:mt-0">
             <Button onClick={() => setIsFormOpen(true)}>
               <Plus className="h-4 w-4 mr-2" />
@@ -171,7 +122,7 @@ const MedicalRecords = () => {
             </Button>
           </div>
         </div>
-        
+
         <div className="bg-card rounded-lg shadow-sm border p-4 mb-6">
           {view === "pets" ? (
             <>
@@ -184,7 +135,7 @@ const MedicalRecords = () => {
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
               </div>
-              
+
               <div className="overflow-hidden">
                 <Table>
                   <TableHeader>
@@ -199,27 +150,27 @@ const MedicalRecords = () => {
                   <TableBody>
                     {filteredPets.length > 0 ? (
                       filteredPets.map((pet) => (
-                        <TableRow 
-                          key={pet.id} 
+                        <TableRow
+                          key={pet.id}
                           className="cursor-pointer hover:bg-muted/50"
                           onClick={() => handlePetSelect(pet)}
                         >
                           <TableCell>
                             <div className="flex items-center">
                               <Avatar className="h-8 w-8 mr-3">
-                                <AvatarFallback className={getAvatarColor(pet.petName)}>
-                                  {getInitials(pet.petName)}
+                                <AvatarFallback className={getAvatarColor(pet.name)}>
+                                  {getInitials(pet.name)}
                                 </AvatarFallback>
                               </Avatar>
-                              <span className="font-medium">{pet.petName}</span>
+                              <span className="font-medium">{pet.name}</span>
                             </div>
                           </TableCell>
-                          <TableCell>{pet.ownerName}</TableCell>
-                          <TableCell>{pet.petType}</TableCell>
-                          <TableCell>{pet.petBreed || "—"}</TableCell>
+                          <TableCell>{pet.owner.name}</TableCell>
+                          <TableCell>{pet.type}</TableCell>
+                          <TableCell>{pet.breed || "—"}</TableCell>
                           <TableCell>
-                            <Badge variant={pet.examinations.length > 0 ? "outline" : "secondary"}>
-                              {pet.examinations.length} records
+                            <Badge variant={pet.examinations?.length > 0 ? "outline" : "secondary"}>
+                              {pet.examinations?.length || 0} records
                             </Badge>
                           </TableCell>
                         </TableRow>
@@ -249,9 +200,8 @@ const MedicalRecords = () => {
             </div>
           )}
         </div>
-        
-        {/* Use the multi-step medical record form */}
-        <MultiStepMedicalRecordForm 
+
+        <MultiStepMedicalRecordForm
           open={isFormOpen}
           onClose={() => setIsFormOpen(false)}
           onSubmit={handleCreateMedicalRecord}
