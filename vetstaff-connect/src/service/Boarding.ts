@@ -122,3 +122,17 @@ export const addNewBoardingService = async (
     throw new Error(error.response?.data?.message || error.message || "Failed to add new boarding service");
   }
 };
+
+
+// Fetch user boardings
+export const fetchUsersBoardings = async (token: string): Promise<any[]> => {
+  try {
+    const response = await axios.get(`${API_BASE_URL}/staff/users-boardings`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    return response.data.data;
+  } catch (error: any) {
+    console.error("Error fetching user boardings:", error.message);
+    throw new Error(error.message || "Failed to fetch user boardings");
+  }
+};

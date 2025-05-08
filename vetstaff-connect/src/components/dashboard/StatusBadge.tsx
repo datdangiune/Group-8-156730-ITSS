@@ -2,7 +2,7 @@ import React from "react";
 import { cn } from "@/lib/utils";
 
 interface StatusBadgeProps {
-  status: "Done" | "In progess" | "Scheduled" | "Cancel" | "available" | "unavailable" | undefined; // Allow undefined to handle edge cases
+  status: "Done" | "In progess" | "Scheduled" | "Cancel" | "available" | "unavailable" | "paid" | "pending" | undefined; // Allow undefined to handle edge cases
 }
 
 const getStatusLabel = (status: string | undefined) => {
@@ -25,6 +25,11 @@ const getStatusColor = (status: string | undefined) => {
       return "bg-red-100 text-red-600";
     case "unavailable":
       return "bg-red-100 text-red-600";
+    case "paid":
+      return "bg-green-100 text-green-600";    
+    case "pending":
+      return "bg-blue-100 text-blue-600";
+
     default:
       return "bg-gray-100 text-gray-600";
     
