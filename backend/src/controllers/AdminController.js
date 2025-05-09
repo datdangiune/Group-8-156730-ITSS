@@ -37,7 +37,7 @@ const AdminController = {
             res.status(500).json({ message: 'Error logging in', error: err.message });
         }
     },    
-    
+//Trang dashboard thống kê
     async getDashboardStats(req, res) {
         try {
           const [totalUsers, activeBoarders, pendingServices, unreadNotifications] = await Promise.all([
@@ -58,20 +58,117 @@ const AdminController = {
           res.status(500).json({ error: 'Failed to fetch dashboard statistics', details: err });
         }
       },
-    
-
-    //Lấy danh sách user => test thành công
-getAllUsers: async (req, res) => {
+    // Biểu đồ doanh thu theo tháng (USD)
+    async getMonthlyRevenue(req, res) {
     try {
-        const users = await User.findAll({
-            attributes: ['name', 'username', 'email', 'role']
-        });
-        res.json({ success: true, users });
-    } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
+      const revenues = await Report.findAll({
+        where: { type: 'revenue' },
+        attributes: [
+          [Sequelize.fn('MONTH', Sequelize.col('generated_at')), 'month'],
+          [Sequelize.fn('SUM', Sequelize.cast(Sequelize.col('content'), 'float')), 'total']
+        ],
+        group: ['month'],
+        order: [['month', 'ASC']]
+      });
+
+      res.json(revenues);
+    } catch (err) {
+      res.status(500).json({ error: 'Failed to fetch revenue data', details: err });
     }
-},
-// Thêm user => test thành công
+  },
+
+  // Biểu đồ thống kê dịch vụ theo loại (grooming, training, boarding) theo thứ trong tuần
+  async getServiceStatsByCategory(req, res) {
+    try {
+      const services = await ServiceUser.findAll({
+        attributes: [
+          [Sequelize.fn('DAYNAME', Sequelize.col('date')), 'day'],
+          'status',
+          [Sequelize.fn('COUNT', Sequelize.col('id')), 'count']
+        ],
+        include: [{
+          model: Service,
+          as: 'service',
+          attributes: ['type']
+        }],
+        group: ['day', 'service.type'],
+        raw: true
+      });
+
+      res.json(services);
+    } catch (err) {
+      res.status(500).json({ error: 'Failed to fetch service stats', details: err });
+    }
+  },
+
+  // Lịch hẹn và dịch vụ hôm nay
+  async getTodaySchedule(req, res) {
+    try {
+      const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+
+      const appointments = await Appointment.findAll({
+        where: Sequelize.where(Sequelize.fn('DATE', Sequelize.col('appointment_date')), today),
+        include: [
+          {
+            model: Pet,
+            as: 'pet',
+            attributes: ['name', 'type']
+          }
+        ],
+        attributes: ['id', 'appointment_type', 'appointment_hour', 'appointment_status']
+      });
+
+      const services = await ServiceUser.findAll({
+        where: { date: today },
+        include: [
+          {
+            model: Pet,
+            as: 'pet',
+            attributes: ['name', 'type']
+          },
+          {
+            model: Service,
+            as: 'service',
+            attributes: ['name']
+          }
+        ],
+        attributes: ['id', 'hour', 'status']
+      });
+
+      res.json({ appointments, services });
+    } catch (err) {
+      res.status(500).json({ error: 'Failed to fetch today schedule', details: err });
+    }
+  },
+
+  // Danh sách thông báo gần đây
+  async getRecentNotifications(req, res) {
+    try {
+      const notifications = await Notification.findAll({
+        order: [['created_at', 'DESC']],
+        limit: 5
+      });
+
+      res.json(notifications);
+    } catch (err) {
+      res.status(500).json({ error: 'Failed to fetch recent notifications', details: err });
+    }
+  },
+//Trang user management
+ async getAllUsers(req, res) {
+    try {
+      const users = await User.findAll({
+        attributes: ['id', 'name', 'email', 'role', 'phone_number', 'created_at'],
+        order: [['created_at', 'DESC']]
+      });
+
+      res.json(users);
+    } catch (err) {
+      console.error("❌ Error fetching users:", err);
+      res.status(500).json({ message: 'Error fetching users', error: err.message });
+    }
+  },
+
     addUser: async (req, res) => {
         try {
             const { name, email, role, username, phone_number } = req.body;
@@ -98,301 +195,300 @@ getAllUsers: async (req, res) => {
             res.status(500).json({ error: error.message });
         }
     },
-    
-
-    getAppointments: async (req, res) => {
-        try {
-            const today = new Date();
-    
-            // Lấy lịch hẹn sắp tới
-            const upcomingAppointments = await Appointment.findAll({
-                where: { appointment_date: { [Op.gte]: today } },
-                include: [
-                    { model: Pet, as: 'pet', attributes: ['name', 'type', 'breed'] }, // Đúng alias 'pet'
-                    { model: User, as: 'staff', attributes: ['name'], where: { role: 'vet' } } // Đúng alias 'staff'
-                ],
-                order: [['appointment_date', 'ASC']]
-            });
-    
-            // Lấy lịch hẹn đã hoàn thành
-            const recentAppointments = await Appointment.findAll({
-                where: { appointment_date: { [Op.lt]: today } },
-                include: [
-                    { model: Pet, as: 'pet', attributes: ['name', 'type', 'breed'] },
-                    { model: User, as: 'staff', attributes: ['name'], where: { role: 'vet' } }
-                ],
-                order: [['appointment_date', 'DESC']]
-            });
-    
-            // Format dữ liệu trả về
-            const formatAppointments = (appointments) => {
-                return appointments.map(appt => ({
-                    title: `${appt.appointment_type} - ${appt.pet.name} (${appt.pet.type} - ${appt.pet.breed || 'Unknown'})`,
-                    date: appt.appointment_date,
-                    time: appt.appointment_hour,
-                    doctor: `Dr. ${appt.staff.name}` // Đổi từ 'vet' thành 'staff'
-                }));
-            };
-    
-            res.json({
-                success: true,
-                message: "Appointments retrieved successfully",
-                upcomingAppointments: formatAppointments(upcomingAppointments),
-                recentAppointments: formatAppointments(recentAppointments)
-            });
-        } catch (error) {
-            res.status(500).json({ error: error.message });
-        }
-    },    
-    // Fetch medical records => Đang đợi sửa db
-    getMedicalRecords: async (req, res) => {
-        try {
-            const records = await MedicalRecord.findAll();
-            res.json(records);
-        } catch (error) {
-            res.status(500).json({ error: error.message });
-        }
-    },
-
-    // Fetch boarding details => Đang đợi sửa db
-    getBoardingInfo: async (req, res) => {
-        try {
-            const totalRooms = await Room.count();
-            const occupied = await Boarding.count({ where: { status: 'ongoing' } });
-            const available = await Room.count({ where: { is_available: true } });
-            const reserved = await Boarding.count({ where: { status: 'completed' } });
-            const currentBoarders = await Boarding.findAll({
-                where: { status: 'ongoing' },
-                include: [{ model: Room, attributes: ['room_number', 'type'] }]
-            });
-            res.json({ totalRooms, occupied, available, reserved, currentBoarders });
-        } catch (error) {
-            res.status(500).json({ error: error.message });
-        }
-    },
-
-    getAnalyticsData: async (req, res) => {
-        try {
-            const newPatients = await User.count({ 
-                where: { 
-                    role: 'pet_owner', 
-                    created_at: { [Op.gte]: Sequelize.literal('CURRENT_DATE - INTERVAL 1 MONTH') } 
-                } 
-            });
-    
-            const revenueGrowth = await Payment.sum('amount', { 
-                where: { 
-                    payment_date: { [Op.gte]: Sequelize.literal('CURRENT_DATE - INTERVAL 1 MONTH') } 
-                } 
-            });
-    
-            const avgVisitValue = await Payment.findOne({ 
-                attributes: [[Sequelize.fn('AVG', Sequelize.col('amount')), 'avgValue']] 
-            });
-    
-            const bookings = await Appointment.count();
-            const capacityUtilization = (bookings / (await Room.count())) * 100;
-    
-            const revenueOverview = await Payment.findAll({
-                attributes: [
-                    [Sequelize.fn('MONTH', Sequelize.col('payment_date')), 'month'],
-                    [Sequelize.fn('SUM', Sequelize.col('amount')), 'totalRevenue']
-                ],
-                where: { 
-                    payment_date: { [Op.gte]: new Date(new Date().getFullYear(), 0, 1) } 
-                },
-                group: [Sequelize.fn('MONTH', Sequelize.col('payment_date'))],
-                order: [[Sequelize.fn('MONTH', Sequelize.col('payment_date')), 'ASC']]
-            });
-    
-            const servicesBreakdown = await Service.findAll({
-                attributes: ['type', [Sequelize.fn('COUNT', Sequelize.col('id')), 'count']],
-                group: ['type'],
-            });
-    
-            res.json({ 
-                newPatients, 
-                revenueGrowth, 
-                avgVisitValue, 
-                bookings, 
-                capacityUtilization, 
-                revenueOverview, 
-                servicesBreakdown 
-            });
-        } catch (error) {
-            res.status(500).json({ error: error.message });
-        }
-    },
-    
-
-    // Fetch notifications
-    getNotifications: async (req, res) => {
-        try {
-            const { type } = req.query;
-            const filter = type ? { category: type } : {};
-            const notifications = await Notification.findAll({ where: filter }); //filter???
-            res.json(notifications);
-        } catch (error) {
-            res.status(500).json({ error: error.message });
-        }
-    },
-
-    markAllNotificationsAsRead: async (req, res) => {
-        try {
-            await Notification.update({ status: 'read' }, { where: {} });
-            res.json({ message: 'All notifications marked as read' });
-        } catch (error) {
-            res.status(500).json({ error: error.message });
-        }
-    },
-
-    // Manage admin profile
-    updateProfile: async (req, res) => {
-        try {
-            const { firstName, lastName, email, bio } = req.body;
-            await User.update({ firstName, lastName, email, bio }, { where: { id: req.user.id } });
-            res.json({ message: 'Profile updated successfully' });
-        } catch (error) {
-            res.status(500).json({ error: error.message });
-        }
-    },
-
-    updatePassword: async (req, res) => {
-        try {
-            const { currentPassword, newPassword } = req.body;
-            const user = await User.findByPk(req.user.id);
-            if (!(await bcrypt.compare(currentPassword, user.password))) {
-                return res.status(401).json({ message: 'Current password is incorrect' });
-            }
-            const hashedPassword = await bcrypt.hash(newPassword, 10);
-            await User.update({ password: hashedPassword }, { where: { id: req.user.id } });
-            res.json({ message: 'Password updated successfully' });
-        } catch (error) {
-            res.status(500).json({ error: error.message });
-        }
-    },
-
-    updateNotificationPreferences: async (req, res) => {
-        try {
-            const { emailNotifications, pushNotifications, smsNotifications, desktopNotifications } = req.body;
-            await Setting.update({ emailNotifications, pushNotifications, smsNotifications, desktopNotifications }, { where: { userId: req.user.id } });
-            res.json({ message: 'Notification preferences updated' });
-        } catch (error) {
-            res.status(500).json({ error: error.message });
-        }
-    },
-
-    updateSystemSettings: async (req, res) => {
-        try {
-            const { language, timezone, autoUpdates, analyticsCollection, errorReporting } = req.body;
-            await Setting.update({ language, timezone, autoUpdates, analyticsCollection, errorReporting }, { where: { userId: req.user.id } });
-            res.json({ message: 'System settings updated' });
-        } catch (error) {
-            res.status(500).json({ error: error.message });
-        }
-    },
-    //mượn xóa tạm
-    // deleteService: async (req, res) => {
-    //     try {
-    //         await ServiceUser.destroy({
-    //             where: { }
-    //         });
-    //         await Service.destroy({ where: {} }); // Xóa tất cả bản ghi
-    //         res.status(200).json({ message: "Deleted all services successfully!" });
-    //     } catch (error) {
-    //         res.status(500).json({ message: "Error deleting services", error });
-    //     }
-    // },
-
-    async updateUserRole(req, res) {
-        // Ensure this method is implemented
-        // ...existing code...
-    },
-
+//Lấy dịch vụ ở trang service
     async getAllServices(req, res) {
-        // Ensure this method is implemented
-        // ...existing code...
-    },
+    try {
+      const services = await Service.findAll({
+        attributes: ['id', 'name', 'type', 'price', 'duration', 'status'],
+        order: [['created_at', 'DESC']]
+      });
 
-    async createService(req, res) {
-        // Ensure this method is implemented
-        // ...existing code...
-    },
+      res.json(services);
+    } catch (err) {
+      console.error('❌ Error fetching services:', err);
+      res.status(500).json({ message: 'Failed to fetch services', error: err.message });
+    }
+  },
+//Trang Appointments
+  // 1. Lịch hẹn sắp tới (Upcoming)
+  async getUpcomingAppointments(req, res) {
+    try {
+      const today = new Date();
+      const appointments = await Appointment.findAll({
+        where: {
+          appointment_date: {
+            [Op.gte]: today // hôm nay hoặc tương lai
+          },
+          appointment_status: {
+            [Op.in]: ['Scheduled', 'In progress']
+          }
+        },
+        include: [
+          {
+            model: Pet,
+            as: 'pet',
+            attributes: ['name', 'type']
+          },
+          {
+            model: User,
+            as: 'staff',
+            attributes: ['name']
+          }
+        ],
+        order: [['appointment_date', 'ASC'], ['appointment_hour', 'ASC']]
+      });
 
-    async updateService(req, res) {
-        // Ensure this method is implemented
-        // ...existing code...
-    },
+      res.json(appointments);
+    } catch (err) {
+      console.error('❌ Error fetching upcoming appointments:', err);
+      res.status(500).json({ message: 'Failed to fetch upcoming appointments', error: err.message });
+    }
+  },
 
-    async deleteService(req, res) {
-        // Ensure this method is implemented
-        // ...existing code...
-    },
+  // 2. Lịch hẹn gần đây (Recent)
+  async getRecentAppointments(req, res) {
+    try {
+      const fromDate = new Date();
+      fromDate.setDate(fromDate.getDate() - 7); // 7 ngày gần đây
 
-    async getAllBoarding(req, res) {
-        // Ensure this method is implemented
-        // ...existing code...
-    },
+      const appointments = await Appointment.findAll({
+        where: {
+          appointment_status: 'Done',
+          appointment_date: {
+            [Op.gte]: fromDate
+          }
+        },
+        include: [
+          {
+            model: Pet,
+            as: 'pet',
+            attributes: ['name', 'type']
+          },
+          {
+            model: User,
+            as: 'staff',
+            attributes: ['name']
+          }
+        ],
+        order: [['appointment_date', 'DESC'], ['appointment_hour', 'DESC']]
+      });
 
-    async getDashboard(req, res) {
-        // Ensure this method is implemented
-        // ...existing code...
-    },
+      res.json(appointments);
+    } catch (err) {
+      console.error('❌ Error fetching recent appointments:', err);
+      res.status(500).json({ message: 'Failed to fetch recent appointments', error: err.message });
+    }
+  }, 
+//Trang Medical Record 
+   // 1. Recent medical records
+  async getRecentMedicalRecords(req, res) {
+    try {
+      const records = await MedicalRecord.findAll({
+        include: [
+          {
+            model: Pet,
+            attributes: ['name', 'type']
+          },
+          {
+            model: User,
+            attributes: ['name']
+          }
+        ],
+        order: [['record_date', 'DESC']],
+        limit: 10
+      });
 
-    async getUsersByRole(req, res) {
-        // Ensure this method is implemented
-        // ...existing code...
-    },
+      res.json(records);
+    } catch (err) {
+      console.error('❌ Error fetching recent medical records:', err);
+      res.status(500).json({ message: 'Failed to fetch medical records', error: err.message });
+    }
+  },
 
-    async getRevenueReport(req, res) {
-        // Ensure this method is implemented
-        // ...existing code...
-    },
+  // 2. Chi tiết một bản ghi y tế
+  async getMedicalRecordById(req, res) {
+    try {
+      const { id } = req.params;
+      const record = await MedicalRecord.findByPk(id, {
+        include: [
+          {
+            model: Pet,
+            attributes: ['name', 'type']
+          },
+          {
+            model: User,
+            attributes: ['name']
+          }
+        ]
+      });
 
-    async getHealthTrends(req, res) {
-        // Ensure this method is implemented
-        // ...existing code...
-    },
+      if (!record) return res.status(404).json({ message: 'Medical record not found' });
 
-    async getPetRegistrationStats(req, res) {
-        // Ensure this method is implemented
-        // ...existing code...
-    },
+      res.json(record);
+    } catch (err) {
+      console.error('❌ Error fetching medical record detail:', err);
+      res.status(500).json({ message: 'Failed to fetch medical record detail', error: err.message });
+    }
+  },
+//Trang Boarding
+  // 1. Thống kê Boarding
+  async getBoardingStats(req, res) {
+    try {
+      const today = new Date();
 
-    async getServiceUsageStats(req, res) {
-        // Ensure this method is implemented
-        // ...existing code...
-    },
+      const [totalRooms, occupied, available, reserved] = await Promise.all([
+        Room.count(),
+        BoardingUser.count({
+          where: {
+            start_date: { [Op.lte]: today },
+            end_date: { [Op.gte]: today },
+            status_payment: 'paid'
+          }
+        }),
+        Room.count({ where: { is_available: true } }),
+        BoardingUser.count({ where: { status_payment: 'pending' } })
+      ]);
 
-    async getAllAppointments(req, res) {
-        // Ensure this method is implemented
-        // ...existing code...
-    },
+      res.json({
+        totalRooms,
+        occupied,
+        available,
+        reserved
+      });
+    } catch (err) {
+      console.error('❌ Error fetching boarding stats:', err);
+      res.status(500).json({ message: 'Failed to fetch boarding stats', error: err.message });
+    }
+  },
 
-    async deleteAppointment(req, res) {
-        // Ensure this method is implemented
-        // ...existing code...
-    },
+  // 2. Danh sách các thú cưng đang ở trọ hiện tại
+  async getCurrentBoarders(req, res) {
+  try {
+    const today = new Date();
 
-    async getAllMedicalRecords(req, res) {
-        // Ensure this method is implemented
-        // ...existing code...
-    },
+    const boarders = await BoardingUser.findAll({
+      where: {
+        start_date: { [Op.lte]: today },
+        end_date: { [Op.gte]: today },
+        status_payment: 'paid'
+      },
+      include: [
+        {
+          model: Pet,
+          as: 'pet',
+          attributes: ['name', 'type', 'breed']
+        }
+      ],
+      order: [['start_date', 'ASC']]
+    });
 
-    async deleteMedicalRecord(req, res) {
-        // Ensure this method is implemented
-        // ...existing code...
-    },
+    const formatted = boarders.map(b => ({
+      id: b.id,
+      petName: b.pet.name,
+      petBreed: b.pet.breed,
+      dateRange: '${b.start_date.toISOString().slice(0, 10)} - ${b.end_date.toISOString().slice(0, 10)}',
+      notes: b.notes
+    }));
 
-    async registerAdmin(req, res) {
-        // Ensure this method is implemented
-        // ...existing code...
-    },
+    res.json(formatted);
+  } catch (err) {
+    console.error('❌ Error fetching current boarders:', err);
+    res.status(500).json({ message: 'Failed to fetch current boarders', error: err.message });
+  }
+},
+//Trang Analytics
+async getMonthlyRevenue(req, res) {
+  try {
+    const revenueData = await Report.findAll({
+      where: { type: 'revenue' },
+      attributes: [
+        [Sequelize.fn('MONTH', Sequelize.col('generated_at')), 'month'],
+        [Sequelize.fn('SUM', Sequelize.cast(Sequelize.col('content'), 'float')), 'total']
+      ],
+      group: ['month'],
+      order: [['month', 'ASC']]
+    });
 
-    async loginAdmin(req, res) {
-        // Ensure this method is implemented
-        // ...existing code...
-    },
+    res.json(revenueData);
+  } catch (err) {
+    console.error('❌ Revenue fetch error:', err);
+    res.status(500).json({ message: 'Failed to fetch revenue overview' });
+  }
+},
+async getServiceBreakdown(req, res) {
+  try {
+    const serviceStats = await ServiceUser.findAll({
+      include: [{
+        model: Service,
+        as: 'service',
+        attributes: ['type']
+      }],
+      attributes: [
+        [Sequelize.col('service.type'), 'type'],
+        [Sequelize.fn('COUNT', Sequelize.col('ServiceUser.id')), 'count']
+      ],
+      group: ['service.type']
+    });
+
+    res.json(serviceStats);
+  } catch (err) {
+    console.error('❌ Service breakdown error:', err);
+    res.status(500).json({ message: 'Failed to fetch service breakdown' });
+  }
+},
+
+async getKPIs(req, res) {
+  try {
+    const today = new Date();
+    const startThisMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+    const startLastMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+    const endLastMonth = new Date(today.getFullYear(), today.getMonth(), 0);
+
+    // New patients
+    const newThisMonth = await User.count({ where: { created_at: { [Op.gte]: startThisMonth } } });
+    const newLastMonth = await User.count({ where: { created_at: { [Op.between]: [startLastMonth, endLastMonth] } } });
+    const newPatientsGrowth = newLastMonth ? (((newThisMonth - newLastMonth) / newLastMonth) * 100).toFixed(1) : '100';
+
+    // Revenue growth
+    const revenueReports = await Report.findAll({
+      where: { type: 'revenue' }
+    });
+
+    const thisMonthRevenue = revenueReports
+      .filter(r => new Date(r.generated_at) >= startThisMonth)
+      .reduce((acc, r) => acc + parseFloat(r.content || 0), 0);
+
+    const lastMonthRevenue = revenueReports
+      .filter(r => new Date(r.generated_at) >= startLastMonth && new Date(r.generated_at) < startThisMonth)
+      .reduce((acc, r) => acc + parseFloat(r.content || 0), 0);
+
+    const revenueGrowth = lastMonthRevenue ? (((thisMonthRevenue - lastMonthRevenue) / lastMonthRevenue) * 100).toFixed(1) : '100';
+
+    // Avg visit value
+    const totalAppointments = await Appointment.count();
+    const avgVisitValue = totalAppointments ? (thisMonthRevenue / totalAppointments).toFixed(2) : 0;
+
+    // Booking utilization
+    const maxSlots = 30 * 6; // 6 slot/hours mỗi ngày giả định
+    const bookings = await Appointment.count({
+      where: {
+        appointment_date: { [Op.gte]: startThisMonth }
+      }
+    });
+    const bookingUtilization = ((bookings / maxSlots) * 100).toFixed(1);
+
+    res.json({
+      newPatients: newPatientsGrowth + '%',
+      revenueGrowth: revenueGrowth + '%',
+      avgVisitValue: '$' + avgVisitValue,
+      bookingUtilization: bookingUtilization + '%'
+    });
+  } catch (err) {
+    console.error('❌ KPI error:', err);
+    res.status(500).json({ message: 'Failed to fetch KPIs', error: err.message });
+  }
+},
+
 };
 
 module.exports = AdminController;

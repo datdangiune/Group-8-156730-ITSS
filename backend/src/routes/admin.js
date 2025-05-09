@@ -52,30 +52,37 @@ const router = express.Router();
 // router.get('/analytics', verifyTokenAdmin, AdminController.getAnalyticsData);
 
 // Quản lý user
-router.get('/users', verifyTokenAdmin, AdminController.getAllUsers);
-router.post('/users', verifyTokenAdmin, AdminController.addUser);
-// router.patch('/users/:id/role', verifyTokenAdmin, AdminController.updateUserRole); // (bạn cần viết hàm này trong AdminController nếu chưa có)
+// Login
+router.post('/login', AdminController.login);
 
-// Quản lý cuộc hẹn
-router.get('/appointments', verifyTokenAdmin, AdminController.getAppointments);
+// Dashboard stats
+router.get('/dashboard/stats', AdminController.getDashboardStats);
+router.get('/dashboard/monthly-revenue', AdminController.getMonthlyRevenue);
+router.get('/dashboard/service-stats', AdminController.getServiceStatsByCategory);
+router.get('/dashboard/today-schedule', AdminController.getTodaySchedule);
+router.get('/dashboard/recent-notifications', AdminController.getRecentNotifications);
 
-// Quản lý hồ sơ y tế
-router.get('/medical-records', verifyTokenAdmin, AdminController.getMedicalRecords);
+// User management
+router.get('/users', AdminController.getAllUsers);
+router.post('/users', AdminController.addUser);
 
-// Quản lý lưu trú
-router.get('/boarding-info', verifyTokenAdmin, AdminController.getBoardingInfo);
+// Services
+router.get('/services', AdminController.getAllServices);
 
-// Quản lý thông báo
-router.get('/notifications', verifyTokenAdmin, AdminController.getNotifications);
-router.patch('/notifications/mark-all-read', verifyTokenAdmin, AdminController.markAllNotificationsAsRead);
+// Appointments
+router.get('/appointments/upcoming', AdminController.getUpcomingAppointments);
+router.get('/appointments/recent', AdminController.getRecentAppointments);
 
-// Quản lý hồ sơ admin
-router.put('/profile', verifyTokenAdmin, AdminController.updateProfile);
-router.put('/profile/password', verifyTokenAdmin, AdminController.updatePassword);
-router.put('/profile/notification-preferences', verifyTokenAdmin, AdminController.updateNotificationPreferences);
-router.put('/profile/system-settings', verifyTokenAdmin, AdminController.updateSystemSettings);
+// Medical records
+router.get('/medical-records/recent', AdminController.getRecentMedicalRecords);
+router.get('/medical-records/:id', AdminController.getMedicalRecordById);
 
+// Boarding
+router.get('/boarding/stats', AdminController.getBoardingStats);
+router.get('/boarding/current', AdminController.getCurrentBoarders);
 
-// router.delete('/del', AdminController.deleteService)
-
+// Analytics
+router.get('/analytics/monthly-revenue', AdminController.getMonthlyRevenue);
+router.get('/analytics/service-breakdown', AdminController.getServiceBreakdown);
+router.get('/analytics/kpis', AdminController.getKPIs);
 module.exports = router;
