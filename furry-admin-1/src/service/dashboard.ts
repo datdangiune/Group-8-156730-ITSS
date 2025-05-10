@@ -1,147 +1,166 @@
-type RevenueData = {
-  month: number;
-  total: number;
-};
+// ================= INTERFACES =================
 
-type DashboardStats = {
+export interface DashboardStats {
   totalUsers: number;
   activeBoarders: number;
   pendingServices: number;
   unreadNotifications: number;
-};
+}
 
-type ServiceStatsByDay = {
+export interface RevenueData {
+  month: number;
+  total: number;
+}
+
+export interface ServiceStatsByDay {
   day: string;
   status: string;
   type: string;
   count: number;
-};
+}
 
-type Appointment = {
+export interface Pet {
+  name: string;
+  type: string;
+}
+
+export interface Appointment {
   id: number;
   appointment_type: string;
   appointment_hour: string;
   appointment_status: string;
-  pet: {
-    name: string;
-    type: string;
-  };
-};
+  pet: Pet;
+}
 
-type ServiceToday = {
+export interface ServiceToday {
   id: number;
   hour: string;
   status: string;
-  pet: {
-    name: string;
-    type: string;
-  };
+  pet: Pet;
   service: {
     name: string;
   };
-};
+}
 
-type TodaySchedule = {
+export interface TodaySchedule {
   appointments: Appointment[];
   services: ServiceToday[];
-};
+}
 
-type Notification = {
+export interface Notification {
   id: number;
   title: string;
   message: string;
   created_at: string;
+}
+
+// ================ API URL =====================
+
+const API_URL = "http://localhost:3000/api/v1/admin/dashboard";
+
+// ================ FETCH FUNCTIONS =============
+
+export const fetchDashboardStats = async (token: string): Promise<DashboardStats> => {
+  try {
+    const res = await fetch(`${API_URL}/stats`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (!res.ok) {
+      const error = await res.json();
+      throw new Error(error.message || "Failed to fetch dashboard stats");
+    }
+
+    return await res.json();
+  } catch (error) {
+    console.error("❌ Error fetching dashboard stats:", error);
+    throw error;
+  }
 };
 
-const BASE_URL = 'http://localhost:3000/api/v1/admin/dashboard';
-
-async function fetchDashboardStats(): Promise<void> {
+export const fetchMonthlyRevenue = async (token: string): Promise<RevenueData[]> => {
   try {
-    const res = await fetch(`${BASE_URL}/stats`);
-    const data: DashboardStats = await res.json();
-
-    console.log("\n===== 📊 DASHBOARD OVERVIEW =====");
-    console.log(`👥 Total Users: ${data.totalUsers}`);
-    console.log(`🏠 Active Boarders: ${data.activeBoarders}`);
-    console.log(`🛁 Pending Services: ${data.pendingServices}`);
-    console.log(`🔔 Unread Notifications: ${data.unreadNotifications}`);
-  } catch (err) {
-    console.error("❌ Error fetching dashboard stats:", err);
-  }
-}
-
-async function fetchMonthlyRevenue(): Promise<void> {
-  try {
-    const res = await fetch(`${BASE_URL}/monthly-revenue`);
-    const data: RevenueData[] = await res.json();
-
-    console.log("\n===== 💰 Revenue Overview =====");
-    console.log("Monthly revenue in USD for the current year:");
-    data.forEach(d => {
-      console.log(`- Month ${d.month}: $${d.total}`);
-    });
-  } catch (err) {
-    console.error("❌ Error fetching revenue:", err);
-  }
-}
-
-async function fetchServiceStatsByCategory(): Promise<void> {
-  try {
-    const res = await fetch(`${BASE_URL}/service-stats`);
-    const data: ServiceStatsByDay[] = await res.json();
-
-    console.log("\n===== 📊 Services by Category =====");
-    console.log("Weekly breakdown of services by category:");
-    data.forEach(s => {
-      console.log(`- ${s.day} | ${s.type} (${s.status}): ${s.count}`);
-    });
-  } catch (err) {
-    console.error("❌ Error fetching service stats:", err);
-  }
-}
-
-async function fetchTodaySchedule(): Promise<void> {
-  try {
-    const res = await fetch(`${BASE_URL}/today-schedule`);
-    const data: TodaySchedule = await res.json();
-
-    console.log("\n===== 📅 Today's Schedule =====");
-    console.log("Appointments and services for today:\n");
-
-    console.log("👉 Appointments:");
-    data.appointments.forEach(a => {
-      console.log(`- ${a.pet.name} (${a.pet.type}) | ${a.appointment_type} at ${a.appointment_hour}`);
+    const res = await fetch(`${API_URL}/monthly-revenue`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
     });
 
-    console.log("\n👉 Services:");
-    data.services.forEach(s => {
-      console.log(`- ${s.pet.name} (${s.pet.type}) | ${s.service.name} at ${s.hour}`);
-    });
-  } catch (err) {
-    console.error("❌ Error fetching today's schedule:", err);
-  }
-}
+    if (!res.ok) {
+      const error = await res.json();
+      throw new Error(error.message || "Failed to fetch revenue data");
+    }
 
-async function fetchRecentNotifications(): Promise<void> {
+    return await res.json();
+  } catch (error) {
+    console.error("❌ Error fetching monthly revenue:", error);
+    throw error;
+  }
+};
+
+export const fetchServiceStatsByCategory = async (token: string): Promise<ServiceStatsByDay[]> => {
   try {
-    const res = await fetch(`${BASE_URL}/recent-notifications`);
-    const data: Notification[] = await res.json();
-
-    console.log("\n===== 🔔 Recent Notifications =====");
-    console.log("Updates and alerts:");
-    data.forEach(n => {
-      console.log(`- [${n.created_at}] ${n.title}: ${n.message}`);
+    const res = await fetch(`${API_URL}/service-stats`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
     });
-  } catch (err) {
-    console.error("❌ Error fetching notifications:", err);
-  }
-}
 
-// ======= RUN ALL =======
-(async () => {
-  await fetchDashboardStats();
-  await fetchMonthlyRevenue();
-  await fetchServiceStatsByCategory();
-  await fetchTodaySchedule();
-  await fetchRecentNotifications();
-})();
+    if (!res.ok) {
+      const error = await res.json();
+      throw new Error(error.message || "Failed to fetch service stats");
+    }
+
+    return await res.json();
+  } catch (error) {
+    console.error("❌ Error fetching service stats:", error);
+    throw error;
+  }
+};
+
+export const fetchTodaySchedule = async (token: string): Promise<TodaySchedule> => {
+  try {
+    const res = await fetch(`${API_URL}/today-schedule`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (!res.ok) {
+      const error = await res.json();
+      throw new Error(error.message || "Failed to fetch today's schedule");
+    }
+
+    return await res.json();
+  } catch (error) {
+    console.error("❌ Error fetching today schedule:", error);
+    throw error;
+  }
+};
+
+export const fetchRecentNotifications = async (token: string): Promise<Notification[]> => {
+  try {
+    const res = await fetch(`${API_URL}/recent-notifications`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (!res.ok) {
+      const error = await res.json();
+      throw new Error(error.message || "Failed to fetch notifications");
+    }
+
+    return await res.json();
+  } catch (error) {
+    console.error("❌ Error fetching notifications:", error);
+    throw error;
+  }
+};
