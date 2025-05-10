@@ -82,7 +82,12 @@ export const fetchServices = async (token: string): Promise<ClinicService[]> => 
     const response = await axios.get(`${API_BASE_URL}/staff/clinic-services`, {
       headers: { Authorization: `Bearer ${token}` }, 
     });
-    return response.data.data;
+
+    // Format prices with VND
+    return response.data.data.map((service: ClinicService) => ({
+      ...service,
+      price: `${service.price.toLocaleString()} VND`, // Format price with VND
+    }));
   } catch (error: any) {
     console.error("Error fetching services:", error.message);
     throw new Error(error.message || "Failed to fetch services");

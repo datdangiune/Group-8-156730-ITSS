@@ -300,7 +300,7 @@ const ClinicServices = () => {
                     </p>
                     <div className="flex justify-between items-center">
                       <div>
-                        <p className="font-medium">{service.price} VND</p>
+                        <p className="font-medium">{service.price.toLocaleString()}</p> {/* Format price with VND */}
                         <p className="text-xs text-muted-foreground">{service.duration}</p>
                       </div>
                       <div className="flex gap-2">

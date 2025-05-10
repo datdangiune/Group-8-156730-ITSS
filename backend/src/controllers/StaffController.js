@@ -356,16 +356,16 @@ const StaffController = {
         try {
             const { type, status } = req.query;
 
-            // Xây dựng điều kiện truy vấn động
+            // Build dynamic query conditions
             const whereCondition = {};
             if (type) whereCondition.type = type;
             if (status) whereCondition.status = status;
 
-            // Truy vấn danh sách dịch vụ
+            // Query the list of services
             const services = await Service.findAll({
                 where: whereCondition,
                 attributes: ['id', 'type', 'name', 'description', 'price', 'duration', 'status', 'image'],
-                order: [['created_at', 'DESC']], // Use 'created_at' for sorting
+                order: [['created_at', 'DESC']],
             });
 
             if (!services.length) {
@@ -375,13 +375,13 @@ const StaffController = {
                 });
             }
 
-            // Định dạng dữ liệu đầu ra phù hợp với frontend
+            // Format prices with VND
             const formattedServices = services.map(service => ({
                 id: service.id,
                 type: service.type,
                 name: service.name,
                 description: service.description,
-                price: `$${service.price.toFixed(2)}`,
+                price: `${service.price.toLocaleString()}`, // Format price with VND
                 duration: service.duration,
                 status: service.status,
                 image: service.image,
@@ -508,7 +508,7 @@ const StaffController = {
                     breed: serviceUser.pet.breed,
                 } : null,
                 description: serviceUser.service?.description || null,
-                price: serviceUser.service ? `$${serviceUser.service.price.toFixed(2)}` : null,
+                price: serviceUser.service ? `${serviceUser.service.price.toFixed(2)}` : null,
                 duration: serviceUser.service?.duration || null,
                 status: serviceUser.status || null,
                 date: serviceUser.date || null,
