@@ -281,7 +281,7 @@ const PetDetail = () => {
 
           <Card>
             <CardHeader>
-              <CardTitle className="text-xl">Medical History</CardTitle>
+              <CardTitle className="text-xl">Medical Records</CardTitle>
               <CardDescription>Examination records and treatment history</CardDescription>
             </CardHeader>
             <CardContent>
