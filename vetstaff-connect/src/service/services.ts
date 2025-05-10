@@ -153,3 +153,21 @@ export const fetchEditService = async (
     throw new Error(error.message || "Failed to edit service");
   }
 };
+
+export const fetchToggleServiceStatus = async (token: string, serviceId: number): Promise<{ status: string }> => {
+  try {
+    const response = await axios.patch(`${API_BASE_URL}/staff/clinic-services/${serviceId}/status`, {}, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    if (response.status !== 200) {
+      throw new Error(response.data.message || "Failed to toggle service status");
+    }
+
+    console.log("Service status toggled successfully:", response.data.message);
+    return { status: response.data.status }; // Return the updated status
+  } catch (error: any) {
+    console.error("Error toggling service status:", error.message);
+    throw new Error(error.message || "Failed to toggle service status");
+  }
+};

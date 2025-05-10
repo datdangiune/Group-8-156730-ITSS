@@ -16,10 +16,10 @@ import {
   DialogClose
 } from "@/components/ui/dialog";
 import StatusBadge from "@/components/dashboard/StatusBadge";
-import { Search, Plus, Edit, Image, ArrowLeft, Trash2 } from "lucide-react";
+import { Search, Plus, Edit, Image, ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { fetchServices, fetchCreateService, fetchEditService } from "@/service/services";
+import { fetchServices, fetchCreateService, fetchEditService, fetchToggleServiceStatus } from "@/service/services";
 import { uploadFile } from "@/service/UploadImage";
 
 interface ClinicService {
@@ -31,6 +31,7 @@ interface ClinicService {
   duration: string;
   image?: string;
   status: 'available' | 'unavailable';
+  deleteStatus?: boolean;
   details?: {
     included: string[];
   };
@@ -219,22 +220,22 @@ const ClinicServices = () => {
     }
   };
   
-  // Handle service deletion
-  const handleDelete = (serviceId: string) => {
-    setServices(prevServices => prevServices.filter(service => String(service.id) !== serviceId));
-    toast.success("Service deleted successfully");
-  };
-
   // Handle status toggle
-  const handleStatusToggle = (serviceId: string) => {
-    setServices(prevServices =>
-      prevServices.map(service =>
-        String(service.id) === serviceId
-          ? { ...service, status: service.status === "available" ? "unavailable" : "available" }
-          : service
-      )
-    );
-    toast.success("Service status updated successfully");
+  const handleStatusToggle = async (serviceId: number) => {
+    try {
+      const response = await fetchToggleServiceStatus(token, serviceId); // Call the toggle status API
+      setServices(prevServices =>
+              prevServices.map(service =>
+                service.id === serviceId
+                  ? { ...service, status: response.status as "available" | "unavailable" } // Ensure correct type
+                  : service
+              )
+            );
+      toast.success(`Service status updated to ${response.status}`);
+    } catch (error: any) {
+      console.error("Error toggling service status:", error.message);
+      toast.error("Failed to toggle service status");
+    }
   };
   
   return (
@@ -309,7 +310,7 @@ const ClinicServices = () => {
                         <Button 
                           variant="outline" 
                           size="sm"
-                          onClick={() => handleStatusToggle(String(service.id))}
+                          onClick={() => handleStatusToggle(service.id)} // Attach the toggle handler
                         >
                           {service.status === "available" ? "Deactivate" : "Activate"}
                         </Button>
@@ -509,10 +510,9 @@ const ClinicServices = () => {
       <Button 
         type="button" 
         variant="destructive"
-        onClick={() => handleDelete(String(editingService.id))}
+        onClick={() => setDialogOpen(false)}
       >
-        <Trash2 className="h-4 w-4 mr-2" />
-        Delete
+        Cancel
       </Button>
     )}
     <div className="flex gap-2">

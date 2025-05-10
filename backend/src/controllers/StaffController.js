@@ -441,6 +441,31 @@ const StaffController = {
         }
     },
 
+    async toggleServiceStatus(req, res) {
+        try {
+            const { id } = req.params;
+
+            // Find the service by ID
+            const service = await Service.findByPk(id);
+            if (!service) {
+                return res.status(404).json({ message: 'Service not found' });
+            }
+
+            // Toggle the status field
+            const newStatus = service.status === 'available' ? 'unavailable' : 'available';
+            await service.update({ status: newStatus });
+
+            // Return a success response
+            return res.status(200).json({
+                message: `Service status updated to ${newStatus}`,
+                status: newStatus,
+            });
+        } catch (error) {
+            console.error('Error toggling service status:', error);
+            return res.status(500).json({ message: 'Internal server error' });
+        }
+    },
+
     async getUserServices(req, res) {
         try {
             const { id } = req.user;

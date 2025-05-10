@@ -21,7 +21,8 @@ if (
     !StaffController.getUsersBoardings ||
     !StaffController.getBoardingUserDetails ||
     !StaffController.getPets ||
-    !StaffController.editService
+    !StaffController.editService ||
+    !StaffController.toggleServiceStatus
 ) {
     throw new Error('One or more StaffController methods are undefined. Please check the controller implementation.');
 }
@@ -38,6 +39,7 @@ router.get('/owners/:ownerId/pets', verifyTokenStaff, StaffController.getPetsByO
 router.post('/clinic-services/create', verifyTokenStaff, StaffController.createService);
 router.get('/clinic-services', verifyTokenStaff, StaffController.getServices);
 router.put('/clinic-services/:id/edit', verifyTokenStaff, StaffController.editService);
+router.patch('/clinic-services/:id/status', verifyTokenStaff, StaffController.toggleServiceStatus);
 router.get('/user-services', verifyTokenStaff, StaffController.getUserServices);
 router.get('/boarding-services/available', verifyTokenStaff, StaffController.getAvailableBoardingServices);
 router.post('/boarding-services/new', verifyTokenStaff, StaffController.addNewBoardingService);
