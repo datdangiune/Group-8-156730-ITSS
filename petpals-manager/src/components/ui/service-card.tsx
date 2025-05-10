@@ -32,11 +32,9 @@ const getStatusColor = (status?: string) => {
   if (!status) return 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-300';
   
   switch (status.toLowerCase()) {
-    case 'available':
+    case 'Complete':
       return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300';
-    case 'completed':
-      return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300';
-    case 'unavailable':
+    case 'In Progerss':
       return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300';
     default:
       return 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-300';
@@ -107,7 +105,7 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
           {service.price !== undefined && (
             <div className="flex items-center text-gray-700 dark:text-gray-300 font-medium">
               <DollarSign className="h-4 w-4 mr-2 flex-shrink-0" />
-              <span>${service.price.toFixed(2)}</span>
+              <span>{service.price} VNĐ</span>
             </div>
           )}
         </div>

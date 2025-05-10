@@ -10,7 +10,7 @@ import { getTokenFromCookies } from '@/service/auth';
 import { useNavigate } from 'react-router-dom';
 import { getPets } from '@/service/pet';
 import { fetchUserAppointments } from '@/service/appointment';
-import { fetchUserServices, Service, UserService} from '@/service/service';
+import { fetchUserServices, UserService, } from '@/service/service';
 type PetType = "dog" | "cat" | "bird" | "rabbit" | "fish" | "other";
 
 
@@ -27,7 +27,6 @@ const Dashboard = () => {
   const [pets, setPets] = useState<Pet[]>([]);  
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [status, setStatus] = useState("Scheduled");
-  const [status1, setStatus1] = useState("Completed");
   const [services, setServices] = useState<UserService[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -76,7 +75,7 @@ const Dashboard = () => {
     useEffect(() => {
       const loadServices = async () => {
         try {
-          const data = await fetchUserServices(token, status1);
+          const data = await fetchUserServices(token);
           setServices(data); 
           setLoading(false); 
         } catch (error) {

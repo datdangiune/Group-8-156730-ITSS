@@ -197,9 +197,8 @@ const MyServices = () => {
             navigate('/login');
         }
         const loadServices = async () => {
-            const status = "";
           try {
-            const data = await fetchUserServices(token, status);
+            const data = await fetchUserServices(token);
             setServices(data); 
             setLoading(false); 
           } catch (error) {
