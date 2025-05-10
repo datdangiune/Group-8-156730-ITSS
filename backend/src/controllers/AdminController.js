@@ -58,7 +58,7 @@ const AdminController = {
           res.status(500).json({ error: 'Failed to fetch dashboard statistics', details: err });
         }
       },
-    // Biểu đồ doanh thu theo tháng (USD)
+    // Biểu đồ doanh thu theo tháng ???
     async getMonthlyRevenue(req, res) {
     try {
       const revenues = await Report.findAll({
@@ -77,7 +77,7 @@ const AdminController = {
     }
   },
 
-  // Biểu đồ thống kê dịch vụ theo loại (grooming, training, boarding) theo thứ trong tuần
+  // Biểu đồ thống kê dịch vụ theo loại (grooming, training, boarding) theo thứ trong tuần ???
   async getServiceStatsByCategory(req, res) {
     try {
       const services = await ServiceUser.findAll({
@@ -101,7 +101,7 @@ const AdminController = {
     }
   },
 
-  // Lịch hẹn và dịch vụ hôm nay
+  // Lịch hẹn và dịch vụ hôm nay OK
   async getTodaySchedule(req, res) {
     try {
       const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
@@ -141,7 +141,7 @@ const AdminController = {
     }
   },
 
-  // Danh sách thông báo gần đây
+  // Danh sách thông báo gần đây OK
   async getRecentNotifications(req, res) {
     try {
       const notifications = await Notification.findAll({
@@ -154,7 +154,7 @@ const AdminController = {
       res.status(500).json({ error: 'Failed to fetch recent notifications', details: err });
     }
   },
-//Trang user management
+//Trang user management OK
  async getAllUsers(req, res) {
     try {
       const users = await User.findAll({
@@ -195,7 +195,7 @@ const AdminController = {
             res.status(500).json({ error: error.message });
         }
     },
-//Lấy dịch vụ ở trang service
+//Lấy dịch vụ ở trang service OK
     async getAllServices(req, res) {
     try {
       const services = await Service.findAll({
@@ -210,7 +210,7 @@ const AdminController = {
     }
   },
 //Trang Appointments
-  // 1. Lịch hẹn sắp tới (Upcoming)
+  // 1. Lịch hẹn sắp tới (Upcoming) OK
   async getUpcomingAppointments(req, res) {
     try {
       const today = new Date();
@@ -220,7 +220,7 @@ const AdminController = {
             [Op.gte]: today // hôm nay hoặc tương lai
           },
           appointment_status: {
-            [Op.in]: ['Scheduled', 'In progress']
+            [Op.in]: ['Scheduled', 'In progess']
           }
         },
         include: [
@@ -245,7 +245,7 @@ const AdminController = {
     }
   },
 
-  // 2. Lịch hẹn gần đây (Recent)
+  // 2. Lịch hẹn gần đây (Recent) OK
   async getRecentAppointments(req, res) {
     try {
       const fromDate = new Date();
@@ -280,7 +280,7 @@ const AdminController = {
     }
   }, 
 //Trang Medical Record 
-   // 1. Recent medical records
+   // 1. Recent medical records OK
   async getRecentMedicalRecords(req, res) {
     try {
       const records = await MedicalRecord.findAll({
@@ -305,33 +305,35 @@ const AdminController = {
     }
   },
 
-  // 2. Chi tiết một bản ghi y tế
+  // 2. Chi tiết một bản ghi y tế ??
   async getMedicalRecordById(req, res) {
-    try {
-      const { id } = req.params;
-      const record = await MedicalRecord.findByPk(id, {
-        include: [
-          {
-            model: Pet,
-            attributes: ['name', 'type']
-          },
-          {
-            model: User,
-            attributes: ['name']
-          }
-        ]
-      });
+  try {
+    const { id } = req.params;
 
-      if (!record) return res.status(404).json({ message: 'Medical record not found' });
-
-      res.json(record);
-    } catch (err) {
-      console.error('❌ Error fetching medical record detail:', err);
-      res.status(500).json({ message: 'Failed to fetch medical record detail', error: err.message });
+    // Kiểm tra nếu id không phải là số
+    if (isNaN(id)) {
+      return res.status(400).json({ message: 'Invalid medical record ID' });
     }
-  },
-//Trang Boarding
-  // 1. Thống kê Boarding
+
+    const record = await MedicalRecord.findByPk(parseInt(id), {
+      include: [
+        { model: Pet, attributes: ['name', 'type'] },
+        { model: User, attributes: ['name'] }
+      ]
+    });
+
+    if (!record) {
+      return res.status(404).json({ message: 'Medical record not found' });
+    }
+
+    res.json(record);
+  } catch (err) {
+    console.error('❌ Error fetching medical record detail:', err);
+    res.status(500).json({ message: 'Failed to fetch medical record detail', error: err.message });
+  }
+},
+//Trang Boarding OK
+  // 1. Thống kê Boarding OK
   async getBoardingStats(req, res) {
     try {
       const today = new Date();
@@ -361,7 +363,7 @@ const AdminController = {
     }
   },
 
-  // 2. Danh sách các thú cưng đang ở trọ hiện tại
+  // 2. Danh sách các thú cưng đang ở trọ hiện tại OK
   async getCurrentBoarders(req, res) {
   try {
     const today = new Date();
@@ -396,7 +398,7 @@ const AdminController = {
     res.status(500).json({ message: 'Failed to fetch current boarders', error: err.message });
   }
 },
-//Trang Analytics
+//Trang Analytics ???
 async getMonthlyRevenue(req, res) {
   try {
     const revenueData = await Report.findAll({
@@ -488,7 +490,118 @@ async getKPIs(req, res) {
     res.status(500).json({ message: 'Failed to fetch KPIs', error: err.message });
   }
 },
+//Trang notifications
+// Lấy tất cả thông báo của user (GET /notifications)
+    async getAllNotifications(req, res) {
+        try {
+            const userId = req.user.id;
 
+            const notifications = await Notification.findAll({
+                where: { user_id: userId },
+                order: [['created_at', 'DESC']]
+            });
+
+            res.json(notifications);
+        } catch (err) {
+            res.status(500).json({ message: 'Lỗi lấy danh sách thông báo', error: err.message });
+        }
+    },
+
+    // Lấy danh sách thông báo chưa đọc (GET /notifications/unread)
+    async getUnreadNotifications(req, res) {
+        try {
+            const userId = req.user.id;
+
+            const unread = await Notification.findAll({
+                where: { user_id: userId, is_read: false },
+                order: [['created_at', 'DESC']]
+            });
+
+            res.json(unread);
+        } catch (err) {
+            res.status(500).json({ message: 'Lỗi lấy thông báo chưa đọc', error: err.message });
+        }
+    },
+
+    // Đánh dấu tất cả là đã đọc (PATCH /notifications/mark-all-read)
+    async markAllAsRead(req, res) {
+        try {
+            const userId = req.user.id;
+
+            await Notification.update(
+                { is_read: true },
+                { where: { user_id: userId, is_read: false } }
+            );
+
+            res.json({ message: 'Đã đánh dấu tất cả thông báo là đã đọc' });
+        } catch (err) {
+            res.status(500).json({ message: 'Lỗi đánh dấu đã đọc', error: err.message });
+        }
+    },
+
+    // Đánh dấu 1 thông báo đã đọc (PATCH /notifications/:id/mark-read)
+    async markAsRead(req, res) {
+        try {
+            const { id } = req.params;
+            const userId = req.user.id;
+
+            const notification = await Notification.findOne({ where: { id, user_id: userId } });
+            if (!notification) {
+                return res.status(404).json({ message: 'Thông báo không tồn tại' });
+            }
+
+            notification.is_read = true;
+            await notification.save();
+
+            res.json({ message: 'Đã đánh dấu thông báo là đã đọc' });
+        } catch (err) {
+            res.status(500).json({ message: 'Lỗi đánh dấu đã đọc', error: err.message });
+        }
+    },
+//Trang System
+// Cập nhật thông tin người dùng (chỉ name, email, phone_number, role)
+    async updateUser(req, res) {
+        try {
+            const { id } = req.params;
+            const { name, email, phone_number, role } = req.body;
+
+            const user = await User.findByPk(id);
+            if (!user) {
+                return res.status(404).json({ message: 'Người dùng không tồn tại' });
+            }
+
+            user.name = name;
+            user.email = email;
+            user.phone_number = phone_number;
+            user.role = role;
+            await user.save();
+
+            res.json({ message: 'Cập nhật người dùng thành công', user });
+        } catch (err) {
+            res.status(500).json({ message: 'Lỗi cập nhật người dùng', error: err.message });
+        }
+    },
+
+    // Đổi mật khẩu người dùng
+    async changeUserPassword(req, res) {
+        try {
+            const { id } = req.params;
+            const { newPassword } = req.body;
+
+            const user = await User.findByPk(id);
+            if (!user) {
+                return res.status(404).json({ message: 'Người dùng không tồn tại' });
+            }
+
+            const salt = await bcrypt.genSalt(10);
+            user.password = await bcrypt.hash(newPassword, salt);
+            await user.save();
+
+            res.json({ message: 'Đổi mật khẩu người dùng thành công' });
+        } catch (err) {
+            res.status(500).json({ message: 'Lỗi đổi mật khẩu', error: err.message });
+        }
+    },
 };
 
 module.exports = AdminController;

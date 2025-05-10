@@ -51,38 +51,47 @@ const router = express.Router();
 // router.post('/auth/login', AdminController.loginAdmin);
 // router.get('/analytics', verifyTokenAdmin, AdminController.getAnalyticsData);
 
-// Quản lý user
-// Login
+
+// === Auth ===
 router.post('/login', AdminController.login);
 
-// Dashboard stats
+// === Dashboard ===
 router.get('/dashboard/stats', AdminController.getDashboardStats);
 router.get('/dashboard/monthly-revenue', AdminController.getMonthlyRevenue);
 router.get('/dashboard/service-stats', AdminController.getServiceStatsByCategory);
 router.get('/dashboard/today-schedule', AdminController.getTodaySchedule);
 router.get('/dashboard/recent-notifications', AdminController.getRecentNotifications);
 
-// User management
+// === Users ===
 router.get('/users', AdminController.getAllUsers);
 router.post('/users', AdminController.addUser);
+router.put('/users/:id', AdminController.updateUser);
+router.patch('/users/:id/password', AdminController.changeUserPassword);
 
-// Services
+// === Services ===
 router.get('/services', AdminController.getAllServices);
 
-// Appointments
+// === Appointments ===
 router.get('/appointments/upcoming', AdminController.getUpcomingAppointments);
 router.get('/appointments/recent', AdminController.getRecentAppointments);
 
-// Medical records
+// === Medical Records ===
 router.get('/medical-records/recent', AdminController.getRecentMedicalRecords);
 router.get('/medical-records/:id', AdminController.getMedicalRecordById);
 
-// Boarding
+// === Boarding ===
 router.get('/boarding/stats', AdminController.getBoardingStats);
 router.get('/boarding/current', AdminController.getCurrentBoarders);
 
-// Analytics
-router.get('/analytics/monthly-revenue', AdminController.getMonthlyRevenue);
+// === Analytics ===
+router.get('/analytics/monthly-revenue', AdminController.getMonthlyRevenue); // trùng với dashboard
 router.get('/analytics/service-breakdown', AdminController.getServiceBreakdown);
 router.get('/analytics/kpis', AdminController.getKPIs);
+
+// === Notifications ===
+router.get('/notifications', AdminController.getAllNotifications);
+router.get('/notifications/unread', AdminController.getUnreadNotifications);
+router.patch('/notifications/mark-all-read', AdminController.markAllAsRead);
+router.patch('/notifications/:id/mark-read', AdminController.markAsRead);
+
 module.exports = router;
