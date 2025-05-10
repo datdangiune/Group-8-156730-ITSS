@@ -134,9 +134,9 @@ export interface UserService {
     }
   }
 
-  export const fetchUserServices = async (token: string, status: string): Promise<UserService[]> => {
+  export const fetchUserServices = async (token: string): Promise<UserService[]> => {
     try {
-      const response = await fetch(`http://localhost:3000/api/v1/user/service?status=${status}`, {
+      const response = await fetch(`http://localhost:3000/api/v1/user/service`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
