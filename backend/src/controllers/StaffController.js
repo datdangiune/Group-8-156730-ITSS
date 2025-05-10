@@ -1,3 +1,10 @@
+const dayjs = require('dayjs');
+const utc = require('dayjs/plugin/utc');
+const timezone = require('dayjs/plugin/timezone');
+dayjs.extend(utc);
+dayjs.extend(timezone);
+dayjs.tz.setDefault('Asia/Ho_Chi_Minh');
+
 const { assign } = require('nodemailer/lib/shared');
 const { Appointment, Service, Boarding, Notification, Pet, User, ServiceUser, BoardingUser } = require('../models');
 const { Op } = require('sequelize');
@@ -6,12 +13,12 @@ const StaffController = {
     // Lấy thống kê dashboard
     async getDashboardStats(req, res) {
         try {
-            // Get the current date
-            const today = new Date();
+            // Get the current date in Vietnam timezone
+            const today = dayjs().tz();
 
             // Set the start and end of the day
-            const startOfDay = new Date(today.setHours(0, 0, 0, 0)).toISOString();
-            const endOfDay = new Date(today.setHours(23, 59, 59, 999)).toISOString();
+            const startOfDay = today.startOf('day').toISOString();
+            const endOfDay = today.endOf('day').toISOString();
 
             // Count today's appointments
             const counttodayAppointments = await Appointment.count({
@@ -60,10 +67,17 @@ const StaffController = {
     // Lấy danh sách lịch hẹn hôm nay
     async getTodayAppointments(req, res) {
         try {
+            const today = dayjs().tz();
+            const startOfDay = today.startOf('day').toISOString();
+            const endOfDay = today.endOf('day').toISOString();
 
-        
             // Truy vấn dựa trên khoảng thời gian
             const appointments = await Appointment.findAll({
+                where: {
+                    appointment_date: {
+                        [Op.between]: [startOfDay, endOfDay],
+                    },
+                },
                 include: [
                     {
                         model: Pet,
@@ -466,13 +480,94 @@ const StaffController = {
         }
     },
 
+    async checkinService(req, res) {
+        try {
+            const { id } = req.params; // Use 'id' from params
+            console.log("ServiceUser ID received in checkinService:", id); // Add logging
+
+            if (!id || isNaN(Number(id))) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Invalid or missing ServiceUser ID',
+                });
+            }
+
+            const serviceUser = await ServiceUser.findByPk(id); // Query by 'id' in ServiceUser
+            if (!serviceUser) {
+                console.error(`ServiceUser with ID ${id} not found`); // Log the issue
+                return res.status(404).json({
+                    success: false,
+                    message: 'Service user not found',
+                });
+            }
+
+            if (serviceUser.status !== 'Scheduled') {
+                return res.status(400).json({
+                    success: false,
+                    message: `Cannot check in service. Current status is ${serviceUser.status}`,
+                });
+            }
+
+            await serviceUser.update({ status: 'In Progress' });
+
+            res.status(200).json({
+                success: true,
+                message: 'Service checked in successfully',
+                data: serviceUser,
+            });
+        } catch (err) {
+            console.error('Error checking in service:', err);
+            res.status(500).json({
+                success: false,
+                message: 'Error checking in service',
+                error: err.message,
+            });
+        }
+    },
+
+    async completeService(req, res) {
+        try {
+            const { id: serviceId } = req.params;
+            console.log("Service ID received in completeService:", serviceId); // Add logging
+
+            if (!serviceId || isNaN(Number(serviceId))) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Invalid or missing service ID',
+                });
+            }
+
+            const serviceUser = await ServiceUser.findByPk(serviceId);
+            if (!serviceUser) {
+                return res.status(404).json({
+                    success: false,
+                    message: 'Service user not found',
+                });
+            }
+
+            await serviceUser.update({ status: 'Completed' });
+
+            res.status(200).json({
+                success: true,
+                message: 'Service marked as completed',
+                data: serviceUser,
+            });
+        } catch (err) {
+            console.error('Error completing service:', err);
+            res.status(500).json({
+                success: false,
+                message: 'Error completing service',
+                error: err.message,
+            });
+        }
+    },
+
     async getUserServices(req, res) {
         try {
             const { id } = req.user;
 
-            // Truy vấn danh sách dịch vụ mà user đã đăng ký
+            // Query the list of services the user has registered for
             const services = await ServiceUser.findAll({
-                
                 include: [
                     {
                         model: Service,
@@ -480,7 +575,6 @@ const StaffController = {
                         attributes: ['id', 'type', 'name', 'description', 'price', 'duration', 'status'],
                     },
                     {
-                        
                         model: Pet,
                         as: 'pet',
                         attributes: ['id', 'name', 'breed'],
@@ -497,9 +591,10 @@ const StaffController = {
                 });
             }
 
-            // Định dạng dữ liệu đầu ra
+            // Format the output data
             const formattedServices = services.map(serviceUser => ({
-                serviceId: serviceUser.service?.id || null,
+                id: serviceUser.id, // Booking ID
+                serviceId: serviceUser.service?.id || null, // Service ID
                 type: serviceUser.service?.type || null,
                 serviceName: serviceUser.service?.name || null,
                 pet: serviceUser.pet ? {

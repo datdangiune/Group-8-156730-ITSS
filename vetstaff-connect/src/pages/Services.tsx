@@ -14,7 +14,17 @@ import {
 import StatusBadge from "@/components/dashboard/StatusBadge";
 import EditServiceForm from "@/components/services/EditServiceForm";
 import { toast } from "sonner";
-import { fetchUserServices, Service } from "@/service/services";
+import {
+  fetchUserServices,
+  fetchCheckinService,
+  fetchCompleteService,
+  Service,
+} from "@/service/services";
+
+interface ExtendedService extends Service {
+  id: number; // Đảm bảo id luôn tồn tại và là number
+  serviceId?: number; // Thêm trường serviceId nếu cần
+}
 
 const Services: React.FC = () => {
   const navigate = useNavigate();
@@ -22,15 +32,17 @@ const Services: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState("all");
   const [typeFilter, setTypeFilter] = useState("all");
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const [selectedService, setSelectedService] = useState<Service | null>(null);
-  const [services, setServices] = useState<Service[]>([]);
+  const [selectedService, setSelectedService] = useState<ExtendedService | null>(null);
+  const [services, setServices] = useState<ExtendedService[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchServices = async () => {
       try {
-        const token = localStorage.getItem("token") || ""; // Replace with your token retrieval logic
+        const token = localStorage.getItem("token") || "";
         const data = await fetchUserServices(token);
+
+        // Directly set the services without fallback logic
         setServices(data);
       } catch (error) {
         console.error("Error fetching user services:", error);
@@ -63,7 +75,7 @@ const Services: React.FC = () => {
     setIsDrawerOpen(true);
   };
 
-  const handleEditService = (service: Service) => {
+  const handleEditService = (service: ExtendedService) => {
     setSelectedService(service);
     setIsDrawerOpen(true);
   };
@@ -73,34 +85,74 @@ const Services: React.FC = () => {
     setIsDrawerOpen(false);
   };
 
-  const handleCompleteService = (serviceId: number) => {
-    setServices((prev) =>
-      prev.map((service) =>
-        service.id === serviceId
-          ? { ...service, status: "completed" }
-          : service
-      )
-    );
-    toast.success("Service marked as completed");
+  const validateServiceId = (id: any): number => {
+    const numId = Number(id);
+    if (isNaN(numId) || numId <= 0) {
+      throw new Error(`Invalid service ID: ${id}`);
+    }
+    return numId;
   };
 
-  const handleCancelService = (serviceId: number) => {
-    setServices((prev) =>
-      prev.map((service) =>
-        service.id === serviceId
-          ? { ...service, status: "cancelled" }
-          : service
-      )
-    );
-    toast.success("Service has been cancelled");
+  const handleCompleteService = async (id: number) => {
+    try {
+      const token = localStorage.getItem("token") || "";
+      const updatedService = await fetchCompleteService(token, id);
+      
+      setServices((prev) =>
+        prev.map((service) =>
+          service.id === id ? { ...service, status: updatedService.status } : service
+        )
+      );
+      toast.success("Service marked as completed");
+    } catch (error: any) {
+      console.error("Error completing service:", error);
+      toast.error(error.message || "Failed to complete service");
+    }
+  };
+
+  const handleCancelService = (id: any) => {
+    try {
+      const serviceId = validateServiceId(id);
+      setServices((prev) =>
+        prev.map((service) =>
+          service.id === serviceId
+            ? { ...service, status: "cancelled" }
+            : service
+        )
+      );
+      toast.success("Service has been cancelled");
+    } catch (error: any) {
+      console.error("Error cancelling service:", error);
+      toast.error(error.message || "Failed to cancel service");
+    }
+  };
+
+  const handleCheckinService = async (id: number) => {
+    try {
+      console.log("Attempting to check in ServiceUser with ID:", id); // Add logging
+      const token = localStorage.getItem("token") || "";
+      const updatedService = await fetchCheckinService(token, id);
+
+      setServices((prev) =>
+        prev.map((service) =>
+          service.id === id ? { ...service, status: updatedService.status } : service
+        )
+      );
+      toast.success("Service checked in successfully");
+    } catch (error: any) {
+      console.error("Error checking in service:", error);
+      toast.error(error.message || "Failed to check in service");
+    }
   };
 
   const handleManageServices = () => {
     navigate("/clinic-services");
   };
+
   if (loading) {
     return <div>Loading services...</div>;
   }
+
 
   return (
     <PageTransition>
@@ -138,7 +190,7 @@ const Services: React.FC = () => {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Statuses</SelectItem>
-                <SelectItem value="in progess">In Progress</SelectItem>
+                <SelectItem value="In Progress">In Progress</SelectItem>
                 <SelectItem value="scheduled">Scheduled</SelectItem>
                 <SelectItem value="completed">Completed</SelectItem>
                 <SelectItem value="cancelled">Cancelled</SelectItem>
@@ -168,6 +220,9 @@ const Services: React.FC = () => {
             <table className="w-full">
               <thead>
                 <tr className="bg-muted/50">
+                  {/* <th className="px-4 py-3 text-left text-sm font-medium">
+                    Booking ID
+                  </th> */}
                   <th className="px-4 py-3 text-left text-sm font-medium">
                     Service
                   </th>
@@ -195,7 +250,7 @@ const Services: React.FC = () => {
                 {filteredServices.length === 0 ? (
                   <tr>
                     <td
-                      colSpan={6}
+                      colSpan={8}
                       className="px-4 py-8 text-center text-muted-foreground"
                     >
                       No services found matching your criteria
@@ -207,6 +262,9 @@ const Services: React.FC = () => {
                       key={service.id || i}
                       className="hover:bg-muted/50"
                     >
+                      {/* <td className="px-4 py-4">
+                        {service.id}
+                      </td> */}
                       <td className="px-4 py-4">
                         <div>
                           <p className="font-medium">{service.name}</p>
@@ -250,7 +308,7 @@ const Services: React.FC = () => {
                          </td>
                       <td className="px-4 py-4 text-right">
                         <div className="flex justify-end gap-2">
-                          {service.status !== "cancelled" && (
+                          {service.status !== "cancelled" && service.status !== "completed" && (
                             <Button
                               variant="outline"
                               size="sm"
@@ -263,7 +321,18 @@ const Services: React.FC = () => {
                             </Button>
                           )}
 
-                          {service.status === "scheduled" && (
+                          {service.status === "Scheduled" && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleCheckinService(service.id)} // Pass the correct 'id'
+                              className="text-primary border-primary hover:bg-primary/10"
+                            >
+                              Checkin
+                            </Button>
+                          )}
+
+                          {service.status === "In Progress" && (
                             <Button
                               variant="outline"
                               size="sm"
@@ -275,14 +344,6 @@ const Services: React.FC = () => {
                               Complete
                             </Button>
                           )}
-
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleEditService(service)}
-                          >
-                            Update
-                          </Button>
                         </div>
                       </td>
                     </tr>

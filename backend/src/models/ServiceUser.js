@@ -42,8 +42,8 @@ const ServiceUser = sequelize.define('ServiceUser', {
   status: {
     type: DataTypes.STRING,
     allowNull: false,
-    defaultValue:"In Progess"
-  }
+    defaultValue: "Scheduled",
+  },
 }, {
   tableName: 'service_users',
   timestamps: false,

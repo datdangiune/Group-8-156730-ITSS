@@ -1,7 +1,9 @@
 import axios from "axios";
 import { io } from "socket.io-client";
+
 const socket = io("http://localhost:3000");
-const API_BASE_URL = "http://localhost:3000/api/v1"; // Adjusted base URL if necessary
+const API_BASE_URL = "http://localhost:3000/api/v1";
+
 socket.on("connect", () => {
   console.log("Connected to WebSocket server with ID:", socket.id);
 });
@@ -9,8 +11,15 @@ socket.on("connect", () => {
 socket.on("disconnect", () => {
   console.log("Disconnected from WebSocket server");
 });
+
 // Define interfaces
 export interface Pet {
+  id: number;
+  name: string;
+  breed: string;
+}
+
+export interface Service {
   id: number;
   name: string;
   breed: string;
@@ -29,6 +38,7 @@ export interface Service {
   pet?: Pet;
   image?: string;
 }
+
 interface ClinicService {
   id: number;
   type: string;
@@ -39,6 +49,7 @@ interface ClinicService {
   image?: string;
   status: 'available' | 'unavailable';
 }
+
 interface CreateServiceRequest {
   id: number;
   type: string;
@@ -80,7 +91,7 @@ interface EditServiceResponse {
 export const fetchServices = async (token: string): Promise<ClinicService[]> => {
   try {
     const response = await axios.get(`${API_BASE_URL}/staff/clinic-services`, {
-      headers: { Authorization: `Bearer ${token}` }, 
+      headers: { Authorization: `Bearer ${token}` },
     });
 
     // Format prices with VND
@@ -97,9 +108,23 @@ export const fetchServices = async (token: string): Promise<ClinicService[]> => 
 export const fetchUserServices = async (token: string): Promise<Service[]> => {
   try {
     const response = await axios.get(`${API_BASE_URL}/staff/user-services`, {
-      headers: { Authorization: `Bearer ${token}` }, // Include the token in the Authorization header
+      headers: { Authorization: `Bearer ${token}` },
     });
-    return response.data.data;
+
+    // Include the 'id' field (booking ID) in the response
+    return response.data.data.map((service: any) => ({
+      id: service.id, // Booking ID
+      serviceId: service.serviceId, // Service ID
+      type: service.type,
+      name: service.serviceName,
+      description: service.description,
+      price: service.price,
+      duration: service.duration,
+      status: service.status,
+      date: service.date,
+      hour: service.hour,
+      pet: service.pet,
+    }));
   } catch (error: any) {
     console.error("Error fetching user services:", error.message);
     throw new Error(error.message || "Failed to fetch user services");
@@ -112,10 +137,9 @@ export const fetchCreateService = async (
   image: string
 ): Promise<CreateServiceResponse> => {
   try {
-    const payload = {...requestData, image: image}
+    const payload = { ...requestData, image: image };
     const response = await axios.post(`${API_BASE_URL}/staff/clinic-services/create`, payload, {
       headers: { Authorization: `Bearer ${token}` },
-      
     });
     socket.emit("updateService", response.data);
     console.log("Backend response:", response.data); // Log the response for debugging
@@ -174,5 +198,45 @@ export const fetchToggleServiceStatus = async (token: string, serviceId: number)
   } catch (error: any) {
     console.error("Error toggling service status:", error.message);
     throw new Error(error.message || "Failed to toggle service status");
+  }
+};
+
+export const fetchCheckinService = async (token: string, id: number): Promise<Service> => {
+  try {
+    console.log("Sending check-in request for ServiceUser ID:", id); // Add logging
+    if (!id || isNaN(id)) {
+      throw new Error(`Invalid ServiceUser ID: ${id}`);
+    }
+    const response = await axios.patch(
+      `${API_BASE_URL}/staff/user-services/${id}/checkin`,
+      {},
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    );
+    return response.data.data;
+  } catch (error: any) {
+    console.error("Error checking in service:", error.message);
+    throw new Error(error.message || "Failed to check in service");
+  }
+};
+
+export const fetchCompleteService = async (token: string, serviceId: number): Promise<Service> => {
+  try {
+    console.log("Sending complete request for service ID:", serviceId);
+    if (!serviceId || isNaN(serviceId)) {
+      throw new Error("Invalid service ID");
+    }
+    const response = await axios.patch(
+      `${API_BASE_URL}/staff/user-services/${serviceId}/complete`,
+      {},
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    );
+    return response.data.data;
+  } catch (error: any) {
+    console.error("Error completing service:", error.message);
+    throw new Error(error.message || "Failed to complete service");
   }
 };
