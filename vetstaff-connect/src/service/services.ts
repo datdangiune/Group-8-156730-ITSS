@@ -58,6 +58,25 @@ interface CreateServiceResponse {
   service: Service;
 }
 
+interface EditServiceRequest {
+  id: number;
+  type: string;
+  name: string;
+  description: string;
+  price: number;
+  duration: string;
+  status?: string;
+  image?: string;
+  details?: {
+    included: string[];
+  };
+}
+
+interface EditServiceResponse {
+  message: string;
+  service: Service;
+}
+
 export const fetchServices = async (token: string): Promise<ClinicService[]> => {
   try {
     const response = await axios.get(`${API_BASE_URL}/staff/clinic-services`, {
@@ -104,5 +123,33 @@ export const fetchCreateService = async (
   } catch (error: any) {
     console.error("Error creating service:", error.message);
     throw new Error(error.message || "Failed to create service");
+  }
+};
+
+export const fetchEditService = async (
+  token: string,
+  serviceId: number,
+  requestData: EditServiceRequest
+): Promise<EditServiceResponse> => {
+  try {
+    const response = await axios.put(
+      `${API_BASE_URL}/staff/clinic-services/${serviceId}/edit`,
+      requestData,
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    );
+
+    socket.emit("updateService", response.data);
+    console.log("Backend response:", response.data); // Log the response for debugging
+
+    if (response.status !== 200) {
+      throw new Error(response.data.message || "Failed to edit service");
+    }
+
+    return response.data;
+  } catch (error: any) {
+    console.error("Error editing service:", error.message);
+    throw new Error(error.message || "Failed to edit service");
   }
 };

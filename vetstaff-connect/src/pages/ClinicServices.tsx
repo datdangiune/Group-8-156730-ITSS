@@ -19,9 +19,9 @@ import StatusBadge from "@/components/dashboard/StatusBadge";
 import { Search, Plus, Edit, Image, ArrowLeft, Trash2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { fetchServices, fetchCreateService } from "@/service/services";
+import { fetchServices, fetchCreateService, fetchEditService } from "@/service/services";
 import { uploadFile } from "@/service/UploadImage";
-// Type for clinic services
+
 interface ClinicService {
   id: number;
   type: string;
@@ -31,6 +31,9 @@ interface ClinicService {
   duration: string;
   image?: string;
   status: 'available' | 'unavailable';
+  details?: {
+    included: string[];
+  };
 }
 
 const ClinicServices = () => {
@@ -40,9 +43,10 @@ const ClinicServices = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingService, setEditingService] = useState<ClinicService | null>(null);
   const token = localStorage.getItem("token");
-  const [isUploading, setIsUploading] = useState(false)
-  const [selectImage, setSelectedImage] = useState(null)
-  // Form state
+  const [isUploading, setIsUploading] = useState(false);
+  const [selectImage, setSelectedImage] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const [formData, setFormData] = useState({
     type: "",
     name: "",
@@ -53,17 +57,15 @@ const ClinicServices = () => {
     status: "available" as "available" | "unavailable",
     whatsIncluded: [] as string[],
   });
-  
-  // Ref for image upload
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  
   const [includedItem, setIncludedItem] = useState("");
+
   const addIncludedItem = () => {
     if (includedItem.trim()) {
       setFormData(prev => ({ ...prev, whatsIncluded: [...prev.whatsIncluded, includedItem.trim()] }));
       setIncludedItem("");
     }
   };
+
   const removeIncludedItem = (index: number) => {
     setFormData(prev => ({
       ...prev,
@@ -81,17 +83,14 @@ const ClinicServices = () => {
         toast.error("Failed to load services");
       }
     };
-
     fetchData();
   }, [token]);
-  console.log(services)
-  // Filter services based on search term
+
   const filteredServices = services.filter(service =>
     (service.name?.toLowerCase().includes(searchTerm.toLowerCase()) || "") ||
     (service.description?.toLowerCase().includes(searchTerm.toLowerCase()) || "")
   );
-  
-  // Reset form
+
   const resetForm = () => {
     setFormData({
       type: "",
@@ -103,39 +102,37 @@ const ClinicServices = () => {
       status: "available",
       whatsIncluded: [],
     });
+    setSelectedImage(null);
     setEditingService(null);
   };
-  
-  // Open dialog for creating a new service
+
   const handleCreate = () => {
     resetForm();
     setDialogOpen(true);
   };
-  
-  // Open dialog for editing an existing service
+
   const handleEdit = (service: ClinicService) => {
     setEditingService(service);
     setFormData({
-      type: "",
+      type: service.type,
       name: service.name,
       description: service.description,
       price: service.price.toString(),
       duration: service.duration,
-      image: service.image,
+      image: service.image || "",
       status: service.status,
-      whatsIncluded: [],
+      whatsIncluded: service.details?.included || [], // Populate included items if available
     });
+    setSelectedImage(service.image || null); // Set the selected image for preview
     setDialogOpen(true);
   };
-  
+
   const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
-
     setIsUploading(true);
-
     try {
-      const imageUrl = await uploadFile(file, token); // Gọi API upload ảnh
+      const imageUrl = await uploadFile(file, token);
       if (imageUrl) {
         setSelectedImage(imageUrl);
       }
@@ -144,14 +141,90 @@ const ClinicServices = () => {
     } finally {
       setIsUploading(false);
     }
-};
-  
-  // Handle input changes
+  };
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const price = parseFloat(formData.price);
+    if (isNaN(price) || price <= 0) {
+      toast.error("Please enter a valid price");
+      return;
+    }
+    if (!formData.name || !formData.description || !formData.duration || !formData.type) {
+      toast.error("Please fill all required fields");
+      return;
+    }
+    try {
+      if (editingService) {
+        const requestData = {
+          id: editingService.id,
+          name: formData.name,
+          description: formData.description || "",
+          price,
+          duration: formData.duration,
+          image: selectImage,
+          status: formData.status,
+          whatsIncluded: editingService.details?.included || [],
+          type: formData.type,
+        };
+        const response = await fetchEditService(token, editingService.id, requestData);
+        const updatedService = response.service;
+        setServices(prev => prev.map(s => 
+          s.id === updatedService.id 
+            ? { 
+                ...s, 
+                ...updatedService, 
+                price: Number(updatedService.price), 
+                status: updatedService.status as "available" | "unavailable" 
+              } 
+            : s
+        ));
+        toast.success("Service updated successfully");
+      } else {
+        const requestData = {
+          id: null,
+          type: formData.type,
+          name: formData.name,
+          description: formData.description,
+          price,
+          duration: formData.duration,
+          status: formData.status,
+          details: { included: formData.whatsIncluded },
+        };
+        const response = await fetchCreateService(token, requestData, selectImage);
+        const newService = response.service;
+        const transformedService: ClinicService = {
+          id: newService.id,
+          type: newService.type || "default-type",
+          name: newService.name || "Unnamed Service",
+          description: newService.description || "",
+          price: typeof newService.price === "number" ? newService.price : parseFloat(newService.price) || 0,
+          duration: newService.duration || "",
+          image: newService.image || "",
+          status: (newService.status as "available" | "unavailable") || "unavailable",
+        };
+        setServices(prev => [...prev, transformedService]);
+        toast.success("Service created successfully");
+      }
+      setDialogOpen(false);
+      resetForm();
+    } catch (error: any) {
+      console.error("Error submitting service:", error.message);
+      toast.error("Failed to submit service");
+    }
+  };
   
+  // Handle service deletion
+  const handleDelete = (serviceId: string) => {
+    setServices(prevServices => prevServices.filter(service => String(service.id) !== serviceId));
+    toast.success("Service deleted successfully");
+  };
+
   // Handle status toggle
   const handleStatusToggle = (serviceId: string) => {
     setServices(prevServices =>
@@ -161,97 +234,7 @@ const ClinicServices = () => {
           : service
       )
     );
-    
-    toast.success("Service status updated");
-  };
-  
-  // Handle form submission
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    console.log(token)
-    const price = parseFloat(formData.price);
-    if (isNaN(price) || price <= 0) {
-      toast.error("Please enter a valid price");
-      return;
-    }
-
-    if (!formData.name || !formData.description || !formData.duration || !formData.type) {
-      toast.error("Please fill all required fields");
-      return;
-    }
-
-    try {
-       // Replace with actual token retrieval logic
-
-      if (editingService) {
-        setServices(prevServices =>
-          prevServices.map(service =>
-            service.id === editingService.id
-              ? {
-                  ...service,
-                  name: formData.name,
-                  description: formData.description,
-                  price: price,
-                  duration: formData.duration,
-                  image: selectImage,
-                  status: formData.status,
-                }
-              : service
-          )
-        );
-        toast.success("Service updated successfully");
-      } else {
-        // Creating a new service
-        const requestData = {
-          id: null,
-          type: formData.type,
-          name: formData.name,
-          description: formData.description,
-          price: price,
-          duration: formData.duration,
-          status: formData.status,
-          details: { included: formData.whatsIncluded },
-        };
-
-        const response = await fetchCreateService(token, requestData, selectImage);
-        const newService = response.service;
-
-        console.log("New service response:", newService); // Log the response for debugging
-
-        if (!newService || typeof newService.id === "undefined") { // Use 'id' instead of 'serviceId'
-          console.error("Invalid response from the server:", response);
-          throw new Error("Invalid response from the server");
-        }
-
-        // Transform newService to match ClinicService type
-        const transformedService: ClinicService = {
-          id: newService.id, // Use 'id' from the server response
-          type: newService.type || "default-type",
-          name: newService.name || "Unnamed Service",
-          description: newService.description || "",
-          price: typeof newService.price === "number" ? newService.price : parseFloat(newService.price) || 0,
-          duration: newService.duration || "",
-          image: newService.image || "",
-          status: (newService.status as "available" | "unavailable") || "unavailable",
-        };
-        
-
-        setServices(prev => [...prev, transformedService]);
-        toast.success("Service created successfully");
-      }
-
-      setDialogOpen(false);
-      resetForm();
-    } catch (error: any) {
-      console.error("Error creating service:", error.message);
-      toast.error("Failed to create service");
-    }
-  };
-  
-  // Handle service deletion
-  const handleDelete = (serviceId: string) => {
-    setServices(prevServices => prevServices.filter(service => String(service.id) !== serviceId));
-    toast.success("Service deleted successfully");
+    toast.success("Service status updated successfully");
   };
   
   return (

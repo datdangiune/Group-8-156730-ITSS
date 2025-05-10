@@ -402,6 +402,44 @@ const StaffController = {
         }
     },
    
+    async editService(req, res) {
+        try {
+            const { id } = req.params;
+            const { type, name, description, price, duration, status, image, details } = req.body;
+
+            // Validate required fields
+            if (!type || !name || !description || !price || !duration) {
+                return res.status(400).json({ message: 'Missing required fields' });
+            }
+
+            // Find the service by ID
+            const service = await Service.findByPk(id);
+            if (!service) {
+                return res.status(404).json({ message: 'Service not found' });
+            }
+
+            // Update the service
+            await service.update({
+                type,
+                name,
+                description,
+                price,
+                duration,
+                status: status || service.status,
+                image,
+                details,
+            });
+
+            // Return the updated service in the same format as createService
+            return res.status(200).json({
+                message: 'Service updated successfully',
+                service,
+            });
+        } catch (error) {
+            console.error('Error updating service:', error);
+            return res.status(500).json({ message: 'Internal server error' });
+        }
+    },
 
     async getUserServices(req, res) {
         try {
