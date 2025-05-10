@@ -1,4 +1,4 @@
-const { Pet, Appointment, Payment, Service, User, ServiceUser, Boarding, BoardingUser} = require('../models');
+const { Pet, Appointment, Payment, Service, User, ServiceUser, Boarding, BoardingUser, AppointmentResult} = require('../models');
 const sendMail = require('../util/sendMail'); 
 const { Op, fn, col, where } = require("sequelize");
 const { differenceInDays } = require('date-fns');
@@ -474,7 +474,7 @@ const UserController  = {
                     {
                         model: Service,
                         as: 'service',
-                        attributes: ['id', 'name', 'description', 'price', 'duration', 'type'],
+                        attributes: ['id', 'name', 'description', 'price', 'duration', 'type', 'status'],
                     },
                     {
                         model: Pet,
@@ -645,7 +645,7 @@ const UserController  = {
                 include: {
                     model: Service,
                     as: 'service',
-                    attributes: ['price'],
+                    attributes: ['price', 'status'],
                 },
             });
     
@@ -662,14 +662,20 @@ const UserController  = {
                     message: "Service not found for this ServiceUser"
                 });
             }
-    
+            if(service_user.service.status === "unavailable"){
+                console.log(service_user.service.status)
+                return res.status(400).json({
+                    success: false,
+                    message: "ServiceUser hiện không khả dụng"
+                });
+            }
             if (service_user.status === 'Complete') {
                 return res.status(400).json({
                     success: false,
                     message: "ServiceUser đã thanh toán trước đó"
                 });
             }
-    
+
             const vnp_Amount = service_user.service.price;
             const encryptedId = encrypt(service_user.id.toString());
             const vnp_TxnRef = `SU-${encryptedId}`;
@@ -851,7 +857,50 @@ const UserController  = {
             console.error('Lỗi xử lý callbackURL:', error);
             return res.send('Đã xảy ra lỗi trong quá trình xử lý callback');
         }
+    },
+    async getAppointmentResultById(req, res) {
+        const { id } = req.params;
+        const ownerId = req.user.id;
+
+        try {
+            const appointment = await Appointment.findOne({
+                where: { id },
+                include: [
+                    {
+                        model: AppointmentResult,
+                        as: 'result',
+                    },
+                    {
+                        model: Pet,
+                        as: 'pet',
+                    },
+                    {
+                        model: User,
+                        as: 'owner',
+                    },
+                ],
+            });
+
+            if (!appointment) {
+                return res.status(404).json({ message: 'Appointment not found' });
+            }
+
+            // ✅ Check if the owner of the appointment matches the requester
+            if (appointment.owner_id !== ownerId) {
+                return res.status(403).json({ message: 'Access denied: not your appointment' });
+            }
+
+            res.status(200).json({
+                success: true,
+                message: 'ok',
+                data: appointment,
+            });
+        } catch (error) {
+            console.error('Error fetching appointment:', error);
+            res.status(500).json({ message: 'Internal server error' });
+        }
     }
+
     
 
 }

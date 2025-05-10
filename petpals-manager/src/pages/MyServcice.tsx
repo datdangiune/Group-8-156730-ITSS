@@ -25,6 +25,7 @@ import {fetchUserServices, UserService} from "@/service/service"
 import { getTokenFromCookies } from '@/service/auth';
 // Mock services data - in a real app, this would come from an API
 import { getPaymentUrl } from '@/service/service';
+import { toast } from "@/components/ui/use-toast";
 
 const MyServices = () => {
     const [search, setSearch] = useState('');
@@ -41,7 +42,13 @@ const MyServices = () => {
         if (paymentUrl) {
           window.location.href = paymentUrl;
         } else {
-          alert('Không lấy được link thanh toán.');
+          toast({
+            title: "Error",
+            description: "Service tạm không phục vụ",
+            variant: "destructive",
+            className: "text-lg p-6",
+          });
+
         }
 
         }
@@ -61,16 +68,18 @@ const MyServices = () => {
     }
   };
 
-  const getStatusBadge = (status: ServiceStatusUser) => {
-    switch (status) {
-      case 'Complete':
-        return <Badge variant="outline">Available</Badge>;
-      case 'In Progess':
-        return <Badge variant="destructive">Unavailable</Badge>;
-      default:
-        return null;
-    }
-  };
+const getServiceStatusBadge = (serviceStatus: 'available' | 'unavailable' | string) => {
+  switch (serviceStatus) {
+    case 'available':
+      return <Badge className="bg-green-100 text-green-700">Available</Badge>;
+    case 'unavailable':
+      return <Badge className="bg-red-100 text-red-700">Unavailable</Badge>;
+    default:
+      return <Badge className="bg-gray-100 text-gray-700">Unknown</Badge>;
+  }
+};
+
+
 
   const getPaymentStatusBadge = (status?: ServiceStatusUser) => {
     switch (status) {
@@ -170,7 +179,7 @@ const MyServices = () => {
             <TableCell>{service.pet.name}</TableCell>
             <TableCell>{service.date ? new Date(service.date).toLocaleDateString() : 'Not scheduled'}</TableCell>
             <TableCell>{service.hour || 'Not scheduled'}</TableCell>
-            <TableCell>{getStatusBadge(service.status)}</TableCell>
+            <TableCell>{getServiceStatusBadge(service.service.status)}</TableCell>
             <TableCell>{getPaymentStatusBadge(service.status)}</TableCell>
             <TableCell>
               {service.status === 'In Progess' && (

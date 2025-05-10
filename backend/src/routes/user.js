@@ -1,5 +1,6 @@
 const express = require('express');
 const UserController = require('../controllers/UserController');
+const PetController = require('../controllers/PetController');
 const { verifyToken } = require('../middleware/veritify');
 const fileUploader = require('../config/uploadImage')
 const router = express.Router();
@@ -36,5 +37,7 @@ router.post('/image', verifyToken, fileUploader.single('file'), UserController.u
 
 router.get('/pay/:id',verifyToken, UserController.userPaymentService)
 router.get('/pay-boarding/:id', verifyToken,UserController.userPaymentBoarding)
+router.get('/appointment-result/:id', verifyToken, UserController.getAppointmentResultById)
+router.get('/:petId/medical-history', verifyToken, PetController.getMedicalHistory);
 router.get('/vnpay-return', UserController.callbackURL)
 module.exports = router;

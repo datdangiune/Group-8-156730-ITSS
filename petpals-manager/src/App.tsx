@@ -23,6 +23,7 @@ import MyService from "@/pages/MyServcice";
 import Boarding from "@/pages/Boarding";
 import BoardingDetail from "@/pages/BoardingDetail";
 import MyBoarding from "./pages/MyBoarding";
+import AppointmentDetail from "./pages/AppointmentsDetail";
 const queryClient = new QueryClient();
 
 const MainLayout = () => (
@@ -55,6 +56,7 @@ const App = () => (
                 <Route path="/pets/add" element={<PetRegistration />} />
                 <Route path="/appointments" element={<Appointments />} />
                 <Route path="/appointments/book" element={<AppointmentBooking />} />
+                <Route path="/appointments/:id" element={<AppointmentDetail />} />
                 <Route path="/services" element={<Services />} />
                 <Route path="/services/me" element={<MyService/>} />
                 <Route path="/services/:id" element={<ServiceDetail />} />

@@ -10,10 +10,11 @@ import {
   Scissors, 
   PawPrint, 
   Heart, 
-  Weight, 
+  Palette , 
   Syringe, 
-  Utensils 
+  Utensils
 } from 'lucide-react';
+import { Badge } from "@/components/ui/badge";
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import {
@@ -34,15 +35,17 @@ import {
   DialogTrigger,
   DialogClose,
 } from "@/components/ui/dialog";
-import AppointmentCard, { Appointment } from '@/components/ui/appointment-card';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Pet} from '@/types/pets';
 import { getPet } from '@/service/pet';
 import { getTokenFromCookies } from '@/service/auth';
+import { fetchMedicalHistory, FetchMedicalHistoryResponse } from '@/service/medicalrecord';
+import { format } from "date-fns";
 const PetDetail = () => {
     const { id } = useParams();
     const navigate = useNavigate();
     const [pet, setPet] = useState<Pet | null>(null);
-    const [appointments, setAppointments] = useState<Appointment[]>([]);
+    const [medical, setMedical] = useState<FetchMedicalHistoryResponse>();
     const [isLoading, setIsLoading] = useState(true);
     const [showDeleteDialog, setShowDeleteDialog] = useState(false);
     const token = getTokenFromCookies();
@@ -53,8 +56,10 @@ const PetDetail = () => {
             if (id) {
                 const petId = parseInt(id, 10);
                 const petData = await getPet(token, petId);
+                const medicalData = await fetchMedicalHistory(petId, token);
                 console.log(petData)
                 setPet(petData)
+                setMedical(medicalData)
             }
         } catch (error) {
             console.error('Error fetching pet details:', error);
@@ -181,10 +186,10 @@ const PetDetail = () => {
                 
                 <div className="glass-card dark:glass-card-dark rounded-lg p-3 text-center">
                   <div className="flex justify-center mb-1">
-                    <Weight className="h-5 w-5 text-primary" />
+                    <Palette  className="h-5 w-5 text-primary" />
                   </div>
-                  <div className="text-sm font-medium">Weight</div>
-                  <div className="text-lg">{pet.weight} kg</div>
+                  <div className="text-sm font-medium">Color</div>
+                  <div className="text-lg">{pet.fur_color}</div>
                 </div>
                 
                 <div className="glass-card dark:glass-card-dark rounded-lg p-3 text-center">
@@ -274,41 +279,57 @@ const PetDetail = () => {
             </CardFooter>
           </Card>
 
-          {/* Upcoming Appointments */}
           <Card>
             <CardHeader>
-              <div className="flex justify-between items-center">
-                <CardTitle className="text-xl">Appointments</CardTitle>
-                <Button asChild variant="outline" size="sm">
-                  <Link to={`/appointments/book?petId=${pet.id}`}>
-                    <Calendar className="h-4 w-4 mr-1" />
-                    Book Appointment
-                  </Link>
-                </Button>
-              </div>
+              <CardTitle className="text-xl">Medical History</CardTitle>
+              <CardDescription>Examination records and treatment history</CardDescription>
             </CardHeader>
             <CardContent>
-              {appointments.length > 0 ? (
-                <div className="space-y-4">
-                  {appointments.map(appointment => (
-                    <AppointmentCard 
-                      key={appointment.id} 
-                      appointment={appointment} 
-                    />
-                  ))}
-                </div>
+              {medical.data.length > 0 ? ( // Use the local `examinations` variable
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Date</TableHead>
+                      <TableHead>Diagnosis</TableHead>
+                      <TableHead>Prescription</TableHead>
+                      <TableHead>Follow-up</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {medical.data.map((exam) => exam && (
+                      <TableRow key={exam.id}>
+                        <TableCell>
+                          {format(new Date(exam.created_at), 'MMM dd, yyyy')}
+                        </TableCell>
+                        <TableCell>{exam.diagnosis}</TableCell>
+                        <TableCell>
+                          <ul className="list-disc list-inside space-y-1 text-sm">
+                            {exam.prescription.split(';').map((item, index) => (
+                              <li key={index}>{item.trim()}</li>
+                            ))}
+                          </ul>
+                        </TableCell>
+                        <TableCell>
+                          {exam.follow_up_date ? (
+                            <Badge variant="outline" className="bg-primary/10 text-primary">
+                              {format(new Date(exam.follow_up_date), 'MMM dd, yyyy')}
+                            </Badge>
+                          ) : (
+                            <span className="text-muted-foreground">None</span>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
               ) : (
                 <div className="text-center py-8">
-                  <p className="text-gray-500 mb-4">No appointments found for {pet.name}.</p>
-                  <Button asChild>
-                    <Link to={`/appointments/book?petId=${pet.id}`}>
-                      Schedule First Appointment
-                    </Link>
-                  </Button>
+                  <p className="text-muted-foreground">No examination records found</p>
                 </div>
               )}
             </CardContent>
           </Card>
+
         </div>
 
         {/* Sidebar */}

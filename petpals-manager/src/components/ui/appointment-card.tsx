@@ -2,7 +2,7 @@
 import React from 'react';
 import { Calendar, Clock, MapPin } from 'lucide-react';
 import { cn } from '@/lib/utils';
-
+import { Link } from 'react-router-dom';
 export type AppointmentStatus = 'Scheduled' | 'Done' | 'Cancel' | 'In progess';
 interface Pet {
   id: number;
@@ -41,6 +41,8 @@ const getStatusColor = (status: AppointmentStatus) => {
 
 const AppointmentCard: React.FC<AppointmentCardProps> = ({ appointment, className }) => {
   return (
+    <Link to={`/appointments/${appointment.id}`}
+      className="block no-underline">
     <div 
       className={cn(
         "glass-card dark:glass-card-dark rounded-xl p-5 transition-all duration-300 hover-elevate",
@@ -84,6 +86,7 @@ const AppointmentCard: React.FC<AppointmentCardProps> = ({ appointment, classNam
         </div>
       )}
     </div>
+    </Link>
   );
 };
 

@@ -11,13 +11,13 @@ const AppointmentResult = sequelize.define('AppointmentResult', {
         type: DataTypes.INTEGER,
         allowNull: false,
         references: {
-            model: 'appointments', // References the 'appointments' table
+            model: 'appointments', 
             key: 'id',
         },
     },
     diagnosis: {
         type: DataTypes.TEXT,
-        allowNull: false, // Diagnosis result
+        allowNull: false, 
     },
     prescription: {
         type: DataTypes.TEXT,

@@ -217,21 +217,28 @@ const MyBoarding = () => {
         />
       </div>
 
-      <Tabs defaultValue={view} className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="grid" onClick={() => setView('grid')}>Grid</TabsTrigger>
-          <TabsTrigger value="table" onClick={() => setView('table')}>Table</TabsTrigger>
-        </TabsList>
-        <TabsContent value="grid" className="space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {filteredServices.map(service => renderServiceCard(service))}
-          </div>
-        </TabsContent>
-        <TabsContent value="table" className="space-y-4">
-          {renderTableView(filteredServices)}
-        </TabsContent>
-      </Tabs>
+      {services.length === 0 ? (
+        <div className="text-center text-muted-foreground text-lg py-10">
+          You haven’t registered any boarding services yet.
+        </div>
+      ) : (
+        <Tabs defaultValue={view} className="space-y-4">
+          <TabsList>
+            <TabsTrigger value="grid" onClick={() => setView('grid')}>Grid</TabsTrigger>
+            <TabsTrigger value="table" onClick={() => setView('table')}>Table</TabsTrigger>
+          </TabsList>
+          <TabsContent value="grid" className="space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              {filteredServices.map(service => renderServiceCard(service))}
+            </div>
+          </TabsContent>
+          <TabsContent value="table" className="space-y-4">
+            {renderTableView(filteredServices)}
+          </TabsContent>
+        </Tabs>
+      )}
     </div>
+
   );
 };
 

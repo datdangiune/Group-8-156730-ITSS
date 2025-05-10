@@ -9,6 +9,25 @@ interface Pet {
     id: number;
     name: string;
 }
+export interface AppointmentResult {
+  id: number;
+  appointment_id: number;
+  diagnosis: string;
+  prescription: string;
+  follow_up_date: string; // ISO date string
+  created_at: string; // ISO date string
+}
+
+export interface User {
+  id: number;
+  username: string;
+  name: string;
+  email: string;
+  password: string; // thường không nên gửi xuống client, trừ khi cần debug nội bộ
+  role: 'admin' | 'staff' | 'pet_owner'; // bạn có thể mở rộng nếu có thêm role khác
+  phone_number: string | null;
+  created_at: string; // ISO date string
+}
 
 export type AppointmentStatus = 'Scheduled' | 'Done' | 'Cancel' | 'In progess';
 export interface Appointment {
@@ -21,6 +40,8 @@ export interface Appointment {
     reason?: string;
     pet: Pet;
     appointment_status: AppointmentStatus;
+    owner?: User;
+    result?: AppointmentResult | null;
   }
   
 
@@ -76,3 +97,27 @@ export const fetchUserAppointments = async (token: string, status: string): Prom
       throw error;
     }
 };
+
+export interface FetchAppointmentResponse {
+  success: boolean;
+  message: string;
+  data: Appointment;
+}
+export const fetchAppointmentResultById = async(token:string, id: number): Promise<FetchAppointmentResponse> => {
+    const res = await fetch(`http://localhost:3000/api/v1/user/appointment-result/${id}`, {
+    method: 'GET',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!res.ok) {
+    const errorData = await res.json();
+    throw new Error(errorData.message || 'Failed to fetch appointment result');
+  }
+
+  const data = await res.json();
+  console.log(data)
+  return data;
+}
