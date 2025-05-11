@@ -12,7 +12,7 @@ interface AppointmentProps {
   appointment_date: string;
   appointment_hour: string;
   reason: string;
-  appointment_status: string;
+  appointment_status: "Done" | "Scheduled" | "Cancel" | "In Progress" ;
   pet: {
     id: number;
     name: string;
@@ -120,7 +120,8 @@ export const AppointmentList: React.FC<AppointmentListProps> = ({
               </div>
             </div>
 
-            <StatusBadge status={appointment.appointment_status.toLowerCase()} />
+           <StatusBadge status={appointment.appointment_status}/>
+
           </div>
         </div>
       ))}
