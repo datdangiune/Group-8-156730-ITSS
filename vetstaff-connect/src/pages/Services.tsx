@@ -293,10 +293,10 @@ const Services: React.FC = () => {
                         <StatusBadge status={service.status as any} />
                       </td>
                       <td className="px-4 py-4 font-medium">
-                        {service.price}
+                        {service.price} VNĐ
                       </td>
                       <td className = "px-4 py-4">
-                        {service.status === "In Progess" ? (
+                        {service.status_payment === "pending" ? (
                           <span className="px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
                             Pending
                           </span>
@@ -308,7 +308,7 @@ const Services: React.FC = () => {
                          </td>
                       <td className="px-4 py-4 text-right">
                         <div className="flex justify-end gap-2">
-                          {service.status !== "cancelled" && service.status !== "completed" && (
+                          {service.status !== "Cancelled" && service.status !== "Completed" && (
                             <Button
                               variant="outline"
                               size="sm"
@@ -321,7 +321,7 @@ const Services: React.FC = () => {
                             </Button>
                           )}
 
-                          {service.status === "Scheduled" && (
+                          {service.status === "Scheduled" && service.status_payment === 'paid' && (
                             <Button
                               variant="outline"
                               size="sm"

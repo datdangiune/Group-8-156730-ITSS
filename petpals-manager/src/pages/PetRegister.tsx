@@ -41,6 +41,7 @@ const PetRegistration = () => {
     const { id } = useParams();
     const navigate = useNavigate();
     const [selectedImage, setSelectedImage] = useState<string | null>(null);
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
     const isEditMode = !!id;
     const token = getTokenFromCookies();
@@ -66,7 +67,7 @@ const PetRegistration = () => {
     const onSubmit = async (data: PetFormValues) => {
         try {
         console.log("Submitting pet data:", { ...data, image: selectedImage });
-    
+        setIsSubmitting(true);
         // 🔹 Gửi dữ liệu thú cưng lên server
         await registerPet(data, selectedImage, token);
     
@@ -75,6 +76,8 @@ const PetRegistration = () => {
         } catch (error) {
         console.error("Failed to submit pet data:", error);
         toast.error("Failed to submit pet data. Please try again.");
+        } finally {
+        setIsSubmitting(false);
         }
     };
   
@@ -388,17 +391,29 @@ const PetRegistration = () => {
                     <Button
                     type="button"
                     variant="outline"
+                    disabled={isSubmitting}
                     onClick={() => {
-                        if (window.confirm("Are you sure you want to cancel? All unsaved changes will be lost.")) {
+                        if (
+                        !isSubmitting &&
+                        window.confirm("Are you sure you want to cancel? All unsaved changes will be lost.")
+                        ) {
                         navigate("/pets");
                         }
                     }}
                     >
                     Cancel
                     </Button>
-                    <Button type="submit">
-                    {isEditMode ? "Update Pet" : "Register Pet"}
+
+                    <Button type="submit" disabled={isSubmitting}>
+                    {isSubmitting
+                        ? isEditMode
+                        ? "Updating..."
+                        : "Registering..."
+                        : isEditMode
+                        ? "Update Pet"
+                        : "Register Pet"}
                     </Button>
+
                 </CardFooter>
                 </form>
             </Form>

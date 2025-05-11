@@ -1,7 +1,7 @@
 
 export type ServiceType = 'grooming' | 'boarding'| 'training';
 export type ServiceStatus = 'available' | 'unavailable' ;
-export type ServiceStatusUser = 'In Progess' | 'Complete';
+export type ServiceStatusUser = 'In Progess' | 'Completed' | 'Scheduled';
 export interface ServiceDetail {
     included: string[];
   }

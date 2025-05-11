@@ -40,10 +40,14 @@ const ServiceUser = sequelize.define('ServiceUser', {
     allowNull: false,
   },
   status: {
-    type: DataTypes.STRING,
+    type: DataTypes.ENUM('Scheduled', 'In Progress', 'Compeleted', 'Cancelled'),
     allowNull: false,
     defaultValue: "Scheduled",
   },
+  status_payment: {
+        type: DataTypes.ENUM('pending', 'paid', 'cancelled'),
+        defaultValue: 'pending',
+    },
 }, {
   tableName: 'service_users',
   timestamps: false,

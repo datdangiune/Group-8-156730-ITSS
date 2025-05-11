@@ -29,7 +29,7 @@ export interface User {
   created_at: string; // ISO date string
 }
 
-export type AppointmentStatus = 'Scheduled' | 'Done' | 'Cancel' | 'In progess';
+export type AppointmentStatus = 'Scheduled' | 'Done' | 'Cancel' | 'In Progress';
 export interface Appointment {
     id: number;
     appointment_type: string;

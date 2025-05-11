@@ -37,6 +37,7 @@ export interface Service {
   hour: string;
   pet?: Pet;
   image?: string;
+  status_payment?: string;
 }
 
 interface ClinicService {
@@ -124,6 +125,7 @@ export const fetchUserServices = async (token: string): Promise<Service[]> => {
       date: service.date,
       hour: service.hour,
       pet: service.pet,
+      status_payment: service.status_payment,
     }));
   } catch (error: any) {
     console.error("Error fetching user services:", error.message);

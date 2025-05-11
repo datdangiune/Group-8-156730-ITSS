@@ -597,6 +597,7 @@ const StaffController = {
                 serviceId: serviceUser.service?.id || null, // Service ID
                 type: serviceUser.service?.type || null,
                 serviceName: serviceUser.service?.name || null,
+                status_payment: serviceUser.status_payment,
                 pet: serviceUser.pet ? {
                     id: serviceUser.pet.id,
                     name: serviceUser.pet.name,

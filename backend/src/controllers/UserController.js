@@ -669,7 +669,7 @@ const UserController  = {
                     message: "ServiceUser hiện không khả dụng"
                 });
             }
-            if (service_user.status === 'Complete') {
+            if (service_user.status_payment === 'paid') {
                 return res.status(400).json({
                     success: false,
                     message: "ServiceUser đã thanh toán trước đó"
@@ -797,7 +797,7 @@ const UserController  = {
     
                 if (!serviceUser) return res.send('Không tìm thấy ServiceUser');
     
-                await serviceUser.update({ status: 'Complete' });
+                await serviceUser.update({ status_payment: 'paid' });
     
                 const emailContent = `
                     <div style="font-family: Arial, sans-serif; padding: 20px;">

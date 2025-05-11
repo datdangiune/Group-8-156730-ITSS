@@ -3,7 +3,7 @@ import React from 'react';
 import { Calendar, Clock, MapPin } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Link } from 'react-router-dom';
-export type AppointmentStatus = 'Scheduled' | 'Done' | 'Cancel' | 'In progess';
+export type AppointmentStatus = 'Scheduled' | 'Done' | 'Cancel' | 'In Progress';
 interface Pet {
   id: number;
   name: string;
@@ -32,7 +32,7 @@ const getStatusColor = (status: AppointmentStatus) => {
       return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300';
     case 'Cancel':
       return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300';
-    case 'In progess':
+    case 'In Progress':
       return 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300';
     default:
       return 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-300';

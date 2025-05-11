@@ -18,7 +18,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Service, ServiceType, ServiceStatusUser, PaymentStatus} from '@/types/service';
+import { ServiceType, ServiceStatusUser} from '@/types/service';
 import { cn } from '@/lib/utils';
 import { CalendarDays, Clock, CreditCard, Package, ShieldCheck, Sparkles, Stethoscope } from 'lucide-react';
 import {fetchUserServices, UserService} from "@/service/service"
@@ -36,7 +36,7 @@ const MyServices = () => {
     const [loading, setLoading] = useState<boolean>(true);
     const token = getTokenFromCookies();
     const handleServiceClick = async (service: UserService) => {
-        if (service.status === 'In Progess') {
+        if (service.status === 'Scheduled') {
         // Navigate to payment page for the service
         const paymentUrl = await getPaymentUrl(service.id, token);
         if (paymentUrl) {
@@ -68,25 +68,27 @@ const MyServices = () => {
     }
   };
 
-const getServiceStatusBadge = (serviceStatus: 'available' | 'unavailable' | string) => {
+const getServiceStatusBadge = (serviceStatus:'In Progress' | 'Completed' | 'Scheduled') => {
   switch (serviceStatus) {
-    case 'available':
-      return <Badge className="bg-green-100 text-green-700">Available</Badge>;
-    case 'unavailable':
-      return <Badge className="bg-red-100 text-red-700">Unavailable</Badge>;
-    default:
-      return <Badge className="bg-gray-100 text-gray-700">Unknown</Badge>;
+    case 'Completed':
+      return <Badge className="bg-green-100 text-green-700">Completed</Badge>;
+    case 'In Progress':
+      return <Badge className="bg-red-100 text-orange-700">In Progress</Badge>;
+    case 'Scheduled':
+      return <Badge className="bg-gray-100 text-blue-700">Scheduled</Badge>;
   }
 };
 
 
 
-  const getPaymentStatusBadge = (status?: ServiceStatusUser) => {
+  const getPaymentStatusBadge = (status: 'pending' | 'paid' | 'canceled') => {
     switch (status) {
-      case 'Complete':
+      case 'paid':
         return <Badge>Paid</Badge>;
-      case 'In Progess':
+      case 'pending':
         return <Badge variant="destructive">Unpaid</Badge>;
+      case 'canceled':
+        return <Badge className="bg-red-100 text-red-700">Canceled</Badge>;
       default:
         return null;
     }
@@ -107,14 +109,15 @@ const getServiceStatusBadge = (serviceStatus: 'available' | 'unavailable' | stri
       key={service.id} 
       className={cn(
         "overflow-hidden",
-        service.status === 'In Progess' && "cursor-pointer hover:shadow-md"
+        service.status === 'In Progress' && "cursor-pointer hover:shadow-md"
       )}
-      onClick={() => service.status === 'In Progess' && handleServiceClick(service)}
+      onClick={() => service.status === 'In Progress' && handleServiceClick(service)}
     >
       <CardHeader>
         <CardTitle className="flex items-center">
           {getServiceTypeIcon(service.service.type)}
           {service.service.name}
+          {getServiceStatusBadge(service.status)}
         </CardTitle>
         <CardDescription>{service.service.description}</CardDescription>
       </CardHeader>
@@ -135,9 +138,9 @@ const getServiceStatusBadge = (serviceStatus: 'available' | 'unavailable' | stri
           <CreditCard className="h-4 w-4 mr-2" />
           <span>Pet: {service.pet.name}</span>
         </div>
-        {getPaymentStatusBadge(service.status)}
+        {getPaymentStatusBadge(service.status_payment)}
       </CardContent>
-      {service.status === 'In Progess' && (
+      {service.status === 'Scheduled' && (
         <CardFooter className="pt-0">
           <Button 
             className="w-full" 
@@ -171,18 +174,18 @@ const getServiceStatusBadge = (serviceStatus: 'available' | 'unavailable' | stri
         {services.map((service) => (
           <TableRow 
             key={service.id}
-            className={service.status === 'In Progess' ? "cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800" : ""}
-            onClick={() => service.status === 'In Progess' && handleServiceClick(service)}
+            className={service.status === 'In Progress' ? "cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800" : ""}
+            onClick={() => service.status === 'In Progress' && handleServiceClick(service)}
           >
             <TableCell className="font-medium">{service.service.name}</TableCell>
             <TableCell className="flex items-center">{getServiceTypeIcon(service.service.type)} {service.service.type}</TableCell>
             <TableCell>{service.pet.name}</TableCell>
             <TableCell>{service.date ? new Date(service.date).toLocaleDateString() : 'Not scheduled'}</TableCell>
             <TableCell>{service.hour || 'Not scheduled'}</TableCell>
-            <TableCell>{getServiceStatusBadge(service.service.status)}</TableCell>
-            <TableCell>{getPaymentStatusBadge(service.status)}</TableCell>
+            <TableCell>{getServiceStatusBadge(service.status)}</TableCell>
+            <TableCell>{getPaymentStatusBadge(service.status_payment)}</TableCell>
             <TableCell>
-              {service.status === 'In Progess' && (
+              {service.status === 'Scheduled' && (
                 <Button 
                   size="sm" 
                   onClick={(e) => {

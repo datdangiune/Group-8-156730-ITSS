@@ -122,9 +122,9 @@ const Appointments = () => {
             </Button>
             
             <Button
-              variant={activeFilter === 'In progess' ? "default" : "outline"}
+              variant={activeFilter === 'In Progress' ? "default" : "outline"}
               size="sm"
-              onClick={() => setActiveFilter('In progess')}
+              onClick={() => setActiveFilter('In Progress')}
               className="whitespace-nowrap"
             >
               In Progress
