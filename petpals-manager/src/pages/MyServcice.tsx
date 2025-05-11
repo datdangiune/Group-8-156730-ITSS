@@ -68,14 +68,16 @@ const MyServices = () => {
     }
   };
 
-const getServiceStatusBadge = (serviceStatus:'In Progress' | 'Completed' | 'Scheduled') => {
+const getServiceStatusBadge = (serviceStatus:'In Progress' | 'Completed' | 'Scheduled' | 'Cancelled') => {
   switch (serviceStatus) {
     case 'Completed':
       return <Badge className="bg-green-100 text-green-700">Completed</Badge>;
     case 'In Progress':
-      return <Badge className="bg-red-100 text-orange-700">In Progress</Badge>;
+      return <Badge className="bg-blue-100 text-orange-700">In Progress</Badge>;
     case 'Scheduled':
       return <Badge className="bg-gray-100 text-blue-700">Scheduled</Badge>;
+    case 'Cancelled':
+      return <Badge className="bg-gray-100 text-blue-700">Cancelled</Badge>;
   }
 };
 
@@ -185,7 +187,7 @@ const getServiceStatusBadge = (serviceStatus:'In Progress' | 'Completed' | 'Sche
             <TableCell>{getServiceStatusBadge(service.status)}</TableCell>
             <TableCell>{getPaymentStatusBadge(service.status_payment)}</TableCell>
             <TableCell>
-              {service.status === 'Scheduled' && (
+              {service.status === 'Scheduled' && service.status_payment === 'pending'&& (
                 <Button 
                   size="sm" 
                   onClick={(e) => {

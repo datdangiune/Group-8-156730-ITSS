@@ -26,7 +26,7 @@ export interface GetServicesResponse {
     services: Service[];
   }
 
-type ServiceStatusUser = 'In Progress' | 'Completed' | 'Scheduled';
+type ServiceStatusUser = 'In Progress' | 'Completed' | 'Scheduled' | 'Cancelled';
 type StatusPayment = 'pending' | 'paid' | 'canceled';
 export interface UserService {
     id: number;

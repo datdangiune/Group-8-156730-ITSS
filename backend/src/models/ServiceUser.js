@@ -40,7 +40,7 @@ const ServiceUser = sequelize.define('ServiceUser', {
     allowNull: false,
   },
   status: {
-    type: DataTypes.ENUM('Scheduled', 'In Progress', 'Compeleted', 'Cancelled'),
+    type: DataTypes.ENUM('Scheduled', 'In Progress', 'Completed', 'Cancelled'),
     allowNull: false,
     defaultValue: "Scheduled",
   },
