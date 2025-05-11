@@ -17,11 +17,6 @@ import ExaminationForm from "@/components/appointments/ExaminationForm";
 import MultiStepAppointmentForm from "@/components/appointments/MultiStepAppointmentForm";
 import { 
   Pagination, 
-  PaginationContent,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
   PaginationPageAction
 } from "@/components/ui/pagination";
 import { fetchTodayAppointments, fetchAllAppointments, fetchAppointmentById, updateAppointmentStatus, fetchVetAppointments } from "@/service/Appointments";
@@ -36,7 +31,7 @@ type AppointmentType = {
   date: string;
   time: string;
   reason: string;
-  status: "Done" | "In progess" | "Scheduled" | "Cancel";
+  status: "Done" | "In Progress" | "Scheduled" | "Cancel";
   notes?: string;
 };
 
@@ -77,7 +72,7 @@ const Appointments = () => {
             date: appointment.appointment_date,
             time: appointment.appointment_hour,
             reason: appointment.reason,
-            status: appointment.appointment_status as "Done" | "In progess" | "Scheduled" | "Cancel",
+            status: appointment.appointment_status as "Done" | "In Progress" | "Scheduled" | "Cancel",
           }));
         } else if (view === "all") {
           const allAppointments = await fetchAllAppointments(token);
@@ -90,7 +85,7 @@ const Appointments = () => {
             date: appointment.appointment_date,
             time: appointment.appointment_hour,
             reason: appointment.reason,
-            status: appointment.appointment_status as "Done" | "In progess" | "Scheduled" | "Cancel",
+            status: appointment.appointment_status as "Done" | "In Progress" | "Scheduled" | "Cancel",
           }));
         }
         setAppointments(data);
@@ -141,7 +136,7 @@ const Appointments = () => {
       setAppointments((prevList) =>
         prevList.map((appointment) =>
           appointment.id === appointmentId
-            ? { ...appointment, status: newStatus as "Done" | "In progess" | "Scheduled" | "Cancel" }
+            ? { ...appointment, status: newStatus as "Done" | "In Progress" | "Scheduled" | "Cancel" }
             : appointment
         )
       );
@@ -412,7 +407,7 @@ const Appointments = () => {
                             <td className="px-6 py-4 whitespace-nowrap">
                             <StatusBadge 
                               status={
-                                ["Done", "In progess", "Scheduled", "Cancel"].includes(appointment.status)
+                                ["Done", "In Progress", "Scheduled", "Cancelled"].includes(appointment.status)
                                   ? appointment.status
                                   : undefined
                               } 
@@ -439,7 +434,7 @@ const Appointments = () => {
                             <td className="px-6 py-4 whitespace-nowrap text-right text-sm">
                               <div className="flex items-center justify-end space-x-2">
                                 {/* Add Update Examination button */}
-                                {appointment.status === "In progess" && (
+                                {appointment.status === "In Progress" && (
                                   <Button
                                     variant="outline"
                                     size="sm"
@@ -459,7 +454,7 @@ const Appointments = () => {
                                   </SelectTrigger>
                                   <SelectContent align="end">
                                     <SelectItem value="Scheduled">Scheduled</SelectItem>
-                                    <SelectItem value="In progess">In progess</SelectItem>
+                                    <SelectItem value="In Progress">In Progress</SelectItem>
                                     <SelectItem value="Done">Done</SelectItem>
                                     <SelectItem value="Cancel">Cancel</SelectItem>
                                   </SelectContent>
