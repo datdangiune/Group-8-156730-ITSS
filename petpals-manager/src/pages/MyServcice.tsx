@@ -140,7 +140,7 @@ const getServiceStatusBadge = (serviceStatus:'In Progress' | 'Completed' | 'Sche
         </div>
         {getPaymentStatusBadge(service.status_payment)}
       </CardContent>
-      {service.status === 'Scheduled' && (
+      {service.status === 'Scheduled' && service.status_payment === 'pending' && (
         <CardFooter className="pt-0">
           <Button 
             className="w-full" 

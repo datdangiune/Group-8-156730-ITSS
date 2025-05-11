@@ -545,7 +545,7 @@ const StaffController = {
                 });
             }
 
-            await serviceUser.update({ status: 'Completed' });
+            await serviceUser.update({ status: 'Compeleted' });
 
             res.status(200).json({
                 success: true,
