@@ -52,7 +52,7 @@ const BoardingUser = sequelize.define('BoardingUser', {
         allowNull: true,
     },
     status: {
-        type: DataTypes.ENUM('Scheduled', 'In Progress', 'Compeleted', 'Cancelled'),
+        type: DataTypes.ENUM('Scheduled', 'In Progress', 'Completed', 'Cancelled'),
         allowNull: false,
         defaultValue: "Scheduled",
     },
