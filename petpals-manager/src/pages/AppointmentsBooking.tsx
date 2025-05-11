@@ -231,14 +231,29 @@ const AppointmentBooking = () => {
                             </Button>
                           </FormControl>
                         </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                          <Calendar
-                            mode="single"
-                            selected={field.value ? new Date(field.value) : undefined} // Chuyển đổi string → Date
-                            onSelect={(date) => field.onChange(date?.toISOString().split("T")[0] || "")} // Lưu lại thành string "YYYY-MM-DD"
-                            disabled={(date) => date < new Date()} // Không cho chọn ngày trong quá khứ
-                          />
-                        </PopoverContent>
+                          <PopoverContent className="w-auto p-0" align="start">
+                            <Calendar
+                              mode="single"
+                              selected={field.value ? new Date(field.value) : undefined}
+                              onSelect={(date) => {
+                                if (date) {
+                                  const formattedDate = date.toLocaleDateString('en-CA'); // "YYYY-MM-DD"
+                                  field.onChange(formattedDate);
+                                } else {
+                                  field.onChange("");
+                                }
+                              }}
+                              disabled={(date) => {
+                                const today = new Date();
+                                today.setHours(0, 0, 0, 0); // Reset giờ phút giây
+                                const check = new Date(date);
+                                check.setHours(0, 0, 0, 0);
+                                return check < today;
+                              }}
+                            />
+                          </PopoverContent>
+
+
 
                       </Popover>
                       <FormMessage />

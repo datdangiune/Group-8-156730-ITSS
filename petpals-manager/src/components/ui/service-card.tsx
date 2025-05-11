@@ -98,7 +98,7 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
           {service.duration && (
             <div className="flex items-center text-gray-600 dark:text-gray-400">
               <Clock className="h-4 w-4 mr-2 flex-shrink-0" />
-              <span>Duration: {service.duration}</span>
+              <span>Duration: {service.duration} days</span>
             </div>
           )}
           
