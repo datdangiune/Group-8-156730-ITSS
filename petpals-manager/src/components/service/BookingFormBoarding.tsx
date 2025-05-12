@@ -8,7 +8,7 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Textarea } from "@/components/ui/textarea";
-
+import dayjs from "dayjs";
 import {
   Form,
   FormControl,
@@ -78,8 +78,8 @@ const BookingFormBoarding = ({ service, onSuccess }: BookingFormProps) => {
       const response = await fetchRegisterBaording(token, {
         petId: Number(values.id), // Chuyển id thành số nếu cần
         boardingId: service.id,
-        start_date: values.start_date,
-        end_date: values.end_date,
+        start_date: dayjs(values.start_date).format("YYYY-MM-DD"),
+        end_date: dayjs(values.end_date).format("YYYY-MM-DD"),
         notes: values.note,
       });
 

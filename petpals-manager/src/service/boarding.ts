@@ -79,8 +79,8 @@ export const fetchBoardingServiceById = async (token: string, id: string): Promi
 interface RegisterBoardingRequest {
   petId: number;
   boardingId: number;
-  start_date: Date; // Định dạng YYYY-MM-DD
-  end_date: Date;
+  start_date: string; // Định dạng YYYY-MM-DD
+  end_date: string;
   notes: string;
 }
 

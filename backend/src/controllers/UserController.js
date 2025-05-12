@@ -5,6 +5,12 @@ const { differenceInDays } = require('date-fns');
 const {VNPay} = require('vnpay');
 const {HashAlgorithm, ProductCode} = require('../enums');
 const { encrypt, decrypt } = require('../util/encryption');
+const dayjs = require('dayjs');
+const utc = require('dayjs/plugin/utc');
+const timezone = require('dayjs/plugin/timezone');
+dayjs.extend(utc);
+dayjs.extend(timezone);
+
 require('dotenv').config();
 const vnpay = new VNPay({
     tmnCode: process.env.vnp_TmnCode,
@@ -561,10 +567,10 @@ const UserController  = {
           }
       
           // Tính số ngày giữa start_date và end_date
-          const startDate = new Date(start_date);
-          const endDate = new Date(end_date);
+            const startDate = dayjs.tz(start_date, "Asia/Ho_Chi_Minh").toDate();
+            const endDate = dayjs.tz(end_date, "Asia/Ho_Chi_Minh").toDate();
           const numberOfDays = differenceInDays(endDate, startDate);
-      
+          console.log(numberOfDays)
           if (numberOfDays <= 0) {
             return res.status(400).json({ message: 'End date must be after start date' });
           }
