@@ -64,6 +64,18 @@ const MyBoarding = () => {
         return null;
     }
   };
+const getBoardingStatusBadge = (serviceStatus:'In Progress' | 'Completed' | 'Scheduled' | 'Cancelled') => {
+  switch (serviceStatus) {
+    case 'Completed':
+      return <Badge className="bg-green-100 text-green-700">Completed</Badge>;
+    case 'In Progress':
+      return <Badge className="bg-blue-100 text-orange-700">In Progress</Badge>;
+    case 'Scheduled':
+      return <Badge className="bg-gray-100 text-blue-700">Scheduled</Badge>;
+    case 'Cancelled':
+      return <Badge className="bg-gray-100 text-blue-700">Cancelled</Badge>;
+  }
+};
 
   const filterBySearch = (services: UserBoarding[]) => {
     const searchTerm = search.toLowerCase();
@@ -86,6 +98,7 @@ const MyBoarding = () => {
       <CardHeader>
         <CardTitle className="flex items-center">
           {service.boarding.name}
+          <div className="ml-auto">{getBoardingStatusBadge(service.status)}</div>
         </CardTitle>
         <CardDescription>{service.boarding.type}</CardDescription>
       </CardHeader>
