@@ -12,6 +12,7 @@ interface MetricsCardProps {
     type: "increase" | "decrease";
   };
   className?: string;
+  variant?: "default" | "appointments" | "services" | "boarding" | "medical";
 }
 
 export const MetricsCard: React.FC<MetricsCardProps> = ({
@@ -20,7 +21,16 @@ export const MetricsCard: React.FC<MetricsCardProps> = ({
   icon,
   change,
   className,
+  variant = "default",
 }) => {
+  const variantStyles = {
+    default: "bg-primary/10 text-primary",
+    appointments: "bg-blue-100 text-blue-600",
+    services: "bg-green-100 text-green-600",
+    boarding: "bg-amber-100 text-amber-600",
+    medical: "bg-purple-100 text-purple-600",
+  };
+
   return (
     <div className={cn("p-6 bg-card rounded-xl shadow-sm border hover-card", className)}>
       <div className="flex items-center justify-between">
@@ -50,7 +60,7 @@ export const MetricsCard: React.FC<MetricsCardProps> = ({
           )}
         </div>
         
-        <div className="rounded-full p-3 bg-primary/10 text-primary">
+        <div className={cn("rounded-full p-3", variantStyles[variant])}>
           {icon}
         </div>
       </div>

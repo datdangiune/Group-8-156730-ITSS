@@ -37,7 +37,7 @@ type AppointmentType = {
 
 const Appointments = () => {
   const [appointments, setAppointments] = useState<AppointmentType[]>([]);
-  const [view, setView] = useState("today");
+  const [view, setView] = useState("all");
   const [dateFilter, setDateFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
   const [petTypeFilter, setPetTypeFilter] = useState<string[]>([]);

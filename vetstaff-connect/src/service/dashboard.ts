@@ -3,19 +3,38 @@ import axios from "axios";
 const API_BASE_URL = "http://localhost:3000/api/v1/staff";
 
 export interface DashboardStats {
-  counttodayAppointments: number;
-  activeBoarders: number;
-  pendingServices: number;
-  unreadNotifications: number;
+  counts: {
+    todayAppointments: number;
+    todayServices: number;
+    activeBoarders: number;
+    totalMedicalRecords: number;
+  };
+  lists: {
+    todayAppointments: Appointment[];
+    todayServices: Service[];
+    activeBoarders: BoardingPet[];
+    recentMedicalRecords: MedicalRecord[];
+  };
 }
 
 export interface Appointment {
   id: number;
-  date: string;
-  time: string;
-  petName: string;
-  ownerName: string;
-  status: string;
+  appointment_type: string;
+  appointment_date: string;
+  appointment_hour: string;
+  reason: string;
+  appointment_status: "Done" | "Scheduled" | "Cancel" | "In Progress";
+  pet: {
+    id: number;
+    name: string;
+    breed: string;
+    age: number;
+  };
+  owner: {
+    id: number;
+    username: string;
+    email: string;
+  };
 }
 
 export interface Notification {
@@ -40,6 +59,15 @@ export interface BoardingPet {
   petType: string;
   petBreed: string;
   checkOutDate: string;
+}
+
+export interface MedicalRecord {
+  id: number;
+  appointmentDate: string;
+  petName: string;
+  ownerName: string;
+  diagnosis: string;
+  prescription: string;
 }
 
 export const fetchDashboardStats = async (token: string): Promise<DashboardStats> => {

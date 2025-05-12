@@ -6,56 +6,133 @@ dayjs.extend(timezone);
 dayjs.tz.setDefault('Asia/Ho_Chi_Minh');
 
 const { assign } = require('nodemailer/lib/shared');
-const { Appointment, Service, Boarding, Notification, Pet, User, ServiceUser, BoardingUser } = require('../models');
+const { Appointment, Service, Boarding, Notification, Pet, User, ServiceUser, BoardingUser, MedicalRecord, AppointmentResult } = require('../models');
 const { Op } = require('sequelize');
 
 const StaffController = {
     // Lấy thống kê dashboard
     async getDashboardStats(req, res) {
         try {
-            // Get the current date in Vietnam timezone
             const today = dayjs().tz();
-
-            // Set the start and end of the day
             const startOfDay = today.startOf('day').toISOString();
             const endOfDay = today.endOf('day').toISOString();
 
-            // Count today's appointments
-            const counttodayAppointments = await Appointment.count({
+            // Fetch today's appointments
+            const todayAppointments = await Appointment.findAll({
                 where: {
                     appointment_date: {
                         [Op.between]: [startOfDay, endOfDay],
                     },
                 },
+                include: [
+                    {
+                        model: Pet,
+                        as: 'pet',
+                        attributes: ['id', 'name', 'breed', 'age'],
+                    },
+                    {
+                        model: User,
+                        as: 'owner',
+                        attributes: ['id', 'username', 'email'],
+                    },
+                ],
             });
 
-            // Count active boarders (status: 'available')
-            const activeBoarders = await Boarding.count({
-                where: { status: 'available' },
+            // Fetch today's services
+            const todayServices = await ServiceUser.findAll({
+                where: {
+                    date: {
+                        [Op.between]: [startOfDay, endOfDay],
+                    },
+                },
+                include: [
+                    {
+                        model: Service,
+                        as: 'service',
+                        attributes: ['id', 'name', 'type', 'price', 'duration'],
+                    },
+                    {
+                        model: Pet,
+                        as: 'pet',
+                        attributes: ['id', 'name', 'breed'],
+                    },
+                    {
+                        model: User,
+                        as: 'user',
+                        attributes: ['id', 'username', 'email'],
+                    },
+                ],
             });
 
-            // Count pending services (status: 'available')
-            const pendingServices = await Service.count({
-                where: { status: 'available' },
+            // Fetch active boarders
+            const activeBoarders = await BoardingUser.findAll({
+                where: {
+                    status: 'In Progress',
+                },
+                include: [
+                    {
+                        model: Boarding,
+                        as: 'boarding',
+                        attributes: ['id', 'name', 'type', 'price', 'maxday'],
+                    },
+                    {
+                        model: Pet,
+                        as: 'pet',
+                        attributes: ['id', 'name', 'type', 'breed'],
+                    },
+                    {
+                        model: User,
+                        as: 'user',
+                        attributes: ['id', 'username', 'email'],
+                    },
+                ],
             });
 
-            // Count unread notifications
-            const unreadNotifications = await Notification.count({
-                where: { is_read: false },
+            // Fetch recent appointment results (medical records)
+            const recentAppointmentResults = await AppointmentResult.findAll({
+                limit: 10,
+                order: [['created_at', 'DESC']],
+                include: [
+                    {
+                        model: Appointment,
+                        as: 'appointment',
+                        attributes: ['appointment_date'],
+                        include: [
+                            {
+                                model: Pet,
+                                as: 'pet',
+                                attributes: ['id', 'name', 'breed'],
+                            },
+                            {
+                                model: User,
+                                as: 'owner',
+                                attributes: ['id', 'username', 'email'],
+                            },
+                        ],
+                    },
+                ],
             });
 
-            // Return the results
             res.status(200).json({
                 success: true,
                 message: 'Dashboard stats fetched successfully',
                 data: {
-                    counttodayAppointments,
-                    activeBoarders,
-                    pendingServices,
-                    unreadNotifications,
+                    counts: {
+                        todayAppointments: todayAppointments.length,
+                        todayServices: todayServices.length,
+                        activeBoarders: activeBoarders.length,
+                        totalMedicalRecords: recentAppointmentResults.length,
+                    },
+                    lists: {
+                        todayAppointments,
+                        todayServices,
+                        activeBoarders,
+                        recentMedicalRecords: recentAppointmentResults,
+                    },
                 },
             });
         } catch (err) {
+            console.error('Error fetching dashboard stats:', err);
             res.status(500).json({
                 success: false,
                 message: 'Error fetching dashboard stats',

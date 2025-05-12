@@ -1,50 +1,26 @@
 import React, { useEffect, useState } from "react";
-import { Calendar, Heart, Home, Stethoscope, Clock, Calendar as CalendarIcon, Bell } from "lucide-react";
+import { Calendar, Home, Stethoscope, FileText } from "lucide-react";
 import PageTransition from "@/components/animations/PageTransition";
 import DashboardCard from "@/components/dashboard/DashboardCard";
 import AppointmentList from "@/components/dashboard/AppointmentList";
 import MetricsCard from "@/components/dashboard/MetricsCard";
-import NotificationPanel from "@/components/dashboard/NotificationPanel";
-import { fetchDashboardStats, fetchAppointments } from "@/service/dashboard";
+import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
+import { fetchDashboardStats, DashboardStats } from "@/service/dashboard";
 
 const Index = () => {
-  const [appointments, setAppointments] = useState<any[]>([]);
-  const [notifications, setNotifications] = useState<any[]>([]);
-  const [statsRes, setStatsRes] = useState<any>({});
-  const [services, setServices] = useState<any[]>([]);
-  const [boardingPets, setBoardingPets] = useState<any[]>([]);
+  const navigate = useNavigate();
+  const [dashboardStats, setDashboardStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
 
   useEffect(() => {
     const fetchData = async () => {
-      const token = localStorage.getItem("token");
-      if (!token) {
-        console.error("No token found");
-        setError("Authentication token is missing. Please log in.");
-        setLoading(false);
-        return;
-      }
-
       try {
-        // Query backend using service functions
-        const [stats, appointmentsData] = await Promise.all([
-          fetchDashboardStats(token), // Fetch dashboard stats
-          fetchAppointments(token), // Fetch appointments
-          // fetchNotifications(token), // Fetch notifications
-          // fetchServices(token), // Fetch services
-          // fetchBoardingPets(token), // Fetch boarding pets
-        ]);
-
-        // Update state with fetched data
-        setStatsRes(stats || {});
-        setAppointments(appointmentsData || []);
-        // setNotifications(notificationsData || []);
-        // setServices(servicesData || []);
-        // setBoardingPets(boardingData || []);
-      } catch (err: any) {
-        console.error("Error fetching dashboard data:", err.message);
-        setError(err.message || "Failed to fetch dashboard data");
+        const token = localStorage.getItem("token") || "";
+        const data = await fetchDashboardStats(token);
+        setDashboardStats(data);
+      } catch (error) {
+        console.error("Error fetching dashboard stats:", error);
       } finally {
         setLoading(false);
       }
@@ -53,133 +29,203 @@ const Index = () => {
     fetchData();
   }, []);
 
-  const unreadNotifications = notifications?.filter((notif: any) => !notif.read) || [];
-  const activeServices = services?.filter((svc: any) => svc.status === "in-progress") || [];
+  if (loading) {
+    return <div>Loading dashboard...</div>;
+  }
+
+  if (!dashboardStats) {
+    return <div>Error loading dashboard data.</div>;
+  }
+
+  const { counts, lists } = dashboardStats;
 
   return (
     <PageTransition>
       <div className="container px-4 py-6 max-w-7xl mx-auto">
-        {loading ? (
-          <div className="text-center">Loading...</div>
-        ) : error ? (
-          <div className="text-center text-red-500">{error}</div>
-        ) : (
-          <>
-            <h1 className="text-2xl font-medium mb-6">Dashboard</h1>
+        <h1 className="text-2xl font-medium mb-6">Dashboard</h1>
 
-            {/* Metrics */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-              <MetricsCard
-                title="Today's Appointments"
-                value={statsRes?.counttodayAppointments || 0}
-                icon={<Calendar className="h-5 w-5" />}
-              />
-              <MetricsCard
-                title="Active Boarders"
-                value={statsRes?.activeBoarders || 0}
-                icon={<Home className="h-5 w-5" />}
-              />
-              <MetricsCard
-                title="Pending Services"
-                value={statsRes?.pendingServices || 0}
-                icon={<Stethoscope className="h-5 w-5" />}
-              />
-              <MetricsCard
-                title="Unread Notifications"
-                value={unreadNotifications.length}
-                icon={<Bell className="h-5 w-5" />}
-              />
-            </div>
+        {/* Metrics */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          <MetricsCard
+            title="Today's Appointments"
+            value={counts.todayAppointments}
+            icon={<Calendar className="h-5 w-5" />}
+            variant="appointments"
+          />
+          <MetricsCard
+            title="Today's Services"
+            value={counts.todayServices}
+            icon={<Stethoscope className="h-5 w-5" />}
+            variant="services"
+          />
+          <MetricsCard
+            title="Active Boarders"
+            value={counts.activeBoarders}
+            icon={<Home className="h-5 w-5" />}
+            variant="boarding"
+          />
+          <MetricsCard
+            title="Total Medical Records"
+            value={counts.totalMedicalRecords}
+            icon={<FileText className="h-5 w-5" />}
+            variant="medical"
+          />
+        </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {/* Main content - upcoming appointments */}
-              <div className="lg:col-span-2 space-y-6">
-                <DashboardCard
-                  title="Today's Appointments"
-                  description="Scheduled appointments for today"
-                  className="h-full"
-                  contentClassName="h-[400px] overflow-auto"
-                >
-                  <AppointmentList appointments={appointments} />
-                </DashboardCard>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Appointments and Services */}
+          <div className="space-y-6">
+            <DashboardCard
+              title="Today's Appointments"
+              description="Scheduled appointments for today"
+            >
+              <AppointmentList
+                appointments={lists.todayAppointments.map((apt) => ({
+                  id: apt.id,
+                  appointment_type: apt.reason, // Assuming reason is the type
+                  appointment_date: apt.appointment_date,
+                  appointment_hour: apt.appointment_hour,
+                  reason: apt.reason,
+                  appointment_status: apt.appointment_status as "Done" | "Scheduled" | "Cancel" | "In Progress",
+                  pet: {
+                    id: apt.pet.id, // Ensure this field exists in the backend response
+                    name: apt.pet.name,
+                    breed: apt.pet.breed || "Unknown", // Default value if breed is missing
+                    age: apt.pet.age || 0, // Default value if age is missing
+                  },
+                  owner: {
+                    id: apt.owner.id, // Ensure this field exists in the backend response
+                    username: apt.owner.username,
+                    email: apt.owner.email || "Unknown", // Default value if email is missing
+                  },
+                }))}
+              />
+            </DashboardCard>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <DashboardCard title="Active Services" description="Currently in progress">
-                    {activeServices.length > 0 ? (
-                      <div className="divide-y">
-                        {activeServices.map((service: any) => (
-                          <div key={service.id} className="p-4 flex justify-between items-center">
-                            <div>
-                              <p className="font-medium">{service.petName}</p>
-                              <div className="flex items-center text-sm text-muted-foreground mt-0.5">
-                                <Stethoscope className="h-3.5 w-3.5 mr-1.5" />
-                                {service.serviceType}
-                              </div>
-                            </div>
-                            <div className="text-right">
-                              <div className="text-sm font-medium">Started</div>
-                              <div className="flex items-center text-sm text-muted-foreground">
-                                <Clock className="h-3.5 w-3.5 mr-1.5" />
-                                {service.startTime}
-                              </div>
-                            </div>
-                          </div>
-                        ))}
+                
+            <DashboardCard
+              title="Today's Services"
+              description="Services in progress today"
+            >
+              {lists.todayServices.length > 0 ? (
+                <div className="divide-y">
+                  {lists.todayServices.map((service) => (
+                    <div key={service.id} className="p-4 flex justify-between items-center">
+                      <div>
+                        <p className="font-medium">{service.petName}</p>
+                        <div className="flex items-center text-sm text-muted-foreground mt-0.5">
+                          <Stethoscope className="h-3.5 w-3.5 mr-1.5" />
+                          {service.serviceType}
+                        </div>
                       </div>
-                    ) : (
-                      <div className="flex flex-col items-center justify-center p-6 text-center">
-                        <Stethoscope className="h-8 w-8 text-muted-foreground mb-2" />
-                        <p className="text-sm text-muted-foreground">No active services</p>
+                      <div className="text-right">
+                        <div className="text-sm font-medium">Started</div>
+                        <div className="text-sm text-muted-foreground">
+                          {service.startTime}
+                        </div>
                       </div>
-                    )}
-                  </DashboardCard>
-
-                  <DashboardCard title="Boarding Status" description="Current boarders">
-                    {boardingPets.length > 0 ? (
-                      <div className="divide-y">
-                        {boardingPets.slice(0, 3).map((pet: any) => (
-                          <div key={pet.id} className="p-4 flex justify-between items-center">
-                            <div>
-                              <p className="font-medium">{pet.petName}</p>
-                              <div className="flex items-center text-sm text-muted-foreground mt-0.5">
-                                <Heart className="h-3.5 w-3.5 mr-1.5" />
-                                {pet.petType}, {pet.petBreed}
-                              </div>
-                            </div>
-                            <div className="text-right">
-                              <div className="text-sm font-medium">Check out</div>
-                              <div className="flex items-center text-sm text-muted-foreground">
-                                <CalendarIcon className="h-3.5 w-3.5 mr-1.5" />
-                                {pet.checkOutDate}
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="flex flex-col items-center justify-center p-6 text-center">
-                        <Home className="h-8 w-8 text-muted-foreground mb-2" />
-                        <p className="text-sm text-muted-foreground">No pets boarding</p>
-                      </div>
-                    )}
-                  </DashboardCard>
+                    </div>
+                  ))}
+                  <div className="p-4 text-center">
+                    <Button variant="outline" onClick={() => navigate("/services")}>
+                      View all services
+                    </Button>
+                  </div>
                 </div>
-              </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center p-8 text-center">
+                  <Stethoscope className="h-8 w-8 text-muted-foreground mb-2" />
+                  <p className="text-sm text-muted-foreground">No active services today</p>
+                  <Button variant="outline" className="mt-4" onClick={() => navigate("/services")}>
+                    View all services
+                  </Button>
+                </div>
+              )}
+            </DashboardCard>
+          </div>
 
-              {/* Sidebar - notifications */}
-              <div>
-                <DashboardCard
-                  title="Recent Notifications"
-                  description="Updates and alerts"
-                  className="h-full"
-                  contentClassName="h-[600px] overflow-auto"
-                >
-                  <NotificationPanel notifications={notifications.slice(0, 6)} />
-                </DashboardCard>
-              </div>
-            </div>
-          </>
-        )}
+          {/* Boarding and Medical Records */}
+          <div className="space-y-6">
+            <DashboardCard
+              title="Active Boarders"
+              description="Pets currently boarding"
+            >
+              {lists.activeBoarders.length > 0 ? (
+                <div className="divide-y">
+                  {lists.activeBoarders.map((pet) => (
+                    <div key={pet.id} className="p-4 flex justify-between items-center">
+                      <div>
+                        <p className="font-medium">{pet.petName}</p>
+                        <div className="flex items-center text-sm text-muted-foreground mt-0.5">
+                          {pet.petType}, {pet.petBreed}
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-sm font-medium">Check out</div>
+                        <div className="text-sm text-muted-foreground">
+                          {pet.checkOutDate}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                  <div className="p-4 text-center">
+                    <Button variant="outline" onClick={() => navigate("/boarding")}>
+                      View all boarders
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center p-8 text-center">
+                  <Home className="h-8 w-8 text-muted-foreground mb-2" />
+                  <p className="text-sm text-muted-foreground">No pets currently boarding</p>
+                  <Button variant="outline" className="mt-4" onClick={() => navigate("/boarding")}>
+                    View all boarders
+                  </Button>
+                </div>
+              )}
+            </DashboardCard>
+
+            <DashboardCard
+              title="Recent Medical Records"
+              description="Latest patient updates"
+            >
+              {lists.recentMedicalRecords.length > 0 ? (
+                <div className="divide-y">
+                  {lists.recentMedicalRecords.map((record) => (
+                    <div key={record.id} className="p-4 flex justify-between items-center">
+                      <div>
+                        <p className="font-medium">{record.petName}</p>
+                        <div className="flex items-center text-sm text-muted-foreground mt-0.5">
+                          <FileText className="h-3.5 w-3.5 mr-1.5" />
+                          {record.diagnosis}
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-sm font-medium">Date</div>
+                        <div className="text-sm text-muted-foreground">
+                          {record.appointmentDate}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                  <div className="p-4 text-center">
+                    <Button variant="outline" onClick={() => navigate("/medical-records")}>
+                      View all medical records
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center p-8 text-center">
+                  <FileText className="h-8 w-8 text-muted-foreground mb-2" />
+                  <p className="text-sm text-muted-foreground">No medical records available</p>
+                  <Button variant="outline" className="mt-4" onClick={() => navigate("/medical-records")}>
+                    View all medical records
+                  </Button>
+                </div>
+              )}
+            </DashboardCard>
+          </div>
+        </div>
       </div>
     </PageTransition>
   );
