@@ -949,6 +949,32 @@ const UserController  = {
             });
         }
     },
+    async markNotificationAsRead(req, res) {
+        try {
+            const { id } = req.params; // Lấy notification ID từ URL
+            const userId = req.user.id; // Lấy user ID từ token
+
+            // Tìm notification thuộc về user
+            const notification = await Notification.findOne({
+                where: { id, user_id: userId },
+            });
+
+            if (!notification) {
+                return res.status(404).json({ success: false, message: 'Notification not found or unauthorized' });
+            }
+
+            // Cập nhật is_read thành true
+            await notification.update({ is_read: true });
+
+            res.status(200).json({ success: true, message: 'Notification marked as read successfully' });
+        } catch (err) {
+            res.status(500).json({
+                success: false,
+                message: 'Error updating notification',
+                error: err.message,
+            });
+        }
+    },
 
 }
 

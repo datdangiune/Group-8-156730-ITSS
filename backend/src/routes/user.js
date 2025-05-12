@@ -24,6 +24,7 @@ router.get('/services/history/:petId', verifyToken, UserController.getPetService
 router.get('/payments', verifyToken, UserController.getPaymentHistory); // Xem lịch sử thanh toán
 
 router.get('/notifications', verifyToken, UserController.getUserNotifications);
+router.patch('/notifications/:id/read', verifyToken, UserController.markNotificationAsRead);
 
 router.get('/get-all-service', verifyToken, UserController.getAllService)
 router.get('/get-service/:id', verifyToken, UserController.getServiceById)
