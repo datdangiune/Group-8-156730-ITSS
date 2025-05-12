@@ -25,7 +25,8 @@ const Dashboard = () => {
     pendingServices: 0,
     unreadNotifications: 0
   });
-
+  Cookies.set('token', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6OCwicm9sZSI6ImFkbWluIiwidXNlcm5hbWUiOiJhZG1pbiIsImVtYWlsIjoiYWRtaW5AZ21haWwuY29tIiwiaWF0IjoxNzQ3MDE5NzkzLCJleHAiOjE3NDcwMjMzOTN9.-lDAg-TFVk8pHLcM21WxNGfPSFVGttHoPOfrTDRQDsA')
+const token = Cookies.get('token');
   const [revenueData, setRevenueData] = useState([]);
   const [serviceCategoryData, setServiceCategoryData] = useState([]);
   const [todayAppointments, setTodayAppointments] = useState([]);
@@ -38,8 +39,8 @@ const Dashboard = () => {
   ];
 
   useEffect(() => {
-    const token = Cookies.get('token');
-    if (!token) return;
+    
+    // if (!token) return;
 
     const fetchAll = async () => {
       try {
@@ -56,7 +57,7 @@ const Dashboard = () => {
           fetchTodaySchedule(token),
           fetchRecentNotifications(token)
         ]);
-
+        console.log(serviceRes)
         setStats(statsRes);
 
         setRevenueData(revenueRes.map(r => ({
@@ -65,7 +66,7 @@ const Dashboard = () => {
         })));
 
         const weekdays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-        const categoryKeys = ['grooming', 'boarding', 'medical'];
+        const categoryKeys = ['grooming', 'boarding', 'training'];
 
         const weeklyStats = weekdays.map(day => {
           const entry: any = { name: day };
@@ -101,7 +102,7 @@ const Dashboard = () => {
     };
 
     fetchAll();
-  }, []);
+  }, [token]);
 
   return (
     <Layout>

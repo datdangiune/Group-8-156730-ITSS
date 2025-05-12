@@ -15,6 +15,7 @@ router.put('/pets/:id', verifyToken, UserController.updatePetInfo)
 router.post('/appointments', verifyToken, UserController.createAppointment); // Đặt lịch khám
 router.get('/appointments', verifyToken, UserController.getUserAppointments); // Xem danh sách lịch hẹn
 router.get('/appointments/:id', verifyToken, UserController.getAppointmentDetails); // Xem chi tiết lịch hẹn
+router.delete('/appointments/:id', verifyToken, UserController.deleteScheduledAppointment); // Xóa lịch hẹn
 
 // Lịch sử dịch vụ
 router.get('/services/history/:petId', verifyToken, UserController.getPetServiceHistory); // Xem lịch sử dịch vụ

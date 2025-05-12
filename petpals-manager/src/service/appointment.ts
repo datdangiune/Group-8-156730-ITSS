@@ -121,3 +121,23 @@ export const fetchAppointmentResultById = async(token:string, id: number): Promi
   console.log(data)
   return data;
 }
+
+export const deleteScheduledAppointment = async (token: string, id: number): Promise<void> => {
+    try {
+        const response = await fetch(`${API_URL}/${id}`, {
+            method: "DELETE",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+            },
+        });
+
+        if (!response.ok) {
+            const result = await response.json();
+            throw new Error(result.message || "Failed to delete appointment.");
+        }
+    } catch (error) {
+        console.error("Failed to delete appointment:", error);
+        throw error;
+    }
+};

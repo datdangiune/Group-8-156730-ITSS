@@ -32,7 +32,7 @@ import {
 import { AppointmentStatus } from '@/components/ui/appointment-card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { fetchAppointmentResultById, FetchAppointmentResponse} from '@/service/appointment';
+import { fetchAppointmentResultById, FetchAppointmentResponse, deleteScheduledAppointment } from '@/service/appointment';
 // Mock function to get appointment data
 import { getTokenFromCookies } from '@/service/auth';
 const formatDate = (dateString: string): string => {
@@ -73,17 +73,14 @@ const AppointmentDetail = () => {
 
   const handleCancel = async () => {
     try {
-      // In a real app, this would be an API call
-      console.log(`Cancelling appointment with ID: ${id}`);
-      
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      toast.success('Appointment cancelled successfully!');
-      navigate('/appointments');
+        if (id) {
+            await deleteScheduledAppointment(token, numericId);
+            toast.success('Appointment cancelled successfully!');
+            navigate('/appointments');
+        }
     } catch (error) {
-      console.error('Error cancelling appointment:', error);
-      toast.error('Failed to cancel appointment. Please try again.');
+        console.error('Error cancelling appointment:', error);
+        toast.error('Failed to cancel appointment. Please try again.');
     }
   };
 
@@ -129,7 +126,7 @@ const AppointmentDetail = () => {
           color: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300',
           text: 'Cancelled'
         };
-      case 'In progess':
+      case 'In Progress':
         return {
           color: 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300',
           text: 'In Progress'

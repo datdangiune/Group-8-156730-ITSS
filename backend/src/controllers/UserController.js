@@ -899,9 +899,29 @@ const UserController  = {
             console.error('Error fetching appointment:', error);
             res.status(500).json({ message: 'Internal server error' });
         }
-    }
+    },
+    async deleteScheduledAppointment(req, res) {
+        try {
+            const { id } = req.params; // Lấy appointment ID từ URL
+            const ownerId = req.user.id;
 
-    
+            // Tìm appointment với status là Scheduled và thuộc về user
+            const appointment = await Appointment.findOne({
+                where: { id, owner_id: ownerId, appointment_status: 'Scheduled' },
+            });
+
+            if (!appointment) {
+                return res.status(404).json({ success: false, message: 'Appointment not found or not deletable' });
+            }
+
+            // Xóa appointment
+            await appointment.destroy();
+
+            res.status(200).json({ success: true, message: 'Appointment deleted successfully' });
+        } catch (err) {
+            res.status(500).json({ success: false, message: 'Error deleting appointment', error: err.message });
+        }
+    },
 
 }
 
