@@ -128,6 +128,7 @@ export interface UserBoarding {
     boarding: BoardingService;
     pet: Pet;
     total_price: number;
+    status: 'In Progress' | 'Completed' | 'Scheduled' | 'Cancelled';
   }
 
   export const fetchUserBoarding = async (token: string, status: string): Promise<UserBoarding[]> => {
