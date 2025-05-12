@@ -119,7 +119,7 @@ const getServiceStatusBadge = (serviceStatus:'In Progress' | 'Completed' | 'Sche
         <CardTitle className="flex items-center">
           {getServiceTypeIcon(service.service.type)}
           {service.service.name}
-          {getServiceStatusBadge(service.status)}
+          <div className='ml-auto'>{getServiceStatusBadge(service.status)}</div>
         </CardTitle>
         <CardDescription>{service.service.description}</CardDescription>
       </CardHeader>

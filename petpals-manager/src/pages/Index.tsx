@@ -90,7 +90,7 @@ const Dashboard = () => {
     <div className="container mx-auto px-4 animate-fade-in">
       <section className="mb-10">
         <div className="glass-card dark:glass-card-dark rounded-2xl p-8 md:p-10">
-          <h1 className="text-3xl md:text-4xl font-bold mb-2">{greeting}, Pet Owner</h1>
+          <h1 className="text-3xl md:text-4xl font-bold mb-2">{greeting}</h1>
           <p className="text-gray-600 dark:text-gray-400 mb-6">
             Welcome to your PetPals dashboard. Manage your pets, appointments, and services all in one place.
           </p>

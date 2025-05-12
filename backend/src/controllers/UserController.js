@@ -1,4 +1,4 @@
-const { Pet, Appointment, Payment, Service, User, ServiceUser, Boarding, BoardingUser, AppointmentResult} = require('../models');
+const { Pet, Appointment, Payment, Service, User, ServiceUser, Boarding, BoardingUser, AppointmentResult, Notification} = require('../models');
 const sendMail = require('../util/sendMail'); 
 const { Op, fn, col, where } = require("sequelize");
 const { differenceInDays } = require('date-fns');
@@ -926,6 +926,27 @@ const UserController  = {
             res.status(200).json({ success: true, message: 'Appointment deleted successfully' });
         } catch (err) {
             res.status(500).json({ success: false, message: 'Error deleting appointment', error: err.message });
+        }
+    },
+    async getUserNotifications(req, res) {
+        try {
+            const userId = req.user.id; // Lấy user ID từ token
+            const notifications = await Notification.findAll({
+                where: { user_id: userId },
+                order: [['created_at', 'DESC']], // Sắp xếp theo thời gian tạo mới nhất
+            });
+
+            res.status(200).json({
+                success: true,
+                message: 'Notifications fetched successfully',
+                data: notifications,
+            });
+        } catch (err) {
+            res.status(500).json({
+                success: false,
+                message: 'Error fetching notifications',
+                error: err.message,
+            });
         }
     },
 
