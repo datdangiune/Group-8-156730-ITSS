@@ -844,6 +844,123 @@ const StaffController = {
         }
     },
 
+    async checkinBoarding(req, res) {
+        try {
+            const { id } = req.params;
+
+            // Validate the boarding ID
+            if (!id || isNaN(Number(id))) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Invalid or missing boarding ID',
+                });
+            }
+
+            // Find the boarding user record
+            const boardingUser = await BoardingUser.findByPk(id);
+            if (!boardingUser) {
+                return res.status(404).json({
+                    success: false,
+                    message: 'Boarding user not found',
+                });
+            }
+
+            // Ensure the current status is "Scheduled"
+            if (boardingUser.status !== 'Scheduled') {
+                return res.status(400).json({
+                    success: false,
+                    message: `Cannot check in boarding. Current status is ${boardingUser.status}`,
+                });
+            }
+
+            // Update the status to "In Progress"
+            await boardingUser.update({ status: 'In Progress' });
+
+            res.status(200).json({
+                success: true,
+                message: 'Boarding checked in successfully',
+                data: boardingUser,
+            });
+        } catch (err) {
+            console.error('Error checking in boarding:', err);
+            res.status(500).json({
+                success: false,
+                message: 'Error checking in boarding',
+                error: err.message,
+            });
+        }
+    },
+
+    async completeBoarding(req, res) {
+        try {
+            const { id } = req.params;
+
+            // Validate the boarding ID
+            if (!id || isNaN(Number(id))) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Invalid or missing boarding ID',
+                });
+            }
+
+            // Find the boarding user record
+            const boardingUser = await BoardingUser.findOne({
+                where: { id },
+                include: [
+                    {
+                        model: User,
+                        as: 'user',
+                        attributes: ['id', 'name', 'email'], // Include user details
+                    },
+                    {
+                        model: Pet,
+                        as: 'pet',
+                        attributes: ['name'], // Include pet details
+                    },
+                ],
+            });
+
+            if (!boardingUser) {
+                return res.status(404).json({
+                    success: false,
+                    message: 'Boarding user not found',
+                });
+            }
+
+            // Ensure the current status is "In Progress"
+            if (boardingUser.status !== 'In Progress') {
+                return res.status(400).json({
+                    success: false,
+                    message: `Cannot complete boarding. Current status is ${boardingUser.status}`,
+                });
+            }
+
+            // Update the status to "Completed"
+            await boardingUser.update({ status: 'Completed' });
+
+            // Send a notification to the user
+            await Notification.create({
+                user_id: boardingUser.user.id,
+                title: 'Boarding Completed',
+                message: `The boarding service for your pet ${boardingUser.pet.name} has been successfully completed.`,
+                url: `/boarding/${id}`, // URL to redirect the user to the boarding details
+            });
+
+            res.status(200).json({
+                success: true,
+                message: 'Boarding completed successfully and notification sent',
+                data: boardingUser,
+            });
+        } catch (err) {
+            console.error('Error completing boarding:', err);
+            res.status(500).json({
+                success: false,
+                message: 'Error completing boarding',
+                error: err.message,
+            });
+        }
+    },
+
     async getPets(req, res) {
         // Ensure this method is implemented
         // ...existing code...

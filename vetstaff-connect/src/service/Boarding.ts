@@ -127,12 +127,53 @@ export const addNewBoardingService = async (
 // Fetch user boardings
 export const fetchUsersBoardings = async (token: string): Promise<any[]> => {
   try {
-    const response = await axios.get(`${API_BASE_URL}/staff/users-boardings`, {
+    const response = await axios.get(`${API_BASE_URL}/staff/user-boarding`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    // Map the response to include status_payment
+    return response.data.data.map((boarding: any) => ({
+      id: boarding.id,
+      total_price: boarding.total_price,
+      start_date: boarding.start_date,
+      end_date: boarding.end_date,
+      boardingId: boarding.boardingId,
+      userId: boarding.userId,
+      petId: boarding.petId,
+      created_at: boarding.created_at,
+      notes: boarding.notes,
+      status: boarding.status,
+      status_payment: boarding.status_payment, // Include status_payment
+      boarding: boarding.boarding,
+      pet: boarding.pet,
+      user: boarding.user,
+    }));
+  } catch (error: any) {
+    console.error("Error fetching user boardings:", error.message);
+    throw new Error(error.message || "Failed to fetch user boardings");
+  }
+};
+
+export const fetchCheckinBoarding = async (token: string, id: number): Promise<any> => {
+  try {
+    const response = await axios.patch(`${API_BASE_URL}/staff/user-boarding/${id}/checkin`, {}, {
       headers: { Authorization: `Bearer ${token}` },
     });
     return response.data.data;
   } catch (error: any) {
-    console.error("Error fetching user boardings:", error.message);
-    throw new Error(error.message || "Failed to fetch user boardings");
+    console.error("Error checking in boarding:", error.message);
+    throw new Error(error.response?.data?.message || "Failed to check in boarding");
+  }
+};
+
+export const fetchCompleteBoarding = async (token: string, id: number): Promise<any> => {
+  try {
+    const response = await axios.patch(`${API_BASE_URL}/staff/user-boarding/${id}/complete`, {}, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    return response.data.data;
+  } catch (error: any) {
+    console.error("Error completing boarding:", error.message);
+    throw new Error(error.response?.data?.message || "Failed to complete boarding");
   }
 };

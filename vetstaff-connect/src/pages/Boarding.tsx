@@ -12,7 +12,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import BoardingForm from "@/components/boarding/BoardingForm";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
-import { fetchUsersBoardings } from "@/service/Boarding";
+import { fetchUsersBoardings, fetchCheckinBoarding, fetchCompleteBoarding } from "@/service/Boarding";
 
 const Boarding = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -87,6 +87,44 @@ const Boarding = () => {
     console.log("New boarding:", data);
     toast.success("Boarding created successfully!");
     setIsFormOpen(false);
+  };
+
+  const handleCheckinBoarding = async (id: number) => {
+    try {
+      const token = localStorage.getItem("token") || "";
+      // Call the API to check in the boarding
+      const updatedBoarding = await fetchCheckinBoarding(token, id);
+
+      // Update the state with the new status
+      setBoardings((prev) =>
+        prev.map((boarding) =>
+          boarding.id === id ? { ...boarding, status: updatedBoarding.status } : boarding
+        )
+      );
+      toast.success("Boarding checked in successfully");
+    } catch (error: any) {
+      console.error("Error checking in boarding:", error);
+      toast.error(error.message || "Failed to check in boarding");
+    }
+  };
+
+  const handleCompleteBoarding = async (id: number) => {
+    try {
+      const token = localStorage.getItem("token") || "";
+      // Call the API to complete the boarding
+      const updatedBoarding = await fetchCompleteBoarding(token, id);
+
+      // Update the state with the new status
+      setBoardings((prev) =>
+        prev.map((boarding) =>
+          boarding.id === id ? { ...boarding, status: updatedBoarding.status } : boarding
+        )
+      );
+      toast.success("Boarding completed successfully");
+    } catch (error: any) {
+      console.error("Error completing boarding:", error);
+      toast.error(error.message || "Failed to complete boarding");
+    }
   };
 
   return (
@@ -189,6 +227,21 @@ const Boarding = () => {
 
                       <div>
                         <p className="text-sm text-muted-foreground">Status</p>
+                        <StatusBadge
+                          status={
+                            boarding.status === "Scheduled"
+                              ? "Scheduled"
+                              : boarding.status === "In Progress"
+                              ? "In Progress"
+                              : boarding.status === "Completed"
+                              ? "Completed"
+                              : "Cancelled"
+                          }
+                        />
+                      </div>
+
+                      <div>
+                        <p className="text-sm text-muted-foreground">Payment Status</p>
                         <StatusBadge status={boarding.status_payment === "paid" ? "paid" : "pending"} />
                       </div>
 
@@ -198,6 +251,31 @@ const Boarding = () => {
                           <p className="text-sm font-medium">{boarding.notes}</p>
                         </div>
                       )}
+
+                      {/* Action Buttons */}
+                      <div className="flex justify-end gap-2">
+                        {boarding.status === "Scheduled" && boarding.status_payment === "paid" && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleCheckinBoarding(boarding.id)} // Add check-in handler
+                            className="text-primary border-primary hover:bg-primary/10"
+                          >
+                            Checkin
+                          </Button>
+                        )}
+
+                        {boarding.status === "In Progress" && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleCompleteBoarding(boarding.id)} // Add complete handler
+                            className="text-success border-success hover:bg-success/10"
+                          >
+                            Complete
+                          </Button>
+                        )}
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
@@ -208,38 +286,29 @@ const Boarding = () => {
               <Home className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
               <h3 className="text-lg font-medium">No boarding pets found</h3>
               <p className="text-muted-foreground mt-2">
-                Try adjusting your search criteria or add a new boarding
+                Try adjusting your search criteria or add a new boarding.
               </p>
             </div>
           )}
 
-          {filteredBoardings.length > 0 && (
-            <div className="mt-6 flex items-center justify-between">
+          <div className="mt-6 flex items-center justify-between">
+            {filteredBoardings.length > 0 && (
               <div className="text-sm text-muted-foreground">
                 Showing <span className="font-medium">{filteredBoardings.length}</span> of{" "}
                 <span className="font-medium">{boardings.length}</span> boarding pets
               </div>
-
-              <div className="flex items-center space-x-2">
-                <Button variant="outline" size="icon" disabled>
-                  <ArrowLeft className="h-4 w-4" />
-                </Button>
-                <Button variant="outline" size="icon">
-                  <ArrowRight className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
 
-        <BoardingForm 
+        <BoardingForm
           open={isFormOpen}
           onClose={() => setIsFormOpen(false)}
           onSubmit={handleCreateBoarding}
         />
       </div>
-    </PageTransition>
+  </PageTransition>
   );
-};
+}
 
 export default Boarding;

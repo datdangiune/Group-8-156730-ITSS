@@ -23,6 +23,8 @@ router.get('/boarding-services/available', verifyTokenStaff, StaffController.get
 router.post('/boarding-services/new', verifyTokenStaff, StaffController.addNewBoardingService);
 router.get('/user-boarding', verifyTokenStaff, StaffController.getUsersBoardings);
 router.get('/boarding-user-details', StaffController.getBoardingUserDetails);
+router.patch('/user-boarding/:id/checkin', verifyTokenStaff, StaffController.checkinBoarding);
+router.patch('/user-boarding/:id/complete', verifyTokenStaff, StaffController.completeBoarding);
 router.get('/pets', verifyTokenStaff, StaffController.getPets);
 
 module.exports = router;
