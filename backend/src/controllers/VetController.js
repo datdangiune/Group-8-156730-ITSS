@@ -53,26 +53,21 @@ const VetController = {
         }
     },
 
-    async updateDiagnosisAndTests(req, res) {
-        // Ensure this method is implemented
-        // ...existing code...
-    },
 
-    async storePrescription(req, res) {
-        // Ensure this method is implemented
-        // ...existing code...
-    },
-
-    async scheduleFollowUp(req, res) {
-        // Ensure this method is implemented
-        // ...existing code...
-    },
-
-    // Unified controller to update examination record
     async updateExaminationRecord(req, res) {
         try {
             const { appointment_id } = req.params;
-            const { diagnosis, medications, follow_up_date } = req.body;
+            const { diagnosis, medications, follow_up_date, user_id } = req.body;
+
+            // Validate required fields
+            if (!appointment_id) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Appointment ID is required',
+                });
+            }
+
+    
 
             // Upsert the appointment result
             const result = await AppointmentResult.upsert({
@@ -86,23 +81,29 @@ const VetController = {
 
             // If follow-up date is provided, create a notification
             if (follow_up_date) {
-                const { user_id } = req.body;
                 await Notification.create({
                     user_id,
                     title: 'Follow-up Reminder',
                     message: `Your pet has a follow-up appointment scheduled on ${follow_up_date}.`,
+                    url: `/appointments/${appointment_id}`, // URL to redirect the user to the appointment details
                 });
             }
 
-            // Filter out null values from the result
-            const filteredResult = result.filter((record) => record !== null);
+            // Send a notification about the updated examination record
+            await Notification.create({
+                user_id,
+                title: 'Examination Record Updated',
+                message: `The examination record for your pet has been updated. Please check the details.`,
+                url: `/appointments/${appointment_id}`, // URL to redirect the user to the appointment details
+            });
 
             res.status(200).json({
                 success: true,
-                message: 'Examination record updated successfully',
-                data: filteredResult,
+                message: 'Examination record updated successfully and notifications sent',
+                data: result,
             });
         } catch (err) {
+            console.error('Error updating examination record:', err.message);
             res.status(500).json({
                 success: false,
                 message: 'Error updating examination record',

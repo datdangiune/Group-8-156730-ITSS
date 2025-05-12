@@ -183,6 +183,7 @@ const StaffController = {
             const { id } = req.params;
             const { appointment_status } = req.body;
 
+            // Update the appointment status
             const updated = await Appointment.update(
                 { appointment_status },
                 { where: { id } }
@@ -195,9 +196,41 @@ const StaffController = {
                 });
             }
 
+            // Fetch appointment details to get user and pet information
+            const appointment = await Appointment.findOne({
+                where: { id },
+                include: [
+                    {
+                        model: Pet,
+                        as: 'pet',
+                        attributes: ['name'],
+                    },
+                    {
+                        model: User,
+                        as: 'owner',
+                        attributes: ['id', 'username'],
+                    },
+                ],
+            });
+
+            if (!appointment) {
+                return res.status(404).json({
+                    success: false,
+                    message: 'Appointment details not found',
+                });
+            }
+
+            // Create a notification for the user
+            await Notification.create({
+                user_id: appointment.owner.id,
+                title: 'Appointment Status Updated',
+                message: `The status of your appointment for ${appointment.pet.name} has been updated to "${appointment_status}".`,
+                url: `/appointments/${id}`, // URL to redirect the user to the appointment details
+            });
+
             res.status(200).json({
                 success: true,
-                message: 'Appointment status updated successfully',
+                message: 'Appointment status updated successfully and notification sent',
             });
         } catch (err) {
             res.status(500).json({
