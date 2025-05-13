@@ -145,10 +145,6 @@ const Services: React.FC = () => {
     }
   };
 
-  const handleManageServices = () => {
-    navigate("/clinic-services");
-  };
-
   if (loading) {
     return <div>Loading services...</div>;
   }
@@ -160,14 +156,8 @@ const Services: React.FC = () => {
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center">
             <Stethoscope className="mr-2 h-6 w-6 text-primary" />
-            <h1 className="text-2xl font-semibold">Service Management</h1>
+            <h1 className="text-2xl font-semibold">User Services</h1>
           </div>
-          <div className="flex space-x-3">
-      <Button variant="outline" onClick={handleManageServices}>
-        <Stethoscope className="mr-2 h-4 w-4" />
-        Manage Services
-      </Button>
-    </div>
         </div>
 
         {/* Filters and search */}
@@ -308,19 +298,6 @@ const Services: React.FC = () => {
                          </td>
                       <td className="px-4 py-4 text-right">
                         <div className="flex justify-end gap-2">
-                          {service.status !== "Cancelled" && service.status !== "Completed" && (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() =>
-                                handleCancelService(service.id)
-                              }
-                              className="text-destructive border-destructive hover:bg-destructive/10"
-                            >
-                              Cancel
-                            </Button>
-                          )}
-
                           {service.status === "Scheduled" && service.status_payment === 'paid' && (
                             <Button
                               variant="outline"

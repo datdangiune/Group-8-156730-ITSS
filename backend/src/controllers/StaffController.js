@@ -602,7 +602,22 @@ const StaffController = {
                 });
             }
 
-            const serviceUser = await ServiceUser.findByPk(id); // Query by 'id' in ServiceUser
+            const serviceUser = await ServiceUser.findOne({
+                where: { id },
+                include: [
+                    {
+                        model: Service,
+                        as: 'service',
+                        attributes: ['name'],
+                    },
+                    {
+                        model: User,
+                        as: 'user',
+                        attributes: ['id', 'username', 'email'],
+                    },
+                ],
+            });
+
             if (!serviceUser) {
                 console.error(`ServiceUser with ID ${id} not found`); // Log the issue
                 return res.status(404).json({
@@ -620,9 +635,22 @@ const StaffController = {
 
             await serviceUser.update({ status: 'In Progress' });
 
+            // Ensure service and user details are available for the notification
+            if (serviceUser.service && serviceUser.user) {
+                await Notification.create({
+                    user_id: serviceUser.user.id,
+                    title: 'Service Check-in',
+                    message: `Your service "${serviceUser.service.name}" has been checked in and is now in progress.`,
+                    url: `/services/me`, // URL to redirect the user to the service details
+                });
+                console.log("Notification created successfully for user:", serviceUser.user.id); // Log success
+            } else {
+                console.error("Service or user details are missing for notification creation.");
+            }
+
             res.status(200).json({
                 success: true,
-                message: 'Service checked in successfully',
+                message: 'Service checked in successfully and notification sent',
                 data: serviceUser,
             });
         } catch (err) {
@@ -647,7 +675,22 @@ const StaffController = {
                 });
             }
 
-            const serviceUser = await ServiceUser.findByPk(serviceId);
+            const serviceUser = await ServiceUser.findOne({
+                where: { id: serviceId },
+                include: [
+                    {
+                        model: Service,
+                        as: 'service',
+                        attributes: ['name'],
+                    },
+                    {
+                        model: User,
+                        as: 'user',
+                        attributes: ['id', 'username'],
+                    },
+                ],
+            });
+
             if (!serviceUser) {
                 return res.status(404).json({
                     success: false,
@@ -655,11 +698,28 @@ const StaffController = {
                 });
             }
 
+            if (serviceUser.status !== 'In Progress') {
+                return res.status(400).json({
+                    success: false,
+                    message: `Cannot complete service. Current status is ${serviceUser.status}`,
+                });
+            }
+
             await serviceUser.update({ status: 'Completed' });
+
+            // Create a notification for the user
+            if (serviceUser.service && serviceUser.user) {
+                await Notification.create({
+                    user_id: serviceUser.user.id,
+                    title: 'Service Completed',
+                    message: `Your service "${serviceUser.service.name}" has been successfully completed.`,
+                    url: `/services/me`, // URL to redirect the user to the service details
+                });
+            }
 
             res.status(200).json({
                 success: true,
-                message: 'Service marked as completed',
+                message: 'Service marked as completed and notification sent',
                 data: serviceUser,
             });
         } catch (err) {
