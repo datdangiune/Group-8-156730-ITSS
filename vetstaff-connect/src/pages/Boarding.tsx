@@ -132,13 +132,6 @@ const Boarding = () => {
       <div className="container px-4 py-6 max-w-7xl mx-auto">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
           <h1 className="text-2xl font-medium mb-4 md:mb-0">Boarding</h1>
-
-          <div className="flex flex-col sm:flex-row gap-2">
-            <Button onClick={() => navigate("/clinic-boarding")}>
-              <Plus className="h-4 w-4 mr-2" />
-              Manage Boarding
-            </Button>
-          </div>
         </div>
 
         <div className="bg-card rounded-lg shadow-sm border p-4 mb-6">

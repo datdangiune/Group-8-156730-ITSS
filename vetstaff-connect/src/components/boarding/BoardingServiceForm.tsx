@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -82,15 +82,31 @@ const BoardingServiceForm: React.FC<BoardingServiceFormProps> = ({
     defaultValues: {
       name: initialData?.name || "",
       type: initialData?.type || "",
-      price: initialData?.pricePerDay|| 0,
-      maxday: initialData?.maxStay|| 7,
+      price: initialData?.pricePerDay || 0,
+      maxday: initialData?.maxStay || 7,
       status: initialData?.status || "available",
-      details: initialData || {
-        amenities: ["Food", "Water", "Daily Walks"],
-      },
+      details: initialData || { amenities: ["Food", "Water", "Daily Walks"] },
       image: initialData?.image,
     },
   });
+
+  useEffect(() => {
+    // Update form values when initialData changes
+    if (initialData) {
+      form.reset({
+        name: initialData.name || "",
+        type: initialData.type || "",
+        price: initialData.pricePerDay || 0,
+        maxday: initialData.maxStay || 7,
+        status: initialData.status || "available",
+        details: initialData || { amenities: ["Food", "Water", "Daily Walks"] },
+        image: initialData.image,
+      });
+      setImagePreview(
+        initialData.image && typeof initialData.image === "string" ? initialData.image : null
+      );
+    }
+  }, [initialData, form]);
 
   // Handle image file changes
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -130,27 +146,25 @@ const BoardingServiceForm: React.FC<BoardingServiceFormProps> = ({
 
   // Handle form submission
   const handleSubmit = async (data: z.infer<typeof boardingServiceSchema>) => {
-    console.log("Submitting data:", data); 
-  
+    console.log("Submitting data:", data);
+
     if (!onSubmit) {
       console.error("onSubmit function is missing!");
       return;
     }
-  
+
     try {
-      onSubmit(data as NewBoardingServiceRequest);
+      await onSubmit(data as NewBoardingServiceRequest); // Ensure async handling
       console.log("Form submission successful!");
-      window.location.reload();
+      toast.success(`Boarding service ${isEditMode ? "updated" : "created"} successfully`);
+      form.reset();
+      setImagePreview(null);
+      onClose();
     } catch (error) {
       console.error("Error during form submission:", error);
+      toast.error("Failed to save boarding service. Please try again.");
     }
-  
-    form.reset();
-    setImagePreview(null);
-    onClose();
-    toast.success(`Boarding service ${isEditMode ? "updated" : "created"} successfully`);
   };
-  
 
   return (
     <Drawer open={open} onOpenChange={onClose}>
@@ -172,7 +186,13 @@ const BoardingServiceForm: React.FC<BoardingServiceFormProps> = ({
         
         <div className="px-6 py-4 overflow-y-auto">
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+            <form
+              onSubmit={(e) => {
+                e.preventDefault(); // Prevent default form submission
+                form.handleSubmit(handleSubmit)();
+              }}
+              className="space-y-6"
+            >
               <FormField
                 control={form.control}
                 name="name"

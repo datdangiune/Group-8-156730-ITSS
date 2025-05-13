@@ -124,6 +124,28 @@ export const addNewBoardingService = async (
 };
 
 
+// Update boarding service
+export const updateBoardingService = async (
+  token: string,
+  id: number,
+  serviceData: NewBoardingServiceRequest
+): Promise<NewBoardingServiceResponse> => {
+  try {
+    const response = await axios.put(
+      `${API_BASE_URL}/staff/boarding-services/${id}/edit`,
+      serviceData,
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    );
+    return response.data;
+  } catch (error: any) {
+    console.error("Error updating boarding service:", error.message);
+    throw new Error(error.response?.data?.message || "Failed to update boarding service");
+  }
+};
+
+
 // Fetch user boardings
 export const fetchUsersBoardings = async (token: string): Promise<any[]> => {
   try {
@@ -175,5 +197,25 @@ export const fetchCompleteBoarding = async (token: string, id: number): Promise<
   } catch (error: any) {
     console.error("Error completing boarding:", error.message);
     throw new Error(error.response?.data?.message || "Failed to complete boarding");
+  }
+};
+
+// Toggle boarding service status
+export const toggleBoardingServiceStatus = async (
+  token: string,
+  id: number
+): Promise<NewBoardingServiceResponse> => {
+  try {
+    const response = await axios.patch(
+      `${API_BASE_URL}/staff/boarding-services/${id}/status`,
+      {},
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    );
+    return response.data;
+  } catch (error: any) {
+    console.error("Error toggling boarding service status:", error.message);
+    throw new Error(error.response?.data?.message || "Failed to toggle boarding service status");
   }
 };

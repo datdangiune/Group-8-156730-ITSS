@@ -854,17 +854,16 @@ const StaffController = {
 
     async getAvailableBoardingServices(req, res) {
         try {
-            // Fetch boarding services with status 'available'
+            // Fetch all boarding services regardless of status
             const boardingServices = await Boarding.findAll({
-                where: { status: 'available' },
-                attributes: ['id', 'price', 'maxday', 'image', 'status', 'details', 'created_at', 'name',],
+                attributes: ['id', 'price', 'maxday', 'image', 'status', 'details', 'created_at', 'name'],
                 order: [['created_at', 'DESC']], // Sort by creation date
             });
 
             if (!boardingServices.length) {
                 return res.status(404).json({
                     success: false,
-                    message: 'No available boarding services found',
+                    message: 'No boarding services found',
                 });
             }
 
@@ -887,7 +886,7 @@ const StaffController = {
                 return {
                     id: service.id,
                     name: service.name,
-                    description: service.type, // Use 'type' as description,
+                    description: service.type, // Use 'type' as description
                     pricePerDay: service.price,
                     maxStay: service.maxday,
                     status: service.status,
@@ -899,14 +898,14 @@ const StaffController = {
 
             res.status(200).json({
                 success: true,
-                message: 'Available boarding services fetched successfully',
+                message: 'Boarding services fetched successfully',
                 data: formattedBoardingServices,
             });
         } catch (err) {
-            console.error('Error fetching available boarding services:', err);
+            console.error('Error fetching boarding services:', err);
             res.status(500).json({
                 success: false,
-                message: 'Error fetching available boarding services',
+                message: 'Error fetching boarding services',
                 error: err.message,
             });
         }
@@ -939,6 +938,70 @@ const StaffController = {
             return res.status(500).json({ message: "Internal server error" });
         }
     },
+
+    async updateBoardingService(req, res) {
+        try {
+            const { id } = req.params;
+            const { name, price, maxday, image, status, details, type } = req.body;
+
+            // Validate required fields
+            if (!name || !price || !type || !maxday) {
+                return res.status(400).json({ message: "Missing required fields" });
+            }
+
+            // Find the boarding service by ID
+            const boardingService = await Boarding.findByPk(id);
+            if (!boardingService) {
+                return res.status(404).json({ message: "Boarding service not found" });
+            }
+
+            // Update the boarding service
+            await boardingService.update({
+                name,
+                price,
+                maxday,
+                image,
+                status: status || boardingService.status,
+                details,
+                type,
+            });
+
+            // Return the updated boarding service in the same format as addNewBoardingService
+            return res.status(200).json({
+                message: "Boarding service updated successfully",
+                boarding: boardingService,
+            });
+        } catch (error) {
+            console.error("Error updating boarding service:", error);
+            return res.status(500).json({ message: "Internal server error" });
+        }
+    },
+
+    async toggleBoardingServiceStatus(req, res) {
+        try {
+            const { id } = req.params;
+
+            // Find the boarding service by ID
+            const boardingService = await Boarding.findByPk(id);
+            if (!boardingService) {
+                return res.status(404).json({ message: "Boarding service not found" });
+            }
+
+            // Toggle the status field
+            const newStatus = boardingService.status === 'available' ? 'unavailable' : 'available';
+            await boardingService.update({ status: newStatus });
+
+            // Return a success response
+            return res.status(200).json({
+                message: `Boarding service status updated to ${newStatus}`,
+                boarding: boardingService,
+            });
+        } catch (error) {
+            console.error('Error toggling boarding service status:', error);
+            return res.status(500).json({ message: 'Internal server error' });
+        }
+    },
+
     async getUsersBoardings(req, res){
         try {
             const userBoardings = await BoardingUser.findAll({

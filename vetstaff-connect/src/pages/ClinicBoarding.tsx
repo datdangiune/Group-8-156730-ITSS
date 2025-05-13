@@ -48,7 +48,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import BoardingServiceForm from "@/components/boarding/BoardingServiceForm";
 import { BoardingService, BoardingServiceFormValues } from "@/types/boardingService";
-import { addNewBoardingService, fetchAvailableBoardingServices, NewBoardingServiceRequest} from "@/service/Boarding";
+import { addNewBoardingService, fetchAvailableBoardingServices, NewBoardingServiceRequest, updateBoardingService, toggleBoardingServiceStatus } from "@/service/Boarding";
 
 const ClinicBoarding: React.FC = () => {
   const navigate = useNavigate();
@@ -96,7 +96,7 @@ const ClinicBoarding: React.FC = () => {
     service.description.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  // Handle creating a new boarding service
+  // Handle creating or updating a boarding service
   const handleCreateService = async (formData: NewBoardingServiceRequest) => {
     console.log("Calling API with data:", formData);
     if (!token) {
@@ -121,39 +121,52 @@ const ClinicBoarding: React.FC = () => {
       toast.error("Status is required.");
       return;
     }
-    console.log("Submitting Form Data:", formData);
+
     try {
-      const requestData = {
-        name: formData.name.trim(),
-        type: formData.type,
-        price: formData.price,
-        maxday: formData.maxday,
-        duration: "1 day", // Hoặc giá trị phù hợp
-        status: formData.status,
-        details: formData.details || [] ,
+      if (selectedService) {
+        // Update existing boarding service
+        const response = await updateBoardingService(token, selectedService.id, formData);
+        const updatedService: BoardingService = {
+          id: response.data.id,
+          type: response.data.type,
+          name: response.data.name || "Unnamed Service",
+          description: response.data.description || "",
+          pricePerDay: response.data.pricePerDay || 0,
+          maxStay: response.data.maxStay || 0,
+          status: response.data.status || "unavailable",
+          createdAt: response.data.createdAt || new Date().toISOString(),
+          image: response.data.image || "",
+          amenities: response.data.details || [],
+        };
+
+        setBoardingServices((prev) =>
+          prev.map((service) => (service.id === updatedService.id ? updatedService : service))
+        );
+        toast.success("Boarding service updated successfully");
+      } else {
+        // Add new boarding service
+        const response = await addNewBoardingService(token, formData, image);
+        const newService: BoardingService = {
+          id: response.data.id,
+          type: response.data.type,
+          name: response.data.name || "Unnamed Service",
+          description: response.data.description || "",
+          pricePerDay: response.data.pricePerDay || 0,
+          maxStay: response.data.maxStay || 0,
+          status: response.data.status || "unavailable",
+          createdAt: response.data.createdAt || new Date().toISOString(),
+          image: response.data.image || "",
+          amenities: response.data.details || [],
+        };
+
+        setBoardingServices([newService, ...boardingServices]);
+        toast.success("Boarding service added successfully");
       }
-      const response = await addNewBoardingService(token, requestData, image);
-      
 
-      const newService: BoardingService = {
-        id: response.data.id,
-        type: response.data.type,
-        name: response.data.name || "Unnamed Service",
-        description: response.data.description || "",
-        pricePerDay: response.data.pricePerDay || 0,
-        maxStay: response.data.maxStay || 0,
-        status: response.data.status || "unavailable",
-        createdAt: response.data.createdAt || new Date().toISOString(),
-        image: response.data.image || "",
-        amenities: response.data.details || [],
-      };
-
-      setBoardingServices([newService, ...boardingServices]);
-      toast.success("Boarding service added successfully");
       setFormOpen(false); // Close the form after successful submission
     } catch (error: any) {
-      console.error("Error adding boarding service:", error.message);
-      toast.error(error.response?.data?.message || "Failed to add boarding service");
+      console.error("Error saving boarding service:", error.message);
+      toast.error(error.response?.data?.message || "Failed to save boarding service");
     }
   };
 
@@ -294,28 +307,52 @@ const ClinicBoarding: React.FC = () => {
                           </div>
                         </TableCell>
                         <TableCell className="text-right">
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="sm">
-                                Actions <ChevronDown className="h-4 w-4 ml-1" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuLabel>Options</DropdownMenuLabel>
-                              <DropdownMenuItem onClick={() => openEditForm(service)}>
-                                <Edit className="h-4 w-4 mr-2" />
-                                Edit
-                              </DropdownMenuItem>
-                              <DropdownMenuSeparator />
-                              <DropdownMenuItem 
-                                className="text-destructive"
-                                onClick={() => openDeleteDialog(service)}
-                              >
-                                <Trash2 className="h-4 w-4 mr-2" />
-                                Delete
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
+                          <div className="flex items-center justify-end gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => openEditForm(service)}
+                              className="text-primary border-primary hover:bg-primary/10"
+                            >
+                              Edit
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={async () => {
+                                try {
+                                  if (!token) {
+                                    toast.error("Authentication token is missing. Please log in.");
+                                    return;
+                                  }
+                                  const response = await toggleBoardingServiceStatus(token, service.id);
+                                  const updatedService = response.data;
+
+                                  setBoardingServices((prev) =>
+                                    prev.map((s) =>
+                                      s.id === updatedService.id ? { ...s, status: updatedService.status } : s
+                                    )
+                                  );
+
+                                  toast.success(
+                                    `Service ${service.name} is now ${
+                                      updatedService.status === "available" ? "Active" : "Deactivated"
+                                    }`
+                                  );
+                                } catch (error: any) {
+                                  console.error("Error toggling boarding service status:", error.message);
+                                  toast.error(error.message || "Failed to toggle boarding service status");
+                                }
+                              }}
+                              className={
+                                service.status === "available"
+                                  ? "text-red-600 border-red-600 hover:text-opacity-50 hover:border-opacity-50"
+                                  : "text-green-600 border-green-600 hover:bg-green-100"
+                              }
+                            >
+                              {service.status === "available" ? "Deactivate" : "Activate"}
+                            </Button>
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))

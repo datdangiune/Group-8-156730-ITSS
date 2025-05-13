@@ -21,6 +21,8 @@ router.patch('/user-services/:id/checkin', verifyTokenStaff, StaffController.che
 router.patch('/user-services/:id/complete', verifyTokenStaff, StaffController.completeService);
 router.get('/boarding-services/available', verifyTokenStaff, StaffController.getAvailableBoardingServices);
 router.post('/boarding-services/new', verifyTokenStaff, StaffController.addNewBoardingService);
+router.put('/boarding-services/:id/edit', verifyTokenStaff, StaffController.updateBoardingService);
+router.patch('/boarding-services/:id/status', verifyTokenStaff, StaffController.toggleBoardingServiceStatus);
 router.get('/user-boarding', verifyTokenStaff, StaffController.getUsersBoardings);
 router.get('/boarding-user-details', StaffController.getBoardingUserDetails);
 router.patch('/user-boarding/:id/checkin', verifyTokenStaff, StaffController.checkinBoarding);
