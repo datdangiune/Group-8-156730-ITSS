@@ -14,12 +14,12 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "@/components/ui/use-toast";
 import ExaminationForm from "@/components/appointments/ExaminationForm";
-import MultiStepAppointmentForm from "@/components/appointments/MultiStepAppointmentForm";
 import { 
   Pagination, 
   PaginationPageAction
 } from "@/components/ui/pagination";
 import { fetchTodayAppointments, fetchAllAppointments, fetchAppointmentById, updateAppointmentStatus, fetchVetAppointments } from "@/service/Appointments";
+import { format } from "date-fns"; // Add this import
 
 // Define the appointment type to avoid readonly issues
 type AppointmentType = {
@@ -103,9 +103,15 @@ const Appointments = () => {
   // Use the fetched appointments directly
   const appointmentList = appointments;
   
-  // Handle appointment creation
-  const handleSaveAppointment = (newAppointment: AppointmentType) => {
-    setAppointments((prevList) => [newAppointment, ...prevList]);
+  // Correct handleSaveAppointment to add new appointments or update the status of the selected one
+  const handleSaveAppointment = (updatedAppointment: AppointmentType) => {
+    setAppointments((prevList) =>
+      prevList.map((appointment) =>
+        appointment.id === updatedAppointment.id
+          ? { ...appointment, status: "Done" }
+          : appointment
+      )
+    );
   };
 
   // Handle opening examination modal
@@ -153,6 +159,11 @@ const Appointments = () => {
         variant: "destructive",
       });
     }
+  };
+
+  // Handle check-in action
+  const handleCheckIn = async (appointmentId: string) => {
+    await handleStatusUpdate(appointmentId, "In Progress");
   };
   
   // Get initials from pet name
@@ -222,16 +233,6 @@ const Appointments = () => {
       );
     }
 
-
-
-
-
-
-
-
-
-    
-
     return true;
   });
   
@@ -254,13 +255,6 @@ const Appointments = () => {
       <div className="container px-4 py-6 max-w-7xl mx-auto">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
           <h1 className="text-2xl font-medium mb-4 md:mb-0">Appointments</h1>
-          
-          <div className="flex flex-col sm:flex-row gap-2">
-            <Button onClick={() => setIsFormOpen(true)}>
-              <Plus className="h-4 w-4 mr-2" />
-              New Appointment
-            </Button>
-          </div>
         </div>
         
         <div className="bg-card rounded-lg shadow-sm border p-4 mb-6">
@@ -346,11 +340,6 @@ const Appointments = () => {
           </div>
           
           <Tabs defaultValue="list" className="w-full">
-            <TabsList className="grid w-full max-w-md grid-cols-2">
-              <TabsTrigger value="list">List View</TabsTrigger>
-              <TabsTrigger value="calendar">Calendar View</TabsTrigger>
-            </TabsList>
-            
             <TabsContent value="list" className="space-y-4">
               <div className="mt-4 bg-card rounded-md">
                 <div className="min-w-full overflow-hidden">
@@ -368,9 +357,6 @@ const Appointments = () => {
                         </th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                           Status
-                        </th>
-                        <th className="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                          Actions
                         </th>
                       </tr>
                     </thead>
@@ -401,73 +387,47 @@ const Appointments = () => {
                               </div>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap">
-                              <div className="text-sm">{appointment.date}</div>
-                              <div className="text-sm text-muted-foreground">{appointment.time}</div>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                            <StatusBadge 
-                              status={
-                                ["Done", "In Progress", "Scheduled", "Cancelled"].includes(appointment.status)
-                                  ? appointment.status
-                                  : undefined
-                              } 
-                            />
-
-                            </td>
-                            {/* <td className="px-6 py-4 whitespace-nowrap text-right text-sm">
-                              <Select
-                                value={appointment.status}
-                                onValueChange={(value) => handleStatusUpdate(appointment.id, value)}
-                              >
-                                <SelectTrigger className="h-8 w-24">
-                                  <SelectValue placeholder="Update" />
-                                </SelectTrigger>
-                                <SelectContent align="end">
-                                  <SelectItem value="Scheduled">Scheduled</SelectItem>
-                                  <SelectItem value="In progess">In Progress</SelectItem>
-                                  <SelectItem value="Done">Done</SelectItem>
-                                  <SelectItem value="Cancel">Cancel</SelectItem>
-                                </SelectContent>
-                              </Select>
-                            </td> */}
-
-                            <td className="px-6 py-4 whitespace-nowrap text-right text-sm">
-                              <div className="flex items-center justify-end space-x-2">
-                                {/* Add Update Examination button */}
-                                {appointment.status === "In Progress" && (
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => handleUpdateExamination(appointment)}
-                                    className="text-primary border-primary hover:bg-primary/10"
-                                  >
-                                    Update Examination
-                                  </Button>
-                                )}
-                                
-                                <Select 
-                                  defaultValue={appointment.status}
-                                  onValueChange={(value) => handleStatusUpdate(appointment.id, value)}
-                                >
-                                  <SelectTrigger className="h-8 w-24">
-                                    <SelectValue placeholder="Update" />
-                                  </SelectTrigger>
-                                  <SelectContent align="end">
-                                    <SelectItem value="Scheduled">Scheduled</SelectItem>
-                                    <SelectItem value="In Progress">In Progress</SelectItem>
-                                    <SelectItem value="Done">Done</SelectItem>
-                                    <SelectItem value="Cancel">Cancel</SelectItem>
-                                  </SelectContent>
-                                </Select>
+                              <div className="text-sm">
+                                {format(new Date(appointment.date), "PPP")} {/* Format date as 'May 12, 2025' */}
+                              </div>
+                              <div className="text-sm text-muted-foreground">
+                                {format(new Date(`1970-01-01T${appointment.time}:00Z`), "hh:mm a")} {/* Format time as '08:00 AM' */}
                               </div>
                             </td>
-
-                            
+                            <td className="px-6 py-4 whitespace-nowrap flex items-center space-x-2">
+                              <StatusBadge 
+                                status={
+                                  ["Done", "In Progress", "Scheduled", "Cancelled"].includes(appointment.status)
+                                    ? appointment.status
+                                    : undefined
+                                } 
+                              />
+                              {appointment.status === "Scheduled" && (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handleCheckIn(appointment.id)}
+                                  className="text-primary border-primary hover:bg-primary/10"
+                                >
+                                  Check-in
+                                </Button>
+                              )}
+                              {appointment.status === "In Progress" && (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handleUpdateExamination(appointment)}
+                                  className="text-primary border-primary hover:bg-primary/10"
+                                >
+                                  Update Examination
+                                </Button>
+                              )}
+                            </td>
                           </tr>
                         ))
                       ) : (
                         <tr>
-                          <td colSpan={5} className="px-6 py-12 text-center">
+                          <td colSpan={4} className="px-6 py-12 text-center">
                             <div className="flex flex-col items-center justify-center">
                               <Calendar className="h-10 w-10 text-muted-foreground mb-2" />
                               <h3 className="text-lg font-medium">No appointments found</h3>
@@ -501,28 +461,10 @@ const Appointments = () => {
                 </div>
               </div>
             </TabsContent>
-            
-            <TabsContent value="calendar">
-              <div className="bg-card border rounded-md p-8 mt-4 text-center">
-                <Calendar className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                <h3 className="text-lg font-medium">Calendar View Coming Soon</h3>
-                <p className="text-muted-foreground mt-2">
-                  We're working on a calendar view for appointments. Check back soon!
-                </p>
-              </div>
-            </TabsContent>
           </Tabs>
         </div>
-        
-        {/* Use the multi-step appointment form */}
-        <MultiStepAppointmentForm 
-          isOpen={isFormOpen} 
-          onClose={() => setIsFormOpen(false)} 
-          onSave={handleSaveAppointment} 
-        />
 
-                {/* Add the examination form modal */}
-                {selectedAppointment && (
+        {selectedAppointment && (
           <ExaminationForm
             open={isExaminationModalOpen}
             onClose={() => setIsExaminationModalOpen(false)}
@@ -530,6 +472,7 @@ const Appointments = () => {
             petName={selectedAppointment.petName}
             petType={selectedAppointment.petType}
             ownerName={selectedAppointment.ownerName}
+            onSave={() => handleSaveAppointment({ ...selectedAppointment, status: "Done" })} // Transition to Done
           />
         )}
       </div>

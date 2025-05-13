@@ -32,7 +32,7 @@ import {
 } from "@/components/ui/popover";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { toast } from "sonner";
-import { submitExaminationRecord } from "@/service/Appointments";
+import { submitExaminationRecord, updateAppointmentStatus } from "@/service/Appointments";
 
 // Define the form schema with Zod
 const formSchema = z.object({
@@ -58,6 +58,7 @@ interface ExaminationFormProps {
   petName: string;
   petType: string;
   ownerName: string;
+  onSave: () => void; // New prop to handle status update
 }
 
 const ExaminationForm: React.FC<ExaminationFormProps> = ({
@@ -67,6 +68,7 @@ const ExaminationForm: React.FC<ExaminationFormProps> = ({
   petName,
   petType,
   ownerName,
+  onSave,
 }) => {
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -94,12 +96,16 @@ const ExaminationForm: React.FC<ExaminationFormProps> = ({
         followUpDate: data.followUpDate ? data.followUpDate.toISOString() : undefined,
       });
 
+      // Transition status from In Progress to Done
+      await updateAppointmentStatus(localStorage.getItem("token") || "", parseInt(appointmentId), "Done");
+
       toast.success("Examination record updated successfully", {
         description: data.needsFollowUp
           ? "Follow-up appointment scheduled"
           : "No follow-up required",
       });
 
+      onSave(); // Trigger status update to Done
       onClose();
     } catch (error: any) {
       console.error("Error submitting examination record:", error.message);
