@@ -79,16 +79,6 @@ const NotificationBell = () => {
       <PopoverContent className="w-80 p-0" align="end">
         <div className="flex items-center justify-between px-4 py-3 border-b">
           <h3 className="font-medium">Notifications</h3>
-          {unreadCount > 0 && (
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={markAllAsRead} 
-              className="text-xs text-primary"
-            >
-              Mark all as read
-            </Button>
-          )}
         </div>
         <div className="max-h-80 overflow-y-auto">
           {isLoading ? (
