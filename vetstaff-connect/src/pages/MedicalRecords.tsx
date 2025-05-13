@@ -12,7 +12,7 @@ import { toast } from "sonner";
 import PetMedicalProfile from "@/components/medical-records/PetMedicalProfile";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { fetchPets } from "@/service/Pets";
+import { fetchPets, fetchPetRecordCounts } from "@/service/Pets";
 import { fetchPetMedicalHistory } from "@/service/MedicalRecords";
 
 const MedicalRecords = () => {
@@ -26,10 +26,15 @@ const MedicalRecords = () => {
     const fetchData = async () => {
       try {
         const pets = await fetchPets();
-        setPetsList(pets);
+        const recordCounts = await fetchPetRecordCounts(); // Fetch record counts
+        const petsWithRecords = pets.map((pet) => {
+          const recordCount = recordCounts.find((record) => record.id === pet.id)?.record_count || 0;
+          return { ...pet, record_count: recordCount };
+        });
+        setPetsList(petsWithRecords);
       } catch (error: any) {
-        console.error("Error fetching pets:", error.message);
-        toast.error("Failed to fetch pets. Please try again.");
+        console.error("Error fetching pets or record counts:", error.message);
+        toast.error("Failed to fetch pets or record counts. Please try again.");
       }
     };
 
@@ -114,13 +119,6 @@ const MedicalRecords = () => {
               {view === "pets" ? "Medical Records" : `${selectedPet?.name}'s Medical Profile`}
             </h1>
           </div>
-
-          <div className="flex flex-col sm:flex-row gap-2 mt-4 md:mt-0">
-            <Button onClick={() => setIsFormOpen(true)}>
-              <Plus className="h-4 w-4 mr-2" />
-              New Medical Record
-            </Button>
-          </div>
         </div>
 
         <div className="bg-card rounded-lg shadow-sm border p-4 mb-6">
@@ -169,8 +167,8 @@ const MedicalRecords = () => {
                           <TableCell>{pet.type}</TableCell>
                           <TableCell>{pet.breed || "—"}</TableCell>
                           <TableCell>
-                            <Badge variant={pet.examinations?.length > 0 ? "outline" : "secondary"}>
-                              {pet.examinations?.length || 0} records
+                            <Badge variant={pet.record_count > 0 ? "outline" : "secondary"}>
+                              {pet.record_count || 0} records
                             </Badge>
                           </TableCell>
                         </TableRow>
@@ -200,12 +198,6 @@ const MedicalRecords = () => {
             </div>
           )}
         </div>
-
-        <MultiStepMedicalRecordForm
-          open={isFormOpen}
-          onClose={() => setIsFormOpen(false)}
-          onSubmit={handleCreateMedicalRecord}
-        />
       </div>
     </PageTransition>
   );

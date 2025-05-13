@@ -28,7 +28,9 @@ export const fetchPetMedicalHistory = async (petId: number): Promise<Examination
     const response = await axios.get(`${API_BASE_URL}/pet/pets/${petId}/medical-history`, {
       headers: { Authorization: `Bearer ${token}` },
     });
-    return response.data.data.filter((record: ExaminationRecord | null) => record !== null);
+    const records = response.data.data.filter((record: ExaminationRecord | null) => record !== null);
+    console.log(`Fetched ${records.length} records for pet ID ${petId}`); // Debugging log
+    return records;
   } catch (error: any) {
     console.error(`Error fetching medical history for pet ID ${petId}:`, error.message);
     throw new Error(error.message || `Failed to fetch medical history for pet ID ${petId}`);

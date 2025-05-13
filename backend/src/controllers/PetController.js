@@ -1,4 +1,5 @@
-const { MedicalRecord, Pet, User, AppointmentResult, Appointment  } = require('../models');
+const { MedicalRecord, Pet, User, AppointmentResult, Appointment } = require('../models');
+const { Sequelize } = require('sequelize');
 
 const PetController = {
   async getPets(req, res) {
@@ -53,6 +54,35 @@ const PetController = {
           error: err.message,
         });
       }
+  },
+
+  async getPetRecordCounts(req, res) {
+    try {
+      const recordCounts = await Pet.findAll({
+        attributes: [
+          'id',
+          'name',
+          [Sequelize.literal(`(
+            SELECT COUNT(*)
+            FROM appointment_results AS ar
+            INNER JOIN appointments AS a ON a.id = ar.appointment_id
+            WHERE a.pet_id = "Pet"."id"
+          )`), 'record_count'],
+        ],
+      });
+
+      res.status(200).json({
+        success: true,
+        message: 'Record counts fetched successfully',
+        data: recordCounts,
+      });
+    } catch (err) {
+      res.status(500).json({
+        success: false,
+        message: 'Error fetching record counts',
+        error: err.message,
+      });
+    }
   },
 };
 

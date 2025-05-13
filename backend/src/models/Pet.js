@@ -55,4 +55,11 @@ const Pet = sequelize.define('Pet', {
     timestamps: false,
 });
 
+const AppointmentResult = require('./AppointmentResult');
+
+Pet.hasMany(AppointmentResult, {
+  foreignKey: 'appointment_id',
+  as: 'appointment_results',
+});
+
 module.exports = Pet;
