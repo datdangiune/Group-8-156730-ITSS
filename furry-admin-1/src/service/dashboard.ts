@@ -1,5 +1,7 @@
-// ================= INTERFACES =================
+// Service cho quản lý Dashboard
+import { apiGet } from './api';
 
+// Interface cho dashboard stats
 export interface DashboardStats {
   totalUsers: number;
   activeBoarders: number;
@@ -7,161 +9,83 @@ export interface DashboardStats {
   unreadNotifications: number;
 }
 
-export interface RevenueData {
+// Interface cho doanh thu theo tháng
+export interface MonthlyRevenue {
   month: number;
   total: number;
 }
 
-export interface ServiceStatsByDay {
+// Interface cho dịch vụ theo danh mục
+export interface ServiceStat {
   day: string;
-  status: string;
   type: string;
   count: number;
+  status?: string;
 }
 
-export interface Pet {
-  name: string;
-  type: string;
-}
-
-export interface Appointment {
+// Interface cho lịch hẹn hôm nay
+export interface TodayAppointment {
   id: number;
   appointment_type: string;
   appointment_hour: string;
   appointment_status: string;
-  pet: Pet;
+  pet: {
+    name: string;
+    type: string;
+  };
 }
 
-export interface ServiceToday {
+// Interface cho dịch vụ hôm nay
+export interface TodayService {
   id: number;
   hour: string;
   status: string;
-  pet: Pet;
+  pet: {
+    name: string;
+    type: string;
+  };
   service: {
     name: string;
   };
 }
 
+// Interface cho lịch trình hôm nay
 export interface TodaySchedule {
-  appointments: Appointment[];
-  services: ServiceToday[];
+  appointments: TodayAppointment[];
+  services: TodayService[];
 }
 
+// Interface cho thông báo
 export interface Notification {
   id: number;
   title: string;
   message: string;
-  created_at: string;
+  url?: string;
   is_read: boolean;
+  created_at: string;
 }
 
-// ================ API URL =====================
-
-const API_URL = "http://localhost:3000/api/v1/admin/dashboard";
-
-// ================ FETCH FUNCTIONS =============
-
-export const fetchDashboardStats = async (token: string): Promise<DashboardStats> => {
-  try {
-    const res = await fetch(`${API_URL}/stats`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-    });
-
-    if (!res.ok) {
-      const error = await res.json();
-      throw new Error(error.message || "Failed to fetch dashboard stats");
-    }
-
-    return await res.json();
-  } catch (error) {
-    console.error("❌ Error fetching dashboard stats:", error);
-    throw error;
-  }
+// Lấy thống kê dashboard
+export const fetchDashboardStats = async (token?: string): Promise<DashboardStats> => {
+  return apiGet<DashboardStats>('/dashboard/stats');
 };
 
-export const fetchMonthlyRevenue = async (token: string): Promise<RevenueData[]> => {
-  try {
-    const res = await fetch(`${API_URL}/monthly-revenue`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-    });
-
-    if (!res.ok) {
-      const error = await res.json();
-      throw new Error(error.message || "Failed to fetch revenue data");
-    }
-
-    return await res.json();
-  } catch (error) {
-    console.error("❌ Error fetching monthly revenue:", error);
-    throw error;
-  }
+// Lấy doanh thu theo tháng
+export const fetchMonthlyRevenue = async (token?: string): Promise<MonthlyRevenue[]> => {
+  return apiGet<MonthlyRevenue[]>('/dashboard/monthly-revenue');
 };
 
-export const fetchServiceStatsByCategory = async (token: string): Promise<ServiceStatsByDay[]> => {
-  try {
-    const res = await fetch(`${API_URL}/service-stats`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-    });
-
-    if (!res.ok) {
-      const error = await res.json();
-      throw new Error(error.message || "Failed to fetch service stats");
-    }
-
-    return await res.json();
-  } catch (error) {
-    console.error("❌ Error fetching service stats:", error);
-    throw error;
-  }
+// Lấy thống kê dịch vụ theo danh mục
+export const fetchServiceStatsByCategory = async (token?: string): Promise<ServiceStat[]> => {
+  return apiGet<ServiceStat[]>('/dashboard/service-stats');
 };
 
-export const fetchTodaySchedule = async (token: string): Promise<TodaySchedule> => {
-  try {
-    const res = await fetch(`${API_URL}/today-schedule`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-    });
-
-    if (!res.ok) {
-      const error = await res.json();
-      throw new Error(error.message || "Failed to fetch today's schedule");
-    }
-
-    return await res.json();
-  } catch (error) {
-    console.error("❌ Error fetching today schedule:", error);
-    throw error;
-  }
+// Lấy lịch trình hôm nay
+export const fetchTodaySchedule = async (token?: string): Promise<TodaySchedule> => {
+  return apiGet<TodaySchedule>('/dashboard/today-schedule');
 };
 
-export const fetchRecentNotifications = async (token: string): Promise<Notification[]> => {
-  try {
-    const res = await fetch(`${API_URL}/recent-notifications`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-    });
-
-    if (!res.ok) {
-      const error = await res.json();
-      throw new Error(error.message || "Failed to fetch notifications");
-    }
-
-    return await res.json();
-  } catch (error) {
-    console.error("❌ Error fetching notifications:", error);
-    throw error;
-  }
+// Lấy thông báo gần đây
+export const fetchRecentNotifications = async (token?: string): Promise<Notification[]> => {
+  return apiGet<Notification[]>('/dashboard/recent-notifications');
 };

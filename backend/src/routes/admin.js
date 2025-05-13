@@ -53,45 +53,45 @@ const router = express.Router();
 
 
 // === Auth ===
-router.post('/login', AdminController.login);
+router.post('/login', verifyTokenAdmin, AdminController.login);
 
 // === Dashboard ===
-router.get('/dashboard/stats', AdminController.getDashboardStats);
-router.get('/dashboard/monthly-revenue', AdminController.getMonthlyRevenue);
-router.get('/dashboard/service-stats', AdminController.getServiceStatsByCategory);
-router.get('/dashboard/today-schedule', AdminController.getTodaySchedule);
-router.get('/dashboard/recent-notifications', AdminController.getRecentNotifications);
+router.get('/dashboard/stats', verifyTokenAdmin, AdminController.getDashboardStats);
+router.get('/dashboard/monthly-revenue', verifyTokenAdmin, AdminController.getMonthlyRevenue);
+router.get('/dashboard/service-stats', verifyTokenAdmin, AdminController.getServiceStatsByCategory);
+router.get('/dashboard/today-schedule', verifyTokenAdmin, AdminController.getTodaySchedule);
+router.get('/dashboard/recent-notifications', verifyTokenAdmin, AdminController.getRecentNotifications);
 
 // === Users ===
-router.get('/users', AdminController.getAllUsers);
-router.post('/users', AdminController.addUser);
-router.put('/users/:id', AdminController.updateUser);
-router.patch('/users/:id/password', AdminController.changeUserPassword);
+router.get('/users', verifyTokenAdmin, AdminController.getAllUsers);
+router.post('/users', verifyTokenAdmin, AdminController.addUser);
+router.put('/users/:id', verifyTokenAdmin, AdminController.updateUser);
+router.patch('/users/:id/password', verifyTokenAdmin, AdminController.changeUserPassword);
 
 // === Services ===
-router.get('/services', AdminController.getAllServices);
+router.get('/services', verifyTokenAdmin, AdminController.getAllServices);
 
 // === Appointments ===
-router.get('/appointments/upcoming', AdminController.getUpcomingAppointments);
-router.get('/appointments/recent', AdminController.getRecentAppointments);
+router.get('/appointments/upcoming', verifyTokenAdmin, AdminController.getUpcomingAppointments);
+router.get('/appointments/recent', verifyTokenAdmin, AdminController.getRecentAppointments);
 
 // === Medical Records ===
-router.get('/medical-records/recent', AdminController.getRecentMedicalRecords);
-router.get('/medical-records/:id', AdminController.getMedicalRecordById);
+router.get('/medical-records/recent', verifyTokenAdmin, AdminController.getRecentMedicalRecords);
+router.get('/medical-records/:id', verifyTokenAdmin, AdminController.getMedicalRecordById);
 
 // === Boarding ===
-router.get('/boarding/stats', AdminController.getBoardingStats);
+router.get('/boarding/stats', verifyTokenAdmin, AdminController.getBoardingStats);
 router.get('/boarding/current', AdminController.getCurrentBoarders);
 
 // === Analytics ===
-router.get('/analytics/monthly-revenue', AdminController.getMonthlyRevenue); // trùng với dashboard
-router.get('/analytics/service-breakdown', AdminController.getServiceBreakdown);
-router.get('/analytics/kpis', AdminController.getKPIs);
+router.get('/analytics/monthly-revenue', verifyTokenAdmin, AdminController.getMonthlyRevenue); // trùng với dashboard
+router.get('/analytics/service-breakdown', verifyTokenAdmin, AdminController.getServiceBreakdown);
+router.get('/analytics/kpis', verifyTokenAdmin, AdminController.getKPIs);
 
 // === Notifications ===
-router.get('/notifications', AdminController.getAllNotifications);
-router.get('/notifications/unread', AdminController.getUnreadNotifications);
-router.patch('/notifications/mark-all-read', AdminController.markAllAsRead);
-router.patch('/notifications/:id/mark-read', AdminController.markAsRead);
+router.get('/notifications', verifyTokenAdmin, AdminController.getAllNotifications);
+router.get('/notifications/unread', verifyTokenAdmin, AdminController.getUnreadNotifications);
+router.patch('/notifications/mark-all-read', verifyTokenAdmin, AdminController.markAllAsRead);
+router.patch('/notifications/:id/mark-read', verifyTokenAdmin, AdminController.markAsRead);
 
 module.exports = router;
