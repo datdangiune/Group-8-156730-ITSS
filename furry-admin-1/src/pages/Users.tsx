@@ -4,24 +4,22 @@ import UserTable, { UserData } from '@/components/UserTable';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { toast } from '@/hooks/use-toast';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Label } from '@/components/ui/label';
-import { UserPlus } from 'lucide-react';
-import Cookies from 'js-cookie';
-
-const API_BASE = 'http://localhost:3000/api/v1/admin';
+import { getAllUsers, addUser } from '@/service/user';
 
 const Users = () => {
   const [users, setUsers] = useState<UserData[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [formData, setFormData] = useState({
+  const [loading, setLoading] = useState(true);
+
+  const [addFormData, setAddFormData] = useState({
     name: '',
     email: '',
-    role: 'client',
-    status: 'active',
+    username: '',
+    role: 'pet_owner',
+    phone_number: ''
   });
 
   useEffect(() => {
@@ -30,125 +28,119 @@ const Users = () => {
 
   const fetchUsers = async () => {
     try {
-      const token = Cookies.get('token');
-      const res = await fetch(`${API_BASE}/users`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const data = await res.json();
-      const mapped = data.map((u: any) => ({
-        id: u.id.toString(),
-        name: u.name,
-        email: u.email,
-        role: u.role,
-        //status: 'active', // Giả định nếu không có trường status
-        lastActive: new Date(u.created_at).toLocaleDateString(),
+      setLoading(true);
+      const data = await getAllUsers();
+      const formattedUsers: UserData[] = data.map(user => ({
+        id: user.id.toString(),
+        name: user.name,
+        email: user.email,
+        role: (["admin", "staff", "vet", "client"].includes(user.role) ? user.role : "client") as UserData["role"], // Chuyển đổi role
+        status: 'active',
+        lastActive: new Date(user.created_at).toLocaleDateString('vi-VN')
       }));
-      setUsers(mapped);
-    } catch (err) {
-      console.error('❌ Lỗi khi lấy danh sách người dùng:', err);
-      toast({ title: 'Lỗi', description: 'Không thể tải danh sách người dùng', variant: 'destructive' });
+      setUsers(formattedUsers);
+    } catch (error: any) {
+      toast({
+        title: 'Lỗi',
+        description: error.message || 'Không thể tải danh sách người dùng.',
+        variant: 'destructive'
+      });
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleAddUser = async () => {
     try {
-      const token = Cookies.get('token');
-      const res = await fetch(`${API_BASE}/users`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          ...formData,
-          username: formData.email.split('@')[0],
-        }),
-      });
-
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.error || 'Thêm người dùng thất bại');
+      if (!addFormData.name || !addFormData.email || !addFormData.username) {
+        toast({
+          title: 'Thiếu thông tin',
+          description: 'Vui lòng điền đầy đủ tên, email và tên đăng nhập.',
+          variant: 'destructive'
+        });
+        return;
       }
 
-      toast({ title: 'Success', description: 'Thêm người dùng thành công' });
+      await addUser({
+        name: addFormData.name,
+        email: addFormData.email,
+        username: addFormData.username,
+        role: addFormData.role,
+        phone_number: addFormData.phone_number
+      });
+
+      toast({
+        title: 'Thành công',
+        description: 'Thêm người dùng thành công'
+      });
+
       setIsAddDialogOpen(false);
-      fetchUsers(); // Refresh list
-    } catch (err: any) {
-      toast({ title: 'Lỗi', description: err.message, variant: 'destructive' });
+      setAddFormData({
+        name: '',
+        email: '',
+        username: '',
+        role: 'pet_owner',
+        phone_number: ''
+      });
+      fetchUsers();
+    } catch (error: any) {
+      toast({
+        title: 'Lỗi',
+        description: error.message || 'Không thể thêm người dùng.',
+        variant: 'destructive'
+      });
     }
   };
-
-  const filteredUsers = users.filter((user) =>
-    user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    user.email.toLowerCase().includes(searchQuery.toLowerCase())
-  );
 
   return (
     <Layout>
       <div className="space-y-6">
         <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-3xl font-bold">User Management</h1>
-            <p className="text-muted-foreground mt-1">Manage user accounts and permissions</p>
-          </div>
-          <Button onClick={() => setIsAddDialogOpen(true)}>
-            <UserPlus className="h-4 w-4 mr-2" /> Add User
-          </Button>
+          <h1 className="text-3xl font-bold">Quản lý người dùng</h1>
+          <Button onClick={() => setIsAddDialogOpen(true)}>Thêm người dùng</Button>
         </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>All Users</CardTitle>
-            <CardDescription>Manage all users in the system</CardDescription>
-            <Input
-              placeholder="Search users..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="mt-4"
-            />
-          </CardHeader>
-          <CardContent>
-            <UserTable data={filteredUsers} />
-          </CardContent>
-        </Card>
+        <Input
+          placeholder="Tìm kiếm người dùng..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+        />
+
+        {loading ? (
+          <p>Đang tải...</p>
+        ) : (
+          <UserTable data={users} />
+        )}
+
+        <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Thêm người dùng mới</DialogTitle>
+            </DialogHeader>
+            <div>
+              <Input
+                placeholder="Tên"
+                value={addFormData.name}
+                onChange={(e) => setAddFormData({ ...addFormData, name: e.target.value })}
+              />
+              <Input
+                placeholder="Email"
+                value={addFormData.email}
+                onChange={(e) => setAddFormData({ ...addFormData, email: e.target.value })}
+              />
+              <Input
+                placeholder="Tên đăng nhập"
+                value={addFormData.username}
+                onChange={(e) => setAddFormData({ ...addFormData, username: e.target.value })}
+              />
+            </div>
+            <DialogFooter>
+              <Button onClick={() => setIsAddDialogOpen(false)}>Hủy</Button>
+              <Button onClick={handleAddUser}>Thêm</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
-
-      {/* Add User Dialog */}
-      <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Add New User</DialogTitle>
-            <DialogDescription>Enter user details below</DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label>Name</Label>
-              <Input value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} />
-            </div>
-            <div className="space-y-2">
-              <Label>Email</Label>
-              <Input value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} />
-            </div>
-            <div className="space-y-2">
-              <Label>Role</Label>
-              <Select value={formData.role} onValueChange={(value) => setFormData({ ...formData, role: value })}>
-                <SelectTrigger><SelectValue placeholder="Select a role" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="admin">Admin</SelectItem>
-                  <SelectItem value="staff">Staff</SelectItem>
-                  <SelectItem value="client">Client</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>Cancel</Button>
-            <Button onClick={handleAddUser}>Add</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </Layout>
   );
 };

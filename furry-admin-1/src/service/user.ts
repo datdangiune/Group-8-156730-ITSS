@@ -48,25 +48,45 @@ export interface ChangePasswordData {
 
 // Đăng nhập
 export const loginAdmin = async (data: LoginData): Promise<LoginResponse> => {
-  return apiPost<LoginResponse>('/login', data);
+  try {
+    return await apiPost<LoginResponse>('/login', data);
+  } catch (error: any) {
+    throw new Error(error.response?.data?.message || 'Lỗi đăng nhập');
+  }
 };
 
 // Lấy tất cả users
 export const getAllUsers = async (): Promise<User[]> => {
-  return apiGet<User[]>('/users');
+  try {
+    return await apiGet<User[]>('/users');
+  } catch (error: any) {
+    throw new Error(error.response?.data?.message || 'Lỗi khi lấy danh sách người dùng');
+  }
 };
 
 // Thêm user mới
 export const addUser = async (data: AddUserData): Promise<{ success: boolean; message: string; user: User }> => {
-  return apiPost('/users', data);
+  try {
+    return await apiPost('/users', data);
+  } catch (error: any) {
+    throw new Error(error.response?.data?.error || 'Lỗi khi thêm người dùng');
+  }
 };
 
 // Cập nhật thông tin user
 export const updateUser = async (id: number, data: UpdateUserData): Promise<{ message: string; user: User }> => {
-  return apiPut(`/users/${id}`, data);
+  try {
+    return await apiPut(`/users/${id}`, data);
+  } catch (error: any) {
+    throw new Error(error.response?.data?.message || 'Lỗi khi cập nhật thông tin người dùng');
+  }
 };
 
 // Đổi mật khẩu user
 export const changeUserPassword = async (id: number, data: ChangePasswordData): Promise<{ message: string }> => {
-  return apiPatch(`/users/${id}/password`, data);
+  try {
+    return await apiPatch(`/users/${id}/password`, data);
+  } catch (error: any) {
+    throw new Error(error.response?.data?.message || 'Lỗi khi đổi mật khẩu người dùng');
+  }
 };
