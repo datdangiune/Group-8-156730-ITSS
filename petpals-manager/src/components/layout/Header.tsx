@@ -53,7 +53,6 @@ const Header = () => {
     { name: 'Appointments', path: '/appointments' },
     { name: 'Services', path: '/services' },
     { name: 'Boarding', path: '/boardings' },
-    { name: 'History', path: '/history' },
   ];
 
   return (

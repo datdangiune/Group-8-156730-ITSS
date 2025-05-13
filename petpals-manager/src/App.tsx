@@ -9,7 +9,6 @@ import Index from "./pages/Index";
 import Pets from "./pages/Pets";
 import Appointments from "./pages/Appointments";
 import Services from "./pages/Services";
-import History from "./pages/History";
 import NotFound from "./pages/NotFound";
 import LoginPage from "./pages/Login";
 import Register from "./pages/Register";
@@ -63,7 +62,6 @@ const App = () => (
                 <Route path="/boardings" element={<Boarding />} />
                 <Route path="/boarding/:id" element={<BoardingDetail />} />
                 <Route path="/boardings/me" element={<MyBoarding />} />
-                <Route path="/history" element={<History />} />
                 <Route path="*" element={<NotFound />} />
               </Route>
           </Route>
