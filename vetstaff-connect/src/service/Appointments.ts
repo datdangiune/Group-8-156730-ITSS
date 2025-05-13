@@ -75,22 +75,24 @@ export const fetchAppointmentById = async (appointmentId: number): Promise<Appoi
 };
 
 export const updateAppointmentStatus = async (
-authToken: string, appointmentId: number, status: string): Promise<void> => {
+  authToken: string,
+  appointmentId: number,
+  status: string
+): Promise<void> => {
   const token = getAuthToken();
   if (!token) throw new Error("Authentication token is missing.");
   try {
     console.log(`Updating appointment status: ID=${appointmentId}, Status=${status}`); // Debugging log
-    const response = await axios.patch(
+    await axios.patch(
       `${API_BASE_URL}/staff/appointments/${appointmentId}/status`,
-      { appointment_status: status }, // Payload being sent
+      { appointment_status: status },
       {
         headers: { Authorization: `Bearer ${token}` },
       }
     );
-    console.log("Update response:", response.data); // Debugging log
+    console.log(`Appointment status updated to ${status} successfully.`);
   } catch (error: any) {
     console.error(`Error updating appointment status for ID ${appointmentId}:`, error.message);
-    console.error("Error details:", error.response?.data || error); // Log detailed error response
     throw new Error(error.message || `Failed to update appointment status for ID ${appointmentId}`);
   }
 };
