@@ -15,7 +15,6 @@ import MedicalRecords from "./pages/MedicalRecords";
 import Services from "./pages/Services";
 import Boarding from "./pages/Boarding";
 import BoardingServices from "./pages/BoardingServices";
-import Notifications from "./pages/Notifications";
 import Navbar from "./components/layout/Navbar";
 import Sidebar from "./components/layout/Sidebar";
 import ClininBoarding from "@/pages/ClinicBoarding"
@@ -48,7 +47,6 @@ const App = () => {
                   <Route path="/boarding" element={<Boarding />} />
                   <Route path="/clinic-boarding" element={<ClininBoarding />} />
                   <Route path="/boarding-services" element={<BoardingServices />} />
-                  <Route path="/notifications" element={<Notifications />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </main>

@@ -140,12 +140,6 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
                 <SidebarLink href="/clinic-boarding" icon={<Home size={18} />} onClick={onClose}>
                   Clinic Boarding
                 </SidebarLink>
-                <SidebarLink href="/notifications" icon={<Heart size={18} />} onClick={onClose}>
-                  Notifications
-                </SidebarLink>
-                <SidebarLink href="/analytics" icon={<BarChart2 size={18} />} onClick={onClose}>
-                  Analytics
-                </SidebarLink>
               </nav>
             </div>
 
