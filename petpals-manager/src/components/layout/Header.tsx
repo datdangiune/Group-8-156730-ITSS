@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { PopoverContent, Popover, PopoverTrigger} from "@/components/ui/popover";
 import Cookies from 'js-cookie';
+import NotificationBell from './NotificationBell';
 interface User {
   username: string;
   email: string;
@@ -52,7 +53,6 @@ const Header = () => {
     { name: 'Appointments', path: '/appointments' },
     { name: 'Services', path: '/services' },
     { name: 'Boarding', path: '/boardings' },
-    { name: 'History', path: '/history' },
   ];
 
   return (
@@ -87,7 +87,9 @@ const Header = () => {
             >
               {link.name}
             </Link>
+            
           ))}
+          <NotificationBell />
         </nav>
         <Popover open={isOpen} onOpenChange={setIsOpen}>
           <PopoverTrigger asChild>
@@ -127,13 +129,16 @@ const Header = () => {
           </PopoverContent>
         </Popover>
         {/* Mobile Menu Toggle */}
-        <button
-          onClick={toggleMobileMenu}
-          className="md:hidden flex items-center text-gray-600 dark:text-gray-300 focus:outline-none"
-          aria-label={isMobileMenuOpen ? 'Close menu' : 'Open menu'}
-        >
-          {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-        </button>
+        <div className="md:hidden flex items-center space-x-4">
+          <NotificationBell />
+          <button
+            onClick={toggleMobileMenu}
+            className="flex items-center text-gray-600 dark:text-gray-300 focus:outline-none"
+            aria-label={isMobileMenuOpen ? 'Close menu' : 'Open menu'}
+          >
+            {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+          </button>
+        </div>
       </div>
 
       {/* Mobile Menu */}
