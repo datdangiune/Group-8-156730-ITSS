@@ -14,7 +14,7 @@ import {
   FormMessage,
   FormDescription 
 } from "@/components/ui/form";
-
+import { Check, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -66,6 +66,7 @@ const AppointmentBooking = () => {
   const [pets, setPets] = useState<Pet[]>([]);
   const [availableTimes, setAvailableTimes] = useState<string[]>([]);
   const token = getTokenFromCookies()
+  const [loading, setLoading] = useState(false);
   const AVAILABLE_TIMES = ["08:00", "09:30", "11:00", "12:30", "14:00", "15:30"];
   // Generate available times
   useEffect(() => {
@@ -109,12 +110,14 @@ const AppointmentBooking = () => {
         if (!token) {
             throw new Error("User is not authenticated.");
         }
-
+        setLoading(true);
         await createAppointment(data, token);
         toast.success("Appointment booked successfully!");
         navigate("/appointments"); // Điều hướng sau khi đặt lịch thành công
     } catch (error) {
         toast.error(error.message || "Failed to book appointment.");
+    } finally {
+        setLoading(false);
     }
 };
 
@@ -330,9 +333,17 @@ const AppointmentBooking = () => {
                 >
                   Cancel
                 </Button>
-                <Button type="submit">
-                  Book Appointment
-                </Button>
+                    <Button type="submit" disabled={loading}>
+                        {loading ? (
+                            <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Booking...
+                            </>
+                        ) : (
+                            <>
+                            <Check className="mr-2 h-4 w-4" /> Confirm Booking
+                            </>
+                        )}
+                    </Button>
               </CardFooter>
             </form>
           </Form>
