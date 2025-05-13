@@ -7,6 +7,7 @@ import MetricsCard from "@/components/dashboard/MetricsCard";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { fetchDashboardStats, DashboardStats } from "@/service/dashboard";
+import StatusBadge from "@/components/dashboard/StatusBadge";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -102,45 +103,65 @@ const Index = () => {
               />
             </DashboardCard>
 
-                
             <DashboardCard
               title="Today's Services"
               description="Services in progress today"
             >
-              {lists.todayServices.length > 0 ? (
-                <div className="divide-y">
-                  {lists.todayServices.map((service) => (
-                    <div key={service.id} className="p-4 flex justify-between items-center">
-                      <div>
-                        <p className="font-medium">{service.petName}</p>
-                        <div className="flex items-center text-sm text-muted-foreground mt-0.5">
-                          <Stethoscope className="h-3.5 w-3.5 mr-1.5" />
-                          {service.serviceType}
+              <div className="space-y-4">
+                {lists.todayServices.length > 0 ? (
+                  <>
+                    {lists.todayServices.map((service) => (
+                      <div
+                        key={service.id}
+                        className="p-4 border rounded-lg shadow-sm flex justify-between items-center"
+                      >
+                        <div>
+                          <p className="font-medium text-lg">{service.pet.name}</p>
+                          <p className="text-sm text-muted-foreground">
+                            Breed: {service.pet.breed}
+                          </p>
+                          <p className="text-sm text-muted-foreground mt-1">
+                            Service: <span className="font-medium">{service.service.name}</span> ({service.service.type})
+                          </p>
+                          <p className="text-sm text-muted-foreground mt-1">
+                            Price: <span className="font-medium">{service.service.price.toLocaleString()} VND</span>
+                          </p>
+                          <p className="text-sm text-muted-foreground mt-1">
+                            Duration: <span className="font-medium">{service.service.duration} minutes</span>
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-sm text-muted-foreground">
+                            Date: <span className="font-medium">{new Date(service.date).toLocaleDateString()}</span>
+                          </p>
+                          <p className="text-sm text-muted-foreground mt-1">
+                            Hour: <span className="font-medium">{service.hour}</span>
+                          </p>
+                          <p className="text-sm mt-1">
+                            Status: <StatusBadge status={service.status} />
+                          </p>
+                          <p className="text-sm mt-1">
+                            Payment: <StatusBadge status={service.status_payment} />
+                          </p>
                         </div>
                       </div>
-                      <div className="text-right">
-                        <div className="text-sm font-medium">Started</div>
-                        <div className="text-sm text-muted-foreground">
-                          {service.startTime}
-                        </div>
-                      </div>
+                    ))}
+                    <div className="p-4 text-center">
+                      <Button variant="outline" onClick={() => navigate("/services")}>
+                        View all services
+                      </Button>
                     </div>
-                  ))}
-                  <div className="p-4 text-center">
-                    <Button variant="outline" onClick={() => navigate("/services")}>
+                  </>
+                ) : (
+                  <div className="flex flex-col items-center justify-center p-8 text-center">
+                    <Stethoscope className="h-8 w-8 text-muted-foreground mb-2" />
+                    <p className="text-sm text-muted-foreground">No active services today</p>
+                    <Button variant="outline" className="mt-4" onClick={() => navigate("/services")}>
                       View all services
                     </Button>
                   </div>
-                </div>
-              ) : (
-                <div className="flex flex-col items-center justify-center p-8 text-center">
-                  <Stethoscope className="h-8 w-8 text-muted-foreground mb-2" />
-                  <p className="text-sm text-muted-foreground">No active services today</p>
-                  <Button variant="outline" className="mt-4" onClick={() => navigate("/services")}>
-                    View all services
-                  </Button>
-                </div>
-              )}
+                )}
+              </div>
             </DashboardCard>
           </div>
 
@@ -150,79 +171,98 @@ const Index = () => {
               title="Active Boarders"
               description="Pets currently boarding"
             >
-              {lists.activeBoarders.length > 0 ? (
-                <div className="divide-y">
-                  {lists.activeBoarders.map((pet) => (
-                    <div key={pet.id} className="p-4 flex justify-between items-center">
-                      <div>
-                        <p className="font-medium">{pet.petName}</p>
-                        <div className="flex items-center text-sm text-muted-foreground mt-0.5">
-                          {pet.petType}, {pet.petBreed}
+              <div className="space-y-4">
+                {lists.activeBoarders.length > 0 ? (
+                  <>
+                    {lists.activeBoarders.map((boarding) => (
+                      <div
+                        key={boarding.id}
+                        className="p-4 border rounded-lg shadow-sm flex justify-between items-center"
+                      >
+                        <div>
+                          <p className="font-medium text-lg">{boarding.pet.name}</p>
+                          <p className="text-sm text-muted-foreground">
+                            {boarding.pet.type}, {boarding.pet.breed}
+                          </p>
+                          <p className="text-sm text-muted-foreground mt-1">
+                            Service: <span className="font-medium">{boarding.boarding.name}</span> ({boarding.boarding.type})
+                          </p>
+                          <p className="text-sm text-muted-foreground mt-1">
+                            Total Price: <span className="font-medium">{boarding.total_price.toLocaleString()} VND</span>
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-sm text-muted-foreground">
+                            Check out: <span className="font-medium">{new Date(boarding.end_date).toLocaleDateString()}</span>
+                          </p>
+                          <p className="text-sm mt-1">
+                            Status: <StatusBadge status={boarding.status} />
+                          </p>
+                          <p className="text-sm mt-1">
+                            Payment: <StatusBadge status={boarding.status_payment} />
+                          </p>
                         </div>
                       </div>
-                      <div className="text-right">
-                        <div className="text-sm font-medium">Check out</div>
-                        <div className="text-sm text-muted-foreground">
-                          {pet.checkOutDate}
-                        </div>
-                      </div>
+                    ))}
+                    <div className="p-4 text-center">
+                      <Button variant="outline" onClick={() => navigate("/boarding")}>
+                        View all boarders
+                      </Button>
                     </div>
-                  ))}
-                  <div className="p-4 text-center">
-                    <Button variant="outline" onClick={() => navigate("/boarding")}>
+                  </>
+                ) : (
+                  <div className="flex flex-col items-center justify-center p-8 text-center">
+                    <Home className="h-8 w-8 text-muted-foreground mb-2" />
+                    <p className="text-sm text-muted-foreground">No pets currently boarding</p>
+                    <Button variant="outline" className="mt-4" onClick={() => navigate("/boarding")}>
                       View all boarders
                     </Button>
                   </div>
-                </div>
-              ) : (
-                <div className="flex flex-col items-center justify-center p-8 text-center">
-                  <Home className="h-8 w-8 text-muted-foreground mb-2" />
-                  <p className="text-sm text-muted-foreground">No pets currently boarding</p>
-                  <Button variant="outline" className="mt-4" onClick={() => navigate("/boarding")}>
-                    View all boarders
-                  </Button>
-                </div>
-              )}
+                )}
+              </div>
             </DashboardCard>
 
             <DashboardCard
               title="Recent Medical Records"
               description="Latest patient updates"
             >
-              {lists.recentMedicalRecords.length > 0 ? (
-                <div className="divide-y">
-                  {lists.recentMedicalRecords.map((record) => (
-                    <div key={record.id} className="p-4 flex justify-between items-center">
-                      <div>
-                        <p className="font-medium">{record.petName}</p>
-                        <div className="flex items-center text-sm text-muted-foreground mt-0.5">
-                          <FileText className="h-3.5 w-3.5 mr-1.5" />
-                          {record.diagnosis}
+              <div className="space-y-4">
+                {lists.recentMedicalRecords.length > 0 ? (
+                  <>
+                    {lists.recentMedicalRecords.map((record) => (
+                      <div
+                        key={record.id}
+                        className="p-4 border rounded-lg shadow-sm flex justify-between items-center"
+                      >
+                        <div>
+                          <p className="font-medium text-lg">{record.appointment.pet.name}</p>
+                          <p className="text-sm text-muted-foreground">
+                            Breed: {record.appointment.pet.breed}
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-sm text-muted-foreground">
+                            Owner: <span className="font-medium">{record.appointment.owner.username}</span>
+                          </p>
                         </div>
                       </div>
-                      <div className="text-right">
-                        <div className="text-sm font-medium">Date</div>
-                        <div className="text-sm text-muted-foreground">
-                          {record.appointmentDate}
-                        </div>
-                      </div>
+                    ))}
+                    <div className="p-4 text-center">
+                      <Button variant="outline" onClick={() => navigate("/medical-records")}>
+                        View all medical records
+                      </Button>
                     </div>
-                  ))}
-                  <div className="p-4 text-center">
-                    <Button variant="outline" onClick={() => navigate("/medical-records")}>
+                  </>
+                ) : (
+                  <div className="flex flex-col items-center justify-center p-8 text-center">
+                    <FileText className="h-8 w-8 text-muted-foreground mb-2" />
+                    <p className="text-sm text-muted-foreground">No medical records available</p>
+                    <Button variant="outline" className="mt-4" onClick={() => navigate("/medical-records")}>
                       View all medical records
                     </Button>
                   </div>
-                </div>
-              ) : (
-                <div className="flex flex-col items-center justify-center p-8 text-center">
-                  <FileText className="h-8 w-8 text-muted-foreground mb-2" />
-                  <p className="text-sm text-muted-foreground">No medical records available</p>
-                  <Button variant="outline" className="mt-4" onClick={() => navigate("/medical-records")}>
-                    View all medical records
-                  </Button>
-                </div>
-              )}
+                )}
+              </div>
             </DashboardCard>
           </div>
         </div>

@@ -47,27 +47,79 @@ export interface Notification {
 
 export interface Service {
   id: number;
-  petName: string;
-  serviceType: string;
-  status: string;
-  startTime: string;
+  serviceId: number;
+  userId: number;
+  petId: number;
+  date: string;
+  hour: string;
+  status: "Completed" | "In Progress" | "Scheduled" | "Cancel";
+  status_payment: "paid" | "pending";
+  service: {
+    id: number;
+    name: string;
+    type: string;
+    price: number;
+    duration: string;
+  };
+  pet: {
+    id: number;
+    name: string;
+    breed: string;
+  };
+  user: {
+    id: number;
+    username: string;
+    email: string;
+  };
 }
 
 export interface BoardingPet {
   id: number;
-  petName: string;
-  petType: string;
-  petBreed: string;
-  checkOutDate: string;
+  total_price: number;
+  start_date: string;
+  end_date: string;
+  boarding: {
+    id: number;
+    name: string;
+    type: string;
+    price: number;
+    maxday: number;
+  };
+  pet: {
+    id: number;
+    name: string;
+    type: string;
+    breed: string;
+  };
+  user: {
+    id: number;
+    username: string;
+    email: string;
+  };
+  status: "Done" | "Scheduled" | "Cancel" | "In Progress";
+  status_payment: "Paid" | "pending";
 }
 
 export interface MedicalRecord {
   id: number;
-  appointmentDate: string;
-  petName: string;
-  ownerName: string;
+  appointment_id: number;
   diagnosis: string;
   prescription: string;
+  follow_up_date: string;
+  created_at: string;
+  appointment: {
+    appointment_date: string;
+    pet: {
+      id: number;
+      name: string;
+      breed: string;
+    };
+    owner: {
+      id: number;
+      username: string;
+      email: string;
+    };
+  };
 }
 
 export const fetchDashboardStats = async (token: string): Promise<DashboardStats> => {
