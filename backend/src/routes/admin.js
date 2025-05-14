@@ -17,9 +17,13 @@ router.get('/dashboard/recent-notifications', verifyTokenAdmin, AdminController.
 
 // === Users ===
 router.get('/users', verifyTokenAdmin, AdminController.getAllUsers);
+router.get('/users/simple', verifyTokenAdmin, AdminController.getSimpleUserList);
 router.post('/users', verifyTokenAdmin, AdminController.addUser);
 router.put('/users/:id', verifyTokenAdmin, AdminController.updateUser);
 router.patch('/users/:id/password', verifyTokenAdmin, AdminController.changeUserPassword);
+router.patch('/users/:id/set-admin', verifyTokenAdmin, AdminController.setAsAdmin);
+router.patch('/users/:id/set-vet', verifyTokenAdmin, AdminController.setAsVet);
+router.patch('/users/:id/set-staff', verifyTokenAdmin, AdminController.setAsStaff);
 
 // === Services ===
 router.get('/services', verifyTokenAdmin, AdminController.getAllServices);

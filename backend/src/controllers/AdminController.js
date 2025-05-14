@@ -183,6 +183,29 @@ const AdminController = {
       }
     },
 
+    // Controller to get all users in simple format for selection
+    async getSimpleUserList(req, res) {
+      try {
+        const users = await User.findAll({
+          attributes: ['id', 'name', 'email', 'role'],
+          order: [['id', 'ASC']]
+        });
+
+        // Map to required format (id as string, role as string)
+        const result = users.map(u => ({
+          id: u.id.toString(),
+          name: u.name,
+          email: u.email,
+          role: u.role
+        }));
+
+        res.json(result);
+      } catch (err) {
+        console.error("Error fetching simple user list:", err);
+        res.status(500).json({ message: "Failed to fetch user list", error: err.message });
+      }
+    },
+
     // Add new user
     addUser: async (req, res) => {
         try {
@@ -227,6 +250,53 @@ const AdminController = {
             console.error("Error adding user:", error);
             res.status(500).json({ error: error.message });
         }
+    },
+
+    // Add new user (with password)
+    async addUser(req, res) {
+      try {
+        const { name, username, email, password, role } = req.body;
+
+        // Validate required fields
+        if (!name || !username || !email || !password || !role) {
+          return res.status(400).json({ error: "Missing required fields" });
+        }
+
+        // Check if email or username already exists
+        const existingUser = await User.findOne({
+          where: {
+            [Op.or]: [{ email }, { username }]
+          }
+        });
+
+        if (existingUser) {
+          return res.status(400).json({ error: "Email or Username already exists!" });
+        }
+
+        // Create new user (password will be hashed by model hook)
+        const newUser = await User.create({
+          name,
+          username,
+          email,
+          password,
+          role
+        });
+
+        res.status(201).json({
+          success: true,
+          message: "User created successfully!",
+          user: {
+            id: newUser.id,
+            name: newUser.name,
+            username: newUser.username,
+            email: newUser.email,
+            role: newUser.role
+          }
+        });
+      } catch (error) {
+        console.error("Error adding user:", error);
+        res.status(500).json({ error: error.message });
+      }
     },
 
     // Get all services for services page
@@ -969,6 +1039,54 @@ const AdminController = {
         res.json({ message: 'User password changed successfully' });
       } catch (err) {
         res.status(500).json({ message: 'Error changing password', error: err.message });
+      }
+    },
+
+    // Set user as Admin
+    async setAsAdmin(req, res) {
+      try {
+        const { id } = req.params;
+        const user = await User.findByPk(id);
+        if (!user) {
+          return res.status(404).json({ message: 'User not found' });
+        }
+        user.role = 'admin';
+        await user.save();
+        res.json({ message: 'User role updated to admin', user });
+      } catch (err) {
+        res.status(500).json({ message: 'Error setting user as admin', error: err.message });
+      }
+    },
+
+    // Set user as Vet
+    async setAsVet(req, res) {
+      try {
+        const { id } = req.params;
+        const user = await User.findByPk(id);
+        if (!user) {
+          return res.status(404).json({ message: 'User not found' });
+        }
+        user.role = 'vet';
+        await user.save();
+        res.json({ message: 'User role updated to vet', user });
+      } catch (err) {
+        res.status(500).json({ message: 'Error setting user as vet', error: err.message });
+      }
+    },
+
+    // Set user as Staff
+    async setAsStaff(req, res) {
+      try {
+        const { id } = req.params;
+        const user = await User.findByPk(id);
+        if (!user) {
+          return res.status(404).json({ message: 'User not found' });
+        }
+        user.role = 'staff';
+        await user.save();
+        res.json({ message: 'User role updated to staff', user });
+      } catch (err) {
+        res.status(500).json({ message: 'Error setting user as staff', error: err.message });
       }
     },
 };

@@ -22,18 +22,18 @@ import { cn } from '@/lib/utils';
 export interface UserData {
   id: string;
   name: string;
+  username: string;
   email: string;
-  role: 'admin' | 'staff' | 'vet' | 'client';
-  status: 'active' | 'inactive' | 'locked';
-  lastActive?: string;
+  password: string;
+  role: 'admin' | 'staff' | 'vet' | 'user';
+
 }
 
 interface UserTableProps {
   data: UserData[];
   onEdit?: (user: UserData) => void;
   onDelete?: (user: UserData) => void;
-  onStatusChange?: (user: UserData, status: 'active' | 'inactive' | 'locked') => void;
-  onRoleChange?: (user: UserData, role: 'admin' | 'staff' | 'vet' | 'client') => void;
+  onRoleChange?: (user: UserData, role: 'admin' | 'staff' | 'vet' | 'user') => void;
 }
 
 const UserRoleIcon = ({ role }: { role: string }) => {
@@ -52,8 +52,6 @@ const UserRoleIcon = ({ role }: { role: string }) => {
 const UserTable: React.FC<UserTableProps> = ({
   data,
   onEdit,
-  onDelete,
-  onStatusChange,
   onRoleChange,
 }) => {
   return (
@@ -63,8 +61,6 @@ const UserTable: React.FC<UserTableProps> = ({
           <TableHead>Name</TableHead>
           <TableHead>Email</TableHead>
           <TableHead>Role</TableHead>
-          <TableHead>Status</TableHead>
-          <TableHead>Last Active</TableHead>
           <TableHead className="text-right">Actions</TableHead>
         </TableRow>
       </TableHeader>
@@ -79,20 +75,7 @@ const UserTable: React.FC<UserTableProps> = ({
                 <span className="capitalize">{user.role}</span>
               </div>
             </TableCell>
-            <TableCell>
-              <Badge
-                variant="outline"
-                className={cn(
-                  "capitalize",
-                  user.status === 'active' && "border-vetgreen-200 text-vetgreen-600 bg-vetgreen-50",
-                  user.status === 'inactive' && "border-muted text-muted-foreground bg-muted/30",
-                  user.status === 'locked' && "border-vetred-200 text-vetred-600 bg-vetred-50"
-                )}
-              >
-                {user.status}
-              </Badge>
-            </TableCell>
-            <TableCell>{user.lastActive || 'Never'}</TableCell>
+            
             <TableCell className="text-right">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -102,27 +85,6 @@ const UserTable: React.FC<UserTableProps> = ({
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  <DropdownMenuItem onSelect={() => onEdit?.(user)}>
-                    <Pencil className="h-4 w-4 mr-2" />
-                    Edit
-                  </DropdownMenuItem>
-                  
-                  {onStatusChange && (
-                    <>
-                      {user.status !== 'active' && (
-                        <DropdownMenuItem onSelect={() => onStatusChange(user, 'active')}>
-                          <Check className="h-4 w-4 mr-2 text-vetgreen-500" />
-                          Set as Active
-                        </DropdownMenuItem>
-                      )}
-                      {user.status !== 'locked' && (
-                        <DropdownMenuItem onSelect={() => onStatusChange(user, 'locked')}>
-                          <Lock className="h-4 w-4 mr-2 text-vetred-500" />
-                          Lock Account
-                        </DropdownMenuItem>
-                      )}
-                    </>
-                  )}
                   
                   {onRoleChange && (
                     <>
@@ -140,16 +102,7 @@ const UserTable: React.FC<UserTableProps> = ({
                       </DropdownMenuItem>
                     </>
                   )}
-                  
-                  {onDelete && (
-                    <DropdownMenuItem 
-                      onSelect={() => onDelete(user)}
-                      className="text-red-600 hover:text-red-700 focus:text-red-700"
-                    >
-                      <Trash2 className="h-4 w-4 mr-2" />
-                      Delete
-                    </DropdownMenuItem>
-                  )}
+                    
                 </DropdownMenuContent>
               </DropdownMenu>
             </TableCell>
