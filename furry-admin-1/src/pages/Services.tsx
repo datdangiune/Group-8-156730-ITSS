@@ -309,10 +309,6 @@ const Services = () => {
             <h1 className="text-3xl font-bold">Service Management</h1>
             <p className="text-muted-foreground mt-1">Manage all available services</p>
           </div>
-          <Button onClick={openAddDialog} className="animate-fade-in">
-            <Plus className="h-4 w-4 mr-2" />
-            Add Service
-          </Button>
         </div>
 
         {selectedService ? (

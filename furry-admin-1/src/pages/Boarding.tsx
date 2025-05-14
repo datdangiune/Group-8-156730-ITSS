@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Layout from '@/components/Layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -16,101 +15,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-
-// Interface for boarding options
-interface BoardingOption {
-  id: string;
-  name: string;
-  price: number;
-  type: 'standard' | 'deluxe' | 'premium' | 'suite';
-  maxday: number;
-  isActive: boolean;
-  activeUses: number;
-  totalUses: number;
-}
-
-// Interface for boarding users
-interface BoardingUser {
-  id: string;
-  petName: string;
-  ownerName: string;
-  startDate: string;
-  endDate: string;
-  totalPrice: number;
-  status: 'Scheduled' | 'In Progress' | 'Completed' | 'Cancelled';
-  statusPayment: 'pending' | 'paid' | 'cancelled';
-  notes?: string;
-}
-
-// Mock boarding options data
-const initialBoardingOptions: BoardingOption[] = [
-  {
-    id: '1',
-    name: 'Standard Room',
-    price: 45,
-    type: 'standard',
-    maxday: 14,
-    isActive: true,
-    activeUses: 8,
-    totalUses: 245,
-  },
-  {
-    id: '2',
-    name: 'Deluxe Room',
-    price: 65,
-    type: 'deluxe',
-    maxday: 21,
-    isActive: true,
-    activeUses: 6,
-    totalUses: 178,
-  },
-  {
-    id: '3',
-    name: 'Premium Suite',
-    price: 85,
-    type: 'premium',
-    maxday: 30,
-    isActive: true,
-    activeUses: 2,
-    totalUses: 89,
-  },
-  {
-    id: '4',
-    name: 'Luxury Suite',
-    price: 120,
-    type: 'suite',
-    maxday: 60,
-    isActive: false,
-    activeUses: 0,
-    totalUses: 32,
-  }
-];
-
-// Mock data for boarding users
-const mockBoardingUsers: Record<string, BoardingUser[]> = {
-  '1': [
-    { id: 'b1', petName: 'Buddy', ownerName: 'James Wilson', startDate: '2023-05-10', endDate: '2023-05-17', totalPrice: 315, status: 'In Progress', statusPayment: 'paid' },
-    { id: 'b2', petName: 'Coco', ownerName: 'Emily Thompson', startDate: '2023-05-11', endDate: '2023-05-15', totalPrice: 180, status: 'In Progress', statusPayment: 'paid' },
-    { id: 'b3', petName: 'Max', ownerName: 'Michael Rodriguez', startDate: '2023-05-12', endDate: '2023-05-18', totalPrice: 270, status: 'In Progress', statusPayment: 'paid' },
-    { id: 'b4', petName: 'Bailey', ownerName: 'Sophia Martinez', startDate: '2023-05-13', endDate: '2023-05-16', totalPrice: 135, status: 'In Progress', statusPayment: 'pending', notes: 'Special diet requirements' },
-    { id: 'b5', petName: 'Luna', ownerName: 'Alexander Johnson', startDate: '2023-05-14', endDate: '2023-05-19', totalPrice: 225, status: 'Scheduled', statusPayment: 'pending' },
-    { id: 'b6', petName: 'Charlie', ownerName: 'Olivia Brown', startDate: '2023-05-14', endDate: '2023-05-17', totalPrice: 135, status: 'In Progress', statusPayment: 'paid' },
-    { id: 'b7', petName: 'Lucy', ownerName: 'William Davis', startDate: '2023-05-14', endDate: '2023-05-20', totalPrice: 270, status: 'Scheduled', statusPayment: 'pending' },
-    { id: 'b8', petName: 'Daisy', ownerName: 'Emma Miller', startDate: '2023-04-14', endDate: '2023-04-18', totalPrice: 180, status: 'Completed', statusPayment: 'paid' },
-  ],
-  '2': [
-    { id: 'b9', petName: 'Rocky', ownerName: 'Daniel Taylor', startDate: '2023-05-09', endDate: '2023-05-16', totalPrice: 455, status: 'In Progress', statusPayment: 'paid' },
-    { id: 'b10', petName: 'Bella', ownerName: 'Ava Anderson', startDate: '2023-05-10', endDate: '2023-05-17', totalPrice: 455, status: 'In Progress', statusPayment: 'paid' },
-    { id: 'b11', petName: 'Cooper', ownerName: 'Jackson Thomas', startDate: '2023-05-12', endDate: '2023-05-18', totalPrice: 390, status: 'In Progress', statusPayment: 'paid' },
-    { id: 'b12', petName: 'Sadie', ownerName: 'Charlotte White', startDate: '2023-05-13', endDate: '2023-05-19', totalPrice: 390, status: 'In Progress', statusPayment: 'paid', notes: 'Requires daily medication' },
-    { id: 'b13', petName: 'Milo', ownerName: 'Benjamin Harris', startDate: '2023-04-14', endDate: '2023-04-21', totalPrice: 455, status: 'Completed', statusPayment: 'paid' },
-    { id: 'b14', petName: 'Zoe', ownerName: 'Mia Martin', startDate: '2023-04-14', endDate: '2023-04-17', totalPrice: 195, status: 'Cancelled', statusPayment: 'cancelled' },
-  ],
-  '3': [
-    { id: 'b15', petName: 'Oliver', ownerName: 'Isabella Thompson', startDate: '2023-05-08', endDate: '2023-05-15', totalPrice: 595, status: 'In Progress', statusPayment: 'paid' },
-    { id: 'b16', petName: 'Lola', ownerName: 'Ethan Walker', startDate: '2023-05-12', endDate: '2023-05-19', totalPrice: 595, status: 'In Progress', statusPayment: 'paid', notes: 'Prefers window area' },
-  ],
-};
+import { fetchBoardingsWithStats, fetchBoardingUsersByBoarding, BoardingItem, BoardingUserEntry } from '@/service/boarding';
 
 const roomTypeColors = {
   standard: { bg: 'bg-vetgreen-50', text: 'text-vetgreen-600', border: 'border-vetgreen-200' },
@@ -120,17 +25,34 @@ const roomTypeColors = {
 };
 
 const Boarding = () => {
-  const [boardingOptions, setBoardingOptions] = useState<BoardingOption[]>(initialBoardingOptions);
+  const [boardingOptions, setBoardingOptions] = useState<BoardingItem[]>([]);
+  const [boardingUsers, setBoardingUsers] = useState<Record<string, BoardingUserEntry[]>>({});
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedOption, setSelectedOption] = useState<BoardingOption | null>(null);
+  const [selectedOption, setSelectedOption] = useState<BoardingItem | null>(null);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [options, users] = await Promise.all([
+          fetchBoardingsWithStats(),
+          fetchBoardingUsersByBoarding(),
+        ]);
+        setBoardingOptions(options);
+        setBoardingUsers(users);
+      } catch (error: any) {
+        toast.error("Failed to fetch boarding data");
+      }
+    };
+    fetchData();
+  }, []);
 
   // Filtered boarding options based on search
-  const filteredOptions = boardingOptions.filter(option => 
+  const filteredOptions = boardingOptions.filter(option =>
     option.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     option.type.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const handleOptionSelect = (option: BoardingOption) => {
+  const handleOptionSelect = (option: BoardingItem) => {
     setSelectedOption(option);
   };
 
@@ -140,7 +62,7 @@ const Boarding = () => {
 
   // Get boarding users for the selected option
   const getBoardingUsers = (optionId: string) => {
-    return mockBoardingUsers[optionId] || [];
+    return boardingUsers[optionId] || [];
   };
 
   return (
@@ -151,9 +73,6 @@ const Boarding = () => {
             <h1 className="text-3xl font-bold">Boarding Management</h1>
             <p className="text-muted-foreground mt-1">Manage boarding accommodations and schedules</p>
           </div>
-          <Button onClick={() => toast("Feature not implemented", { description: "Adding new boarding options is not available yet." })} className="animate-fade-in">
-            Add Boarding Option
-          </Button>
         </div>
 
         {selectedOption ? (
@@ -174,9 +93,9 @@ const Boarding = () => {
                       variant="outline"
                       className={cn(
                         "capitalize mb-2",
-                        roomTypeColors[selectedOption.type].bg,
-                        roomTypeColors[selectedOption.type].text,
-                        roomTypeColors[selectedOption.type].border
+                        roomTypeColors[selectedOption.type]?.bg,
+                        roomTypeColors[selectedOption.type]?.text,
+                        roomTypeColors[selectedOption.type]?.border
                       )}
                     >
                       {selectedOption.type}
@@ -288,7 +207,7 @@ const Boarding = () => {
                   <TableRow>
                     <TableHead>Room Name</TableHead>
                     <TableHead>Type</TableHead>
-                    <TableHead>Price/Night</TableHead>
+                    <TableHead>Price</TableHead>
                     <TableHead>Max Stay</TableHead>
                     <TableHead>Active Bookings</TableHead>
                     <TableHead>Total Bookings</TableHead>
@@ -311,9 +230,9 @@ const Boarding = () => {
                             variant="outline"
                             className={cn(
                               "capitalize",
-                              typeColor.bg,
-                              typeColor.text,
-                              typeColor.border
+                              typeColor?.bg,
+                              typeColor?.text,
+                              typeColor?.border
                             )}
                           >
                             {option.type}

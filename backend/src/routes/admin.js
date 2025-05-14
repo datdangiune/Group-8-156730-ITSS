@@ -37,6 +37,8 @@ router.get('/medical-records/:id', verifyTokenAdmin, AdminController.getMedicalR
 // === Boarding ===
 router.get('/boarding/stats', verifyTokenAdmin, AdminController.getBoardingStats);
 router.get('/boarding/current', verifyTokenAdmin, AdminController.getCurrentBoarders);
+router.get('/boarding-with-stats', verifyTokenAdmin, AdminController.getBoardingListWithStats);
+router.get('/boarding-users-by-boarding', verifyTokenAdmin, AdminController.getBoardingUsersByBoarding);
 
 // === Analytics ===
 router.get('/analytics/monthly-revenue', verifyTokenAdmin, AdminController.getMonthlyRevenue);

@@ -343,6 +343,107 @@ const AdminController = {
       }
     },
 
+    // Controller to get boarding list with usage stats
+    async getBoardingListWithStats(req, res) {
+      try {
+        // Fetch all boarding services
+        const boardings = await Boarding.findAll({
+          attributes: ['id', 'name', 'price', 'type', 'maxday', 'status'],
+          order: [['created_at', 'DESC']]
+        });
+
+        // Fetch usage counts for all boardings
+        const usageCounts = await BoardingUser.findAll({
+          attributes: [
+            ['boardingId', 'boardingId'],
+            [Sequelize.fn('COUNT', Sequelize.col('id')), 'totalUses'],
+            [Sequelize.fn('SUM', Sequelize.literal(`CASE WHEN status = 'In Progress' THEN 1 ELSE 0 END`)), 'activeUses']
+          ],
+          group: ['boardingId'],
+          raw: true
+        });
+
+        // Map usage counts by boardingId for quick lookup
+        const usageMap = {};
+        usageCounts.forEach(u => {
+          usageMap[u.boardingId] = {
+            totalUses: parseInt(u.totalUses, 10) || 0,
+            activeUses: parseInt(u.activeUses, 10) || 0
+          };
+        });
+
+        // Format the response
+        const result = boardings.map(boarding => ({
+          id: boarding.id.toString(),
+          name: boarding.name,
+          price: boarding.price,
+          type: boarding.type,
+          maxday: boarding.maxday,
+          isActive: boarding.status === 'available',
+          activeUses: usageMap[boarding.id]?.activeUses || 0,
+          totalUses: usageMap[boarding.id]?.totalUses || 0,
+        }));
+
+        res.json(result);
+      } catch (err) {
+        console.error('Error fetching boarding list with stats:', err);
+        res.status(500).json({ message: 'Failed to fetch boarding list', error: err.message });
+      }
+    },
+
+    // Controller to get boarding users grouped by boardingId (mock-like structure)
+    async getBoardingUsersByBoarding(req, res) {
+      try {
+        // Get all boardings
+        const boardings = await Boarding.findAll({
+          attributes: ['id', 'name'],
+          order: [['id', 'ASC']]
+        });
+    
+        // Get all BoardingUser entries with related Pet and User
+        const boardingUsers = await BoardingUser.findAll({
+          attributes: ['id', ['boardingId', 'boardingId'], 'start_date', 'end_date', 'total_price', 'status', 'status_payment', 'notes'],
+          include: [
+            {
+              model: Pet,
+              as: 'pet',
+              attributes: ['name']
+            },
+            {
+              model: User,
+              as: 'user',
+              attributes: ['name']
+            }
+          ],
+          order: [['start_date', 'DESC'], ['end_date', 'DESC']]
+        });
+    
+        // Group boarding users by boardingId
+        const result = {};
+        boardings.forEach(boarding => {
+          const entries = boardingUsers
+            .filter(bu => bu.boardingId === boarding.id)
+            .map(bu => ({
+              id: bu.id.toString(),
+              petName: bu.pet?.name || "",
+              ownerName: bu.user?.name || "",
+              startDate: bu.start_date ? bu.start_date.toISOString().slice(0, 10) : "",
+              endDate: bu.end_date ? bu.end_date.toISOString().slice(0, 10) : "",
+              totalPrice: bu.total_price,
+              status: bu.status,
+              statusPayment: bu.status_payment,
+              notes: bu.notes || undefined,
+            }));
+          result[boarding.id.toString()] = entries;
+        });
+    
+        res.json(result);
+      } catch (err) {
+        console.error("Error fetching boarding users by boarding:", err);
+        res.status(500).json({ message: "Failed to fetch boarding users by boarding", error: err.message });
+      }
+    },
+
     // Appointments page
     // 1. Upcoming appointments
     async getUpcomingAppointments(req, res) {
