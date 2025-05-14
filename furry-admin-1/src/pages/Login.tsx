@@ -32,7 +32,7 @@ const Login = () => {
         onSubmit={handleLogin}
         className="bg-white p-6 rounded shadow-md w-full max-w-sm"
       >
-        <h1 className="text-2xl font-bold mb-4">Vet/Staff Login</h1>
+        <h1 className="text-2xl font-bold mb-4">Admin Login</h1>
         {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
         <div className="mb-4">
           <label htmlFor="email" className="block text-sm font-medium mb-1">
