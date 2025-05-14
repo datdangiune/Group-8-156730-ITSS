@@ -256,18 +256,18 @@ const AdminController = {
         // Fetch usage counts for all services
         const usageCounts = await ServiceUser.findAll({
           attributes: [
-            'service_id',
+            ['serviceId', 'serviceId'],
             [Sequelize.fn('COUNT', Sequelize.col('id')), 'totalUses'],
             [Sequelize.fn('SUM', Sequelize.literal(`CASE WHEN status = 'In Progress' THEN 1 ELSE 0 END`)), 'activeUses']
           ],
-          group: ['service_id'],
+          group: ['serviceId'],
           raw: true
         });
     
-        // Map usage counts by service_id for quick lookup
+        // Map usage counts by serviceId for quick lookup
         const usageMap = {};
         usageCounts.forEach(u => {
-          usageMap[u.service_id] = {
+          usageMap[u.serviceId] = {
             totalUses: parseInt(u.totalUses, 10) || 0,
             activeUses: parseInt(u.activeUses, 10) || 0
           };
@@ -289,6 +289,57 @@ const AdminController = {
       } catch (err) {
         console.error('Error fetching service list with stats:', err);
         res.status(500).json({ message: 'Failed to fetch service list', error: err.message });
+      }
+    },
+    
+    // Controller to get mock-like service user entries for each service
+    async getServiceUsersByService(req, res) {
+      try {
+        // Get all services
+        const services = await Service.findAll({
+          attributes: ['id', 'name'],
+          order: [['id', 'ASC']]
+        });
+    
+        // Get all ServiceUser entries with related Pet and User
+        const serviceUsers = await ServiceUser.findAll({
+          attributes: ['id', ['serviceId', 'serviceId'], 'date', 'hour', 'status'],
+          include: [
+            {
+              model: Pet,
+              as: 'pet',
+              attributes: ['name']
+            },
+            {
+              model: User,
+              as: 'user',
+              attributes: ['name']
+            }
+          ],
+          order: [['date', 'DESC'], ['hour', 'DESC']]
+        });
+    
+        // Group service users by serviceId
+        const result = {};
+        services.forEach(service => {
+          const entries = serviceUsers
+            .filter(su => su.serviceId === service.id)
+            .map(su => ({
+              id: su.id.toString(),
+              petName: su.pet?.name || "",
+              ownerName: su.user?.name || "",
+              time: su.date && su.hour
+                ? `${new Date(su.date).toLocaleDateString()} - ${su.hour}`
+                : "",
+              status: su.status === "In Progress" ? "ongoing" : (su.status === "Completed" ? "completed" : su.status?.toLowerCase() || "")
+            }));
+          result[service.id.toString()] = entries;
+        });
+    
+        res.json(result);
+      } catch (err) {
+        console.error("Error fetching service users by service:", err);
+        res.status(500).json({ message: "Failed to fetch service users by service", error: err.message });
       }
     },
 

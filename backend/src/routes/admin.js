@@ -23,6 +23,8 @@ router.patch('/users/:id/password', verifyTokenAdmin, AdminController.changeUser
 
 // === Services ===
 router.get('/services', verifyTokenAdmin, AdminController.getAllServices);
+router.get('/services-with-stats', verifyTokenAdmin, AdminController.getServiceListWithStats);
+router.get('/service-users-by-service', verifyTokenAdmin, AdminController.getServiceUsersByService);
 
 // === Appointments ===
 router.get('/appointments/upcoming', verifyTokenAdmin, AdminController.getUpcomingAppointments);

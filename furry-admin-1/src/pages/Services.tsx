@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Layout from '@/components/Layout';
 import ServiceTable, { ServiceData } from '@/components/ServiceTable';
 import ServiceUserList, { ServiceUserEntry } from '@/components/ServiceUserList';
@@ -50,123 +50,17 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-
-// Mock data for services with usage statistics
-const initialServices = [
-  {
-    id: '1',
-    name: 'Standard Grooming',
-    category: 'grooming' as const,
-    price: 45,
-    duration: '1 hour',
-    isActive: true,
-    activeUses: 3,
-    totalUses: 127,
-  },
-  {
-    id: '2',
-    name: 'Premium Grooming',
-    category: 'grooming' as const,
-    price: 75,
-    duration: '1.5 hours',
-    isActive: true,
-    activeUses: 5,
-    totalUses: 89,
-  },
-  {
-    id: '3',
-    name: 'Overnight Boarding',
-    category: 'boarding' as const,
-    price: 60,
-    duration: '24 hours',
-    isActive: true,
-    activeUses: 8,
-    totalUses: 215,
-  },
-  {
-    id: '4',
-    name: 'Weekly Boarding',
-    category: 'boarding' as const,
-    price: 350,
-    duration: '1 week',
-    isActive: true,
-    activeUses: 4,
-    totalUses: 42,
-  },
-  {
-    id: '5',
-    name: 'Vaccination',
-    category: 'medical' as const,
-    price: 85,
-    duration: '30 minutes',
-    isActive: true,
-    activeUses: 2,
-    totalUses: 324,
-  },
-  {
-    id: '6',
-    name: 'Dental Cleaning',
-    category: 'medical' as const,
-    price: 120,
-    duration: '1 hour',
-    isActive: false,
-    activeUses: 0,
-    totalUses: 65,
-  },
-  {
-    id: '7',
-    name: 'Pet Photography',
-    category: 'other' as const,
-    price: 65,
-    duration: '45 minutes',
-    isActive: true,
-    activeUses: 1,
-    totalUses: 33,
-  },
-];
-
-// Mock data for service usage
-const mockServiceUsers: Record<string, ServiceUserEntry[]> = {
-  '1': [
-    { id: 'u1', petName: 'Max', ownerName: 'John Smith', time: 'May 14, 2023 - 10:30 AM', status: 'ongoing' },
-    { id: 'u2', petName: 'Bella', ownerName: 'Sarah Johnson', time: 'May 14, 2023 - 11:15 AM', status: 'ongoing' },
-    { id: 'u3', petName: 'Charlie', ownerName: 'Robert Davis', time: 'May 14, 2023 - 2:00 PM', status: 'ongoing' },
-    { id: 'u4', petName: 'Luna', ownerName: 'Emma Wilson', time: 'May 13, 2023 - 3:45 PM', status: 'completed' },
-    { id: 'u5', petName: 'Cooper', ownerName: 'Michael Brown', time: 'May 13, 2023 - 1:30 PM', status: 'completed' },
-  ],
-  '2': [
-    { id: 'u6', petName: 'Daisy', ownerName: 'Jessica Lee', time: 'May 14, 2023 - 9:00 AM', status: 'ongoing' },
-    { id: 'u7', petName: 'Rocky', ownerName: 'Daniel Taylor', time: 'May 14, 2023 - 10:00 AM', status: 'ongoing' },
-    { id: 'u8', petName: 'Bailey', ownerName: 'Olivia Martinez', time: 'May 14, 2023 - 1:15 PM', status: 'ongoing' },
-    { id: 'u9', petName: 'Molly', ownerName: 'Thomas Anderson', time: 'May 14, 2023 - 3:30 PM', status: 'ongoing' },
-    { id: 'u10', petName: 'Milo', ownerName: 'Sophia Garcia', time: 'May 14, 2023 - 4:45 PM', status: 'ongoing' },
-  ],
-  '3': [
-    { id: 'u11', petName: 'Leo', ownerName: 'William Harris', time: 'May 14, 2023 - Present', status: 'ongoing' },
-    { id: 'u12', petName: 'Zoe', ownerName: 'Ava Clark', time: 'May 13, 2023 - Present', status: 'ongoing' },
-    { id: 'u13', petName: 'Toby', ownerName: 'James Lewis', time: 'May 12, 2023 - Present', status: 'ongoing' },
-    { id: 'u14', petName: 'Ruby', ownerName: 'Liam Walker', time: 'May 11, 2023 - Present', status: 'ongoing' },
-    { id: 'u15', petName: 'Oscar', ownerName: 'Charlotte Young', time: 'May 10, 2023 - Present', status: 'ongoing' },
-    { id: 'u16', petName: 'Lucy', ownerName: 'Benjamin Hall', time: 'May 9, 2023 - Present', status: 'ongoing' },
-    { id: 'u17', petName: 'Teddy', ownerName: 'Amelia King', time: 'May 8, 2023 - Present', status: 'ongoing' },
-    { id: 'u18', petName: 'Rosie', ownerName: 'Henry Adams', time: 'May 7, 2023 - Present', status: 'ongoing' },
-  ],
-};
-
-// Extended service data type
-interface ExtendedServiceData extends ServiceData {
-  activeUses: number;
-  totalUses: number;
-}
+import { fetchServicesWithStats, fetchServiceUsersByService, ServiceItem } from '@/service/service';
 
 const Services = () => {
-  const [services, setServices] = useState<ExtendedServiceData[]>(initialServices);
+  const [services, setServices] = useState<ServiceItem[]>([]);
+  const [serviceUsers, setServiceUsers] = useState<Record<string, ServiceUserEntry[]>>({});
   const [searchQuery, setSearchQuery] = useState('');
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [currentService, setCurrentService] = useState<ExtendedServiceData | null>(null);
-  const [selectedService, setSelectedService] = useState<ExtendedServiceData | null>(null);
+  const [currentService, setCurrentService] = useState<ServiceItem | null>(null);
+  const [selectedService, setSelectedService] = useState<ServiceItem | null>(null);
   const [formData, setFormData] = useState({
     name: '',
     category: 'grooming',
@@ -175,6 +69,23 @@ const Services = () => {
     isActive: true,
   });
 
+  // Fetch services and service users on mount
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [servicesData, serviceUsersData] = await Promise.all([
+          fetchServicesWithStats(),
+          fetchServiceUsersByService(),
+        ]);
+        setServices(servicesData);
+        setServiceUsers(serviceUsersData as Record<string, ServiceUserEntry[]>);
+      } catch (error: any) {
+        toast.error("Failed to fetch services or service users");
+      }
+    };
+    fetchData();
+  }, []);
+
   // Filtered services based on search query
   const filteredServices = services.filter(service => 
     service.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -182,7 +93,7 @@ const Services = () => {
   );
 
   const handleEdit = (service: ServiceData) => {
-    const extService = service as ExtendedServiceData;
+    const extService = service as ServiceItem;
     setCurrentService(extService);
     setFormData({
       name: extService.name,
@@ -220,7 +131,7 @@ const Services = () => {
   };
 
   const handleAddService = () => {
-    const newService: ExtendedServiceData = {
+    const newService: ServiceItem = {
       id: (services.length + 1).toString(),
       name: formData.name,
       category: formData.category as any,
@@ -248,7 +159,7 @@ const Services = () => {
   };
 
   const handleDelete = (service: ServiceData) => {
-    const extService = service as ExtendedServiceData;
+    const extService = service as ServiceItem;
     setCurrentService(extService);
     setIsDeleteDialogOpen(true);
   };
@@ -258,21 +169,19 @@ const Services = () => {
 
     setServices(prevServices => prevServices.filter(service => service.id !== currentService.id));
 
-    // Replace variant with proper toast.error
     toast.error("Service deleted", {
       description: `${currentService.name} has been deleted.`,
     });
 
     setIsDeleteDialogOpen(false);
     
-    // If we're deleting the currently selected service, clear it
     if (selectedService && selectedService.id === currentService.id) {
       setSelectedService(null);
     }
   };
 
   const handleToggleActive = (service: ServiceData) => {
-    const extService = service as ExtendedServiceData;
+    const extService = service as ServiceItem;
     setServices(prevServices => 
       prevServices.map(s => 
         s.id === extService.id 
@@ -299,7 +208,7 @@ const Services = () => {
     setIsAddDialogOpen(true);
   };
 
-  const handleServiceSelect = (service: ExtendedServiceData) => {
+  const handleServiceSelect = (service: ServiceItem) => {
     setSelectedService(service);
   };
 
@@ -307,7 +216,6 @@ const Services = () => {
     setSelectedService(null);
   };
 
-  // Enhanced table with usage statistics
   const ServiceTableWithUsage = ({
     data,
     onSelect,
@@ -315,8 +223,8 @@ const Services = () => {
     onDelete,
     onToggleActive
   }: {
-    data: ExtendedServiceData[];
-    onSelect: (service: ExtendedServiceData) => void;
+    data: ServiceItem[];
+    onSelect: (service: ServiceItem) => void;
     onEdit?: (service: ServiceData) => void;
     onDelete?: (service: ServiceData) => void;
     onToggleActive?: (service: ServiceData) => void;
@@ -384,22 +292,7 @@ const Services = () => {
                     </div>
                   )}
                 </TableCell>
-                <TableCell className="text-right">
-                  <div className="flex justify-end">
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onEdit?.(service);
-                      }}
-                      className="opacity-0 group-hover:opacity-100 transition-opacity focus:opacity-100"
-                    >
-                      <PawPrint className="h-4 w-4" />
-                      <span className="sr-only">Edit</span>
-                    </Button>
-                  </div>
-                </TableCell>
+                
               </TableRow>
             );
           })}
@@ -423,7 +316,6 @@ const Services = () => {
         </div>
 
         {selectedService ? (
-          // Detail View for selected service
           <div className="space-y-6 animate-fade-in">
             <div className="flex items-center">
               <Button variant="ghost" onClick={handleBackToList} className="mr-2">
@@ -474,7 +366,7 @@ const Services = () => {
                   <ServiceUserList 
                     title="Current Users"
                     description={`Pets currently using ${selectedService.name}`}
-                    data={(mockServiceUsers[selectedService.id] || []).filter(u => u.status === 'ongoing')}
+                    data={(serviceUsers[selectedService.id] || []).filter(u => u.status === 'ongoing')}
                   />
                   
                   <div className="h-6"></div>
@@ -482,14 +374,13 @@ const Services = () => {
                   <ServiceUserList 
                     title="Recent Users"
                     description={`Pets who recently used ${selectedService.name}`}
-                    data={(mockServiceUsers[selectedService.id] || []).filter(u => u.status === 'completed')}
+                    data={(serviceUsers[selectedService.id] || []).filter(u => u.status === 'completed')}
                   />
                 </div>
               </CardContent>
             </Card>
           </div>
         ) : (
-          // Main List View
           <Card className="animate-fade-in">
             <CardHeader className="pb-3">
               <CardTitle>All Services</CardTitle>
@@ -516,7 +407,6 @@ const Services = () => {
         )}
       </div>
 
-      {/* Delete Confirmation Dialog */}
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -534,7 +424,6 @@ const Services = () => {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Edit Service Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent>
           <DialogHeader>
@@ -616,7 +505,6 @@ const Services = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Add Service Dialog */}
       <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
         <DialogContent>
           <DialogHeader>
