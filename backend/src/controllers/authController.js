@@ -94,4 +94,27 @@ const registerStaff = async(req, res) => {
     }
 };
 
-module.exports = { login, register, loginVetStaff, registerStaff };
+const registerAdmin = async(req, res) => {
+    try {
+        const { username, email, password, name} = req.body; // Add 'name' to destructuring
+        if (!username || !email || !password) {
+            return res.status(400).json({ message: 'Please fill in all required fields' });
+        }
+        const existingUser = await User.findOne({ where: { email } });
+        if (existingUser) {
+            return res.status(400).json({ message: 'Email already exists' });
+        }
+        await User.create({
+            username: username,
+            email,
+            password,
+            name: name, // Use 'username' as the default value for 'name'
+            role: 'admin', // Set the role to 'staff' for staff registration
+        });
+        res.status(201).json({ message: 'User registered successfully', success: true });
+    } catch (err) {
+        res.status(500).json({ message: 'Error registering user', error: err.message });
+    }
+};
+
+module.exports = { login, register, loginVetStaff, registerStaff , registerAdmin};
