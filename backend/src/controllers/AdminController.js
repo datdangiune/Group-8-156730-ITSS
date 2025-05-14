@@ -244,6 +244,54 @@ const AdminController = {
       }
     },
 
+    // Controller to get service list with usage stats
+    async getServiceListWithStats(req, res) {
+      try {
+        // Fetch all services
+        const services = await Service.findAll({
+          attributes: ['id', 'name', 'type', 'price', 'duration', 'status'],
+          order: [['created_at', 'DESC']]
+        });
+    
+        // Fetch usage counts for all services
+        const usageCounts = await ServiceUser.findAll({
+          attributes: [
+            'service_id',
+            [Sequelize.fn('COUNT', Sequelize.col('id')), 'totalUses'],
+            [Sequelize.fn('SUM', Sequelize.literal(`CASE WHEN status = 'In Progress' THEN 1 ELSE 0 END`)), 'activeUses']
+          ],
+          group: ['service_id'],
+          raw: true
+        });
+    
+        // Map usage counts by service_id for quick lookup
+        const usageMap = {};
+        usageCounts.forEach(u => {
+          usageMap[u.service_id] = {
+            totalUses: parseInt(u.totalUses, 10) || 0,
+            activeUses: parseInt(u.activeUses, 10) || 0
+          };
+        });
+    
+        // Format the response
+        const result = services.map(service => ({
+          id: service.id.toString(),
+          name: service.name,
+          category: service.type,
+          price: service.price,
+          duration: service.duration,
+          isActive: service.status === 'available',
+          activeUses: usageMap[service.id]?.activeUses || 0,
+          totalUses: usageMap[service.id]?.totalUses || 0,
+        }));
+    
+        res.json(result);
+      } catch (err) {
+        console.error('Error fetching service list with stats:', err);
+        res.status(500).json({ message: 'Failed to fetch service list', error: err.message });
+      }
+    },
+
     // Appointments page
     // 1. Upcoming appointments
     async getUpcomingAppointments(req, res) {

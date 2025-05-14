@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { 
   Table, 
@@ -33,8 +34,6 @@ interface UserTableProps {
   onDelete?: (user: UserData) => void;
   onStatusChange?: (user: UserData, status: 'active' | 'inactive' | 'locked') => void;
   onRoleChange?: (user: UserData, role: 'admin' | 'staff' | 'vet' | 'client') => void;
-  onChangePassword?: (user: UserData) => void;
-  getRoleDisplay?: (role: string) => string;
 }
 
 const UserRoleIcon = ({ role }: { role: string }) => {
@@ -56,19 +55,17 @@ const UserTable: React.FC<UserTableProps> = ({
   onDelete,
   onStatusChange,
   onRoleChange,
-  onChangePassword,
-  getRoleDisplay
 }) => {
   return (
     <Table className="animate-fade-in">
       <TableHeader>
         <TableRow>
-          <TableHead>Tên</TableHead>
+          <TableHead>Name</TableHead>
           <TableHead>Email</TableHead>
-          <TableHead>Vai trò</TableHead>
-          <TableHead>Trạng thái</TableHead>
-          <TableHead>Hoạt động gần nhất</TableHead>
-          <TableHead className="text-right">Thao tác</TableHead>
+          <TableHead>Role</TableHead>
+          <TableHead>Status</TableHead>
+          <TableHead>Last Active</TableHead>
+          <TableHead className="text-right">Actions</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -79,7 +76,7 @@ const UserTable: React.FC<UserTableProps> = ({
             <TableCell>
               <div className="flex items-center gap-1.5">
                 <UserRoleIcon role={user.role} />
-                <span className="capitalize">{getRoleDisplay ? getRoleDisplay(user.role) : user.role}</span>
+                <span className="capitalize">{user.role}</span>
               </div>
             </TableCell>
             <TableCell>
@@ -92,47 +89,36 @@ const UserTable: React.FC<UserTableProps> = ({
                   user.status === 'locked' && "border-vetred-200 text-vetred-600 bg-vetred-50"
                 )}
               >
-                {user.status === 'active' && 'Hoạt động'}
-                {user.status === 'inactive' && 'Không hoạt động'}
-                {user.status === 'locked' && 'Bị khóa'}
+                {user.status}
               </Badge>
             </TableCell>
-            <TableCell>{user.lastActive || 'Chưa bao giờ'}</TableCell>
+            <TableCell>{user.lastActive || 'Never'}</TableCell>
             <TableCell className="text-right">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="icon" className="opacity-0 group-hover:opacity-100 transition-opacity focus:opacity-100">
                     <MoreHorizontal className="h-4 w-4" />
-                    <span className="sr-only">Thao tác</span>
+                    <span className="sr-only">Actions</span>
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  {onEdit && (
-                    <DropdownMenuItem onSelect={() => onEdit(user)}>
-                      <Pencil className="h-4 w-4 mr-2" />
-                      Chỉnh sửa
-                    </DropdownMenuItem>
-                  )}
-                  
-                  {onChangePassword && (
-                    <DropdownMenuItem onSelect={() => onChangePassword(user)}>
-                      <Lock className="h-4 w-4 mr-2" />
-                      Đổi mật khẩu
-                    </DropdownMenuItem>
-                  )}
+                  <DropdownMenuItem onSelect={() => onEdit?.(user)}>
+                    <Pencil className="h-4 w-4 mr-2" />
+                    Edit
+                  </DropdownMenuItem>
                   
                   {onStatusChange && (
                     <>
                       {user.status !== 'active' && (
                         <DropdownMenuItem onSelect={() => onStatusChange(user, 'active')}>
                           <Check className="h-4 w-4 mr-2 text-vetgreen-500" />
-                          Kích hoạt
+                          Set as Active
                         </DropdownMenuItem>
                       )}
                       {user.status !== 'locked' && (
                         <DropdownMenuItem onSelect={() => onStatusChange(user, 'locked')}>
                           <Lock className="h-4 w-4 mr-2 text-vetred-500" />
-                          Khóa tài khoản
+                          Lock Account
                         </DropdownMenuItem>
                       )}
                     </>
@@ -142,15 +128,15 @@ const UserTable: React.FC<UserTableProps> = ({
                     <>
                       <DropdownMenuItem onSelect={() => onRoleChange(user, 'admin')}>
                         <Shield className="h-4 w-4 mr-2 text-vetblue-600" />
-                        Đặt làm Admin
+                        Set as Admin
                       </DropdownMenuItem>
                       <DropdownMenuItem onSelect={() => onRoleChange(user, 'vet')}>
                         <User className="h-4 w-4 mr-2 text-vetgreen-600" />
-                        Đặt làm Bác sĩ
+                        Set as Vet
                       </DropdownMenuItem>
                       <DropdownMenuItem onSelect={() => onRoleChange(user, 'staff')}>
                         <User className="h-4 w-4 mr-2 text-vetblue-400" />
-                        Đặt làm Nhân viên
+                        Set as Staff
                       </DropdownMenuItem>
                     </>
                   )}
@@ -161,7 +147,7 @@ const UserTable: React.FC<UserTableProps> = ({
                       className="text-red-600 hover:text-red-700 focus:text-red-700"
                     >
                       <Trash2 className="h-4 w-4 mr-2" />
-                      Xóa
+                      Delete
                     </DropdownMenuItem>
                   )}
                 </DropdownMenuContent>
