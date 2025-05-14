@@ -69,6 +69,36 @@ const AdminController = {
         }
     },
 
+    // Controller to fetch total counts for dashboard
+    async getTotalCounts(req, res) {
+      try {
+        const [
+          totalUsers,
+          totalAppointments,
+          totalPets,
+          totalServices,
+          totalBoardings
+        ] = await Promise.all([
+          User.count(),
+          Appointment.count(),
+          Pet.count(),
+          Service.count(),
+          Boarding.count()
+        ]);
+
+        res.json({
+          totalUsers,
+          totalAppointments,
+          totalPets,
+          totalServices,
+          totalBoardings
+        });
+      } catch (err) {
+        console.error('Error fetching total counts:', err);
+        res.status(500).json({ message: 'Failed to fetch total counts', error: err.message });
+      }
+    },
+
     // Monthly revenue chart
     async getMonthlyRevenue(req, res) {
       try {

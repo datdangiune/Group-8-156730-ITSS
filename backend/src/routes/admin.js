@@ -10,6 +10,7 @@ router.post('/login', AdminController.login); // Removed verifyTokenAdmin middle
 
 // === Dashboard ===
 router.get('/dashboard/stats', verifyTokenAdmin, AdminController.getDashboardStats);
+router.get('/dashboard/total-counts', verifyTokenAdmin, AdminController.getTotalCounts);
 router.get('/dashboard/monthly-revenue', verifyTokenAdmin, AdminController.getMonthlyRevenue);
 router.get('/dashboard/service-stats', verifyTokenAdmin, AdminController.getServiceStatsByCategory);
 router.get('/dashboard/today-schedule', verifyTokenAdmin, AdminController.getTodaySchedule);
