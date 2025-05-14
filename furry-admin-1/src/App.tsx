@@ -8,11 +8,9 @@ import Users from "./pages/Users";
 import Login from "./pages/Login";
 import Services from "./pages/Services";
 import Appointments from "./pages/Appointments";
-import Records from "./pages/Records";
 import Boarding from "./pages/Boarding";
 import Analytics from "./pages/Analytics";
-import Notifications from "./pages/Notifications";
-import Settings from "./pages/Settings";
+
 import NotFound from "./pages/NotFound";
 
 // Create a persistent query client
@@ -40,11 +38,8 @@ const App = () => (
           <Route path="/users" element={<Users />} />
           <Route path="/services" element={<Services />} />
           <Route path="/appointments" element={<Appointments />} />
-          <Route path="/records" element={<Records />} />
           <Route path="/boarding" element={<Boarding />} />
           <Route path="/analytics" element={<Analytics />} />
-          <Route path="/notifications" element={<Notifications />} />
-          <Route path="/settings" element={<Settings />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

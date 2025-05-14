@@ -26,13 +26,10 @@ const Sidebar: React.FC<SidebarProps> = ({ open, setOpen }) => {
   const menuItems = [
     { name: 'Dashboard', icon: LayoutDashboard, path: '/dashboard' },
     { name: 'Users', icon: Users, path: '/users' },
-    { name: 'Services', icon: PawPrint, path: '/services' },
     { name: 'Appointments', icon: Calendar, path: '/appointments' },
-    { name: 'Medical Records', icon: FileText, path: '/records' },
+    { name: 'Services', icon: PawPrint, path: '/services' },
     { name: 'Boarding', icon: Home, path: '/boarding' },
     { name: 'Analytics', icon: BarChart3, path: '/analytics' },
-    { name: 'Notifications', icon: Bell, path: '/notifications' },
-    { name: 'Settings', icon: Settings, path: '/settings' },
   ];
 
   return (

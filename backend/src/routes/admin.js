@@ -29,6 +29,7 @@ router.get('/service-users-by-service', verifyTokenAdmin, AdminController.getSer
 // === Appointments ===
 router.get('/appointments/upcoming', verifyTokenAdmin, AdminController.getUpcomingAppointments);
 router.get('/appointments/recent', verifyTokenAdmin, AdminController.getRecentAppointments);
+router.get('/appointments-mock-format', verifyTokenAdmin, AdminController.getAppointmentsMockFormat);
 
 // === Medical Records ===
 router.get('/medical-records/recent', verifyTokenAdmin, AdminController.getRecentMedicalRecords);
@@ -44,6 +45,7 @@ router.get('/boarding-users-by-boarding', verifyTokenAdmin, AdminController.getB
 router.get('/analytics/monthly-revenue', verifyTokenAdmin, AdminController.getMonthlyRevenue);
 router.get('/analytics/service-breakdown', verifyTokenAdmin, AdminController.getServiceBreakdown);
 router.get('/analytics/kpis', verifyTokenAdmin, AdminController.getKPIs);
+router.get('/analytics/data', verifyTokenAdmin, AdminController.getAnalyticsData);
 
 // === Notifications ===
 router.get('/notifications', verifyTokenAdmin, AdminController.getAllNotifications);

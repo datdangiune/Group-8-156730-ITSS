@@ -444,6 +444,45 @@ const AdminController = {
       }
     },
 
+    // Controller to get appointments in the requested mock format
+    async getAppointmentsMockFormat(req, res) {
+      try {
+        // Fetch all appointments with related Pet and User
+        const appointments = await Appointment.findAll({
+          include: [
+            {
+              model: Pet,
+              as: 'pet',
+              attributes: ['name', 'type', 'breed']
+            },
+            {
+              model: User,
+              as: 'owner',
+              attributes: ['name']
+            }
+          ],
+          order: [['appointment_date', 'DESC'], ['appointment_hour', 'ASC']]
+        });
+    
+        // Map to the required format
+        const result = appointments.map(a => ({
+          id: a.id.toString(),
+          petName: a.pet?.name || "",
+          petType: a.pet?.breed || a.pet?.type || "",
+          ownerName: a.owner?.name || "",
+          appointmentType: a.appointment_type,
+          appointmentDate: a.appointment_date,
+          reason: a.reason,
+          status: a.appointment_status
+        }));
+    
+        res.json(result);
+      } catch (err) {
+        console.error("Error fetching appointments in mock format:", err);
+        res.status(500).json({ message: "Failed to fetch appointments", error: err.message });
+      }
+    },
+
     // Appointments page
     // 1. Upcoming appointments
     async getUpcomingAppointments(req, res) {
@@ -727,6 +766,95 @@ const AdminController = {
       } catch (err) {
         console.error('❌ KPI error:', err);
         res.status(500).json({ message: 'Failed to fetch KPIs', error: err.message });
+      }
+    },
+
+    // Controller for analytics: revenueData and serviceData
+    async getAnalyticsData(req, res) {
+      try {
+        // Use EXTRACT(MONTH FROM ...) for better compatibility
+        const serviceRevenue = await ServiceUser.findAll({
+          attributes: [
+            [Sequelize.literal('EXTRACT(MONTH FROM "date")'), 'month'],
+            [Sequelize.fn('SUM', Sequelize.col('service.price')), 'serviceRevenue']
+          ],
+          include: [{
+            model: Service,
+            as: 'service',
+            attributes: []
+          }],
+          group: [Sequelize.literal('EXTRACT(MONTH FROM "date")')],
+          raw: true
+        });
+
+        const boardingRevenue = await BoardingUser.findAll({
+          attributes: [
+            [Sequelize.literal('EXTRACT(MONTH FROM "start_date")'), 'month'],
+            [Sequelize.fn('SUM', Sequelize.col('total_price')), 'boardingRevenue']
+          ],
+          group: [Sequelize.literal('EXTRACT(MONTH FROM "start_date")')],
+          raw: true
+        });
+
+        // Merge serviceRevenue and boardingRevenue by month
+        const revenueMap = {};
+        serviceRevenue.forEach(r => {
+          const m = r.month;
+          revenueMap[m] = { month: m, service: parseFloat(r.serviceRevenue) || 0, boarding: 0 };
+        });
+        boardingRevenue.forEach(r => {
+          const m = r.month;
+          if (!revenueMap[m]) revenueMap[m] = { month: m, service: 0, boarding: 0 };
+          revenueMap[m].boarding = parseFloat(r.boardingRevenue) || 0;
+        });
+
+        // Compose revenueData for 12 months (fill 0 if missing)
+        const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        const revenueData = [];
+        for (let i = 1; i <= 12; i++) {
+          const entry = revenueMap[i] || { month: i, service: 0, boarding: 0 };
+          revenueData.push({
+            name: monthNames[i - 1],
+            value: entry.service + entry.boarding
+          });
+        }
+
+        // 2. Service usage breakdown (service, boarding, appointment)
+        // Service usage
+        const serviceUsage = await ServiceUser.findAll({
+          attributes: [
+            [Sequelize.col('service.type'), 'type'],
+            [Sequelize.fn('COUNT', Sequelize.col('ServiceUser.id')), 'count']
+          ],
+          include: [{
+            model: Service,
+            as: 'service',
+            attributes: []
+          }],
+          group: ['service.type'],
+          raw: true
+        });
+
+        // Boarding usage
+        const boardingCount = await BoardingUser.count();
+
+        // Appointment usage
+        const appointmentCount = await Appointment.count();
+
+        // Compose serviceData
+        const serviceData = [
+          ...serviceUsage.map(s => ({
+            name: s.type.charAt(0).toUpperCase() + s.type.slice(1),
+            value: parseInt(s.count, 10)
+          })),
+          { name: 'Boarding', value: boardingCount },
+          { name: 'Appointment', value: appointmentCount }
+        ];
+
+        res.json({ revenueData, serviceData });
+      } catch (err) {
+        console.error('Error fetching analytics data:', err);
+        res.status(500).json({ message: 'Failed to fetch analytics data', error: err.message });
       }
     },
 

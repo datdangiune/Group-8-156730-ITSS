@@ -1,28 +1,30 @@
-
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import Layout from '@/components/Layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { BarChart as BarChartIcon, PieChart } from 'lucide-react';
 import BarChart from '@/components/BarChart';
 import AreaChart from '@/components/AreaChart';
+import { fetchAnalyticsData, RevenueDataItem, ServiceDataItem } from '@/service/analytics';
 
 const Analytics = () => {
-  const revenueData = [
-    { name: 'Jan', value: 4500 },
-    { name: 'Feb', value: 5200 },
-    { name: 'Mar', value: 4800 },
-    { name: 'Apr', value: 6000 },
-    { name: 'May', value: 5700 },
-    { name: 'Jun', value: 6500 },
-  ];
+  const [revenueData, setRevenueData] = useState<RevenueDataItem[]>([]);
+  const [serviceData, setServiceData] = useState<ServiceDataItem[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const serviceData = [
-    { name: 'Exams', value: 45 },
-    { name: 'Vaccines', value: 32 },
-    { name: 'Surgery', value: 18 },
-    { name: 'Boarding', value: 25 },
-    { name: 'Grooming', value: 30 },
-  ];
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const analytics = await fetchAnalyticsData();
+        setRevenueData(analytics.revenueData);
+        setServiceData(analytics.serviceData);
+      } catch (error) {
+        // Optionally handle error
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
 
   return (
     <Layout>
