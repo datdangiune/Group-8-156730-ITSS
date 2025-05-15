@@ -1,4 +1,4 @@
-const API_URL = "http://localhost:3000/api/v1/user/notifications";
+const API_URL = "https://api.datto.id.vn/api/v1/user/notifications";
 
 export interface Notification {
     id: number;

@@ -42,7 +42,7 @@ export interface UserService {
   }
   export async function fetchServices(token: string): Promise<GetServicesResponse> {
     try {
-      const response = await fetch('http://localhost:3000/api/v1/user/get-all-service', {
+      const response = await fetch('https://api.datto.id.vn/api/v1/user/get-all-service', {
         method: 'GET',
         headers: {
             'Content-Type': 'application/json',
@@ -66,7 +66,7 @@ export interface UserService {
   }
   export async function fetchServicesById(id: string, token: string): Promise<GetServicesResponse> {
     try {
-      const response = await fetch(`http://localhost:3000/api/v1/user/get-service/${id}`, {
+      const response = await fetch(`https://api.datto.id.vn/api/v1/user/get-service/${id}`, {
         method: 'GET',
         headers: {
             'Content-Type': 'application/json',
@@ -114,7 +114,7 @@ export interface UserService {
     requestData: RegisterServiceRequest
   ): Promise<RegisterServiceResponse> {
     try {
-      const response = await fetch('http://localhost:3000/api/v1/user/service', {
+      const response = await fetch('https://api.datto.id.vn/api/v1/user/service', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -138,7 +138,7 @@ export interface UserService {
 
   export const fetchUserServices = async (token: string): Promise<UserService[]> => {
     try {
-      const response = await fetch(`http://localhost:3000/api/v1/user/service`, {
+      const response = await fetch(`https://api.datto.id.vn/api/v1/user/service`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -163,7 +163,7 @@ export interface UserService {
   };
   export const getPaymentUrl = async (serviceId: number, token: string): Promise<string | null> => {
     try {
-      const response = await fetch(`http://localhost:3000/api/v1/user/pay/${serviceId}`, {
+      const response = await fetch(`https://api.datto.id.vn/api/v1/user/pay/${serviceId}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },

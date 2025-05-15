@@ -24,7 +24,7 @@ interface UserPayload {
 }
 export async function Signup(fullname: string, email: string, password: string, name: string): Promise<SignupResponse> {
     try {
-    const response = await fetch(`http://localhost:3000/api/v1/auth/register`, {
+    const response = await fetch(`https://api.datto.id.vn/api/v1/auth/register`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -46,7 +46,7 @@ export async function Signup(fullname: string, email: string, password: string, 
 export async function Login(email: string, password: string): Promise<LoginResponse> {
   
   try {
-    const response = await fetch(`http://localhost:3000/api/v1/auth/login`, {
+    const response = await fetch(`https://api.datto.id.vn/api/v1/auth/login`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -73,7 +73,7 @@ export async function Login(email: string, password: string): Promise<LoginRespo
 }
 export async function handleLogout() {
   const navigate = useNavigate()
-  const response = await fetch("http://localhost:3000/api/v1/auth/logout", {
+  const response = await fetch("https://api.datto.id.vn/api/v1/auth/logout", {
     method: "POST",
     credentials: "include",  // Gửi cookie khi logout
   });
@@ -118,7 +118,7 @@ export const fetchWithAuth = async (url: string, options: RequestInit = {}) => {
     window.location.href = "/login";
     return;
   }
-  const API_BASE_URL = "http://localhost:3000/api/v1";
+  const API_BASE_URL = "https://api.datto.id.vn/api/v1";
   const response = await fetch(`${API_BASE_URL}${url}`, {
     ...options,
     headers: {

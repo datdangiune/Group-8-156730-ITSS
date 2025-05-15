@@ -24,7 +24,7 @@ interface PetsResponse {
 
 export async function getPets(token: string): Promise<Pet[]> {
     try {
-      const response = await fetch("http://localhost:3000/api/v1/user/pets", {
+      const response = await fetch("https://api.datto.id.vn/api/v1/user/pets", {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -59,7 +59,7 @@ export async function getPets(token: string): Promise<Pet[]> {
 
 export async function getPet(token: string, id: number): Promise<Pet | null> {
   try {
-    const response = await fetch(`http://localhost:3000/api/v1/user/get-pet/${id}`, {
+    const response = await fetch(`https://api.datto.id.vn/api/v1/user/get-pet/${id}`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -95,7 +95,7 @@ export const uploadFile = async (file: File, token: string): Promise<string | nu
   formData.append("file", file); 
 
   try {
-    const response = await fetch("http://localhost:3000/api/v1/user/image", {
+    const response = await fetch("https://api.datto.id.vn/api/v1/user/image", {
       method: "POST",
       body: formData,
       headers: {
@@ -126,7 +126,7 @@ export const registerPet = async (petData: PetFormValues, imageUrl: string | nul
   try {
     const payload = { ...petData, image: imageUrl }; // Thêm URL ảnh nếu có
 
-    const response = await fetch("http://localhost:3000/api/v1/user/pets", {
+    const response = await fetch("https://api.datto.id.vn/api/v1/user/pets", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -152,7 +152,7 @@ export const updatePet = async (petData: PetFormValues, imageUrl: string | null,
   try {
     const payload = { ...petData, image: imageUrl }; // Thêm URL ảnh nếu có
 
-    const response = await fetch(`http://localhost:3000/api/v1/user/pets/${petId}`, {
+    const response = await fetch(`https://api.datto.id.vn/api/v1/user/pets/${petId}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",

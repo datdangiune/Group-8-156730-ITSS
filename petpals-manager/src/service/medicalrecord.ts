@@ -14,7 +14,7 @@ export interface FetchMedicalHistoryResponse {
 
 export const fetchMedicalHistory = async (petId: number, token: string): Promise<FetchMedicalHistoryResponse | null> => {
   try {
-    const response = await fetch(`http://localhost:3000/api/v1/user/${petId}/medical-history`, {
+    const response = await fetch(`https://api.datto.id.vn/api/v1/user/${petId}/medical-history`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',

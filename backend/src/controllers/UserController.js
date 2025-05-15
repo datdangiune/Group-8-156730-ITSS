@@ -694,7 +694,7 @@ const UserController  = {
                     vnp_TxnRef: vnp_TxnRef,
                     vnp_OrderInfo: `Payment for order ${vnp_TxnRef}`,
                     vnp_OrderType: ProductCode.Other,
-                    vnp_ReturnUrl: "http://localhost:3000/vnpay-return",
+                    vnp_ReturnUrl: "https://api.datto.id.vn/vnpay-return",
                 },
                 {
                     logger: {
@@ -747,7 +747,7 @@ const UserController  = {
                     vnp_TxnRef: vnp_TxnRef,
                     vnp_OrderInfo: `Payment for order ${vnp_TxnRef}`,
                     vnp_OrderType: ProductCode.Other,
-                    vnp_ReturnUrl: "http://localhost:3000/vnpay-return",
+                    vnp_ReturnUrl: "https://api.datto.id.vn/vnpay-return",
                 },
                 {
                     logger: {

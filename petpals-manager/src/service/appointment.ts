@@ -45,7 +45,7 @@ export interface Appointment {
   }
   
 
-const API_URL = "http://localhost:3000/api/v1/user/appointments";
+const API_URL = "https://api.datto.id.vn/api/v1/user/appointments";
 
 export const createAppointment = async (data: AppointmentFormValues, token: string): Promise<void> => {
     try {
@@ -104,7 +104,7 @@ export interface FetchAppointmentResponse {
   data: Appointment;
 }
 export const fetchAppointmentResultById = async(token:string, id: number): Promise<FetchAppointmentResponse> => {
-    const res = await fetch(`http://localhost:3000/api/v1/user/appointment-result/${id}`, {
+    const res = await fetch(`https://api.datto.id.vn/api/v1/user/appointment-result/${id}`, {
     method: 'GET',
     headers: {
       'Authorization': `Bearer ${token}`,

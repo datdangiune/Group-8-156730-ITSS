@@ -28,7 +28,7 @@ export interface BoardingResponse {
 // Function to fetch the boarding services
 export const fetchBoardingServices = async (token: string): Promise<BoardingResponse> => {
     try {
-      const response = await fetch('http://localhost:3000/api/v1/user/get-all-boarding', {
+      const response = await fetch('https://api.datto.id.vn/api/v1/user/get-all-boarding', {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -52,7 +52,7 @@ export const fetchBoardingServices = async (token: string): Promise<BoardingResp
 };
 export const fetchBoardingServiceById = async (token: string, id: string): Promise<BoardingResponseID> => {
     try {
-      const response = await fetch(`http://localhost:3000/api/v1/user/get-boarding/${id}`, {
+      const response = await fetch(`https://api.datto.id.vn/api/v1/user/get-boarding/${id}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -93,7 +93,7 @@ export async function fetchRegisterBaording(
   requestData: RegisterBoardingRequest
 ): Promise<RegisterBoardingResponse> {
   try {
-    const response = await fetch('http://localhost:3000/api/v1/user/boarding', {
+    const response = await fetch('https://api.datto.id.vn/api/v1/user/boarding', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -133,7 +133,7 @@ export interface UserBoarding {
 
   export const fetchUserBoarding = async (token: string, status: string): Promise<UserBoarding[]> => {
     try {
-      const response = await fetch(`http://localhost:3000/api/v1/user/boarding?status=${status}`, {
+      const response = await fetch(`https://api.datto.id.vn/api/v1/user/boarding?status=${status}`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -160,7 +160,7 @@ export interface UserBoarding {
 
   export const getPaymentUrl = async (boardingId: number, token: string): Promise<string | null> => {
     try {
-      const response = await fetch(`http://localhost:3000/api/v1/user/pay-boarding/${boardingId}`, {
+      const response = await fetch(`https://api.datto.id.vn/api/v1/user/pay-boarding/${boardingId}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
