@@ -29,7 +29,6 @@ const Sidebar: React.FC<SidebarProps> = ({ open, setOpen }) => {
     { name: 'Appointments', icon: Calendar, path: '/appointments' },
     { name: 'Services', icon: PawPrint, path: '/services' },
     { name: 'Boarding', icon: Home, path: '/boarding' },
-    { name: 'Analytics', icon: BarChart3, path: '/analytics' },
   ];
 
   return (

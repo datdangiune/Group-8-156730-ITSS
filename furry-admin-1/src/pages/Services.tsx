@@ -271,7 +271,7 @@ const Services = () => {
                     {service.category}
                   </Badge>
                 </TableCell>
-                <TableCell>${service.price.toFixed(2)}</TableCell>
+                <TableCell>{service.price} VND</TableCell>
                 <TableCell>
                   <div className="flex items-center gap-2">
                     <Users className="h-4 w-4 text-vetblue-500" />
@@ -340,7 +340,7 @@ const Services = () => {
                     </Badge>
                     <CardTitle className="text-2xl">{selectedService.name}</CardTitle>
                     <CardDescription>
-                      ${selectedService.price.toFixed(2)} • {selectedService.duration}
+                      {selectedService.price} VND • {selectedService.duration}
                     </CardDescription>
                   </div>
                   <div className="flex flex-col items-end">
@@ -458,7 +458,7 @@ const Services = () => {
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="price">Price ($)</Label>
+              <Label htmlFor="price">Price (VND)</Label>
               <Input
                 id="price"
                 type="number"
@@ -539,7 +539,7 @@ const Services = () => {
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="add-price">Price ($)</Label>
+              <Label htmlFor="add-price">Price (VND)</Label>
               <Input
                 id="add-price"
                 type="number"

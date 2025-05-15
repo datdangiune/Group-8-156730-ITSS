@@ -102,7 +102,7 @@ const Boarding = () => {
                     </Badge>
                     <CardTitle className="text-2xl">{selectedOption.name}</CardTitle>
                     <CardDescription>
-                      ${selectedOption.price.toFixed(2)} per night • Max stay: {selectedOption.maxday} days
+                      {selectedOption.price} VND • Max stay: {selectedOption.maxday} days
                     </CardDescription>
                   </div>
                   <div className="flex flex-col items-end">
@@ -146,7 +146,7 @@ const Boarding = () => {
                             <TableCell>{user.petName}</TableCell>
                             <TableCell>{user.ownerName}</TableCell>
                             <TableCell>{user.startDate} - {user.endDate}</TableCell>
-                            <TableCell>${user.totalPrice.toFixed(2)}</TableCell>
+                            <TableCell>{user.totalPrice} VND</TableCell>
                             <TableCell>
                               <Badge
                                 variant="outline"
@@ -238,7 +238,7 @@ const Boarding = () => {
                             {option.type}
                           </Badge>
                         </TableCell>
-                        <TableCell>${option.price.toFixed(2)}</TableCell>
+                        <TableCell>{option.price} VND</TableCell>
                         <TableCell>{option.maxday} days</TableCell>
                         <TableCell>
                           <div className="flex items-center gap-2">
