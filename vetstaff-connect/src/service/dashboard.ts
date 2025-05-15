@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_BASE_URL = "http://localhost:3000/api/v1/staff";
+const API_BASE_URL = "https://api.datto.id.vn/api/v1/staff";
 
 export interface DashboardStats {
   counts: {

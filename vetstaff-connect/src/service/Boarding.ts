@@ -2,7 +2,7 @@ import axios from "axios";
 import { io } from "socket.io-client";
 
 const socket = io("http://localhost:3000");
-const API_BASE_URL = "http://localhost:3000/api/v1";
+const API_BASE_URL = "https://api.datto.id.vn/api/v1";
 
 socket.on("connect", () => {
   console.log("Connected to WebSocket server with ID:", socket.id);

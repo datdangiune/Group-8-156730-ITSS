@@ -5,7 +5,7 @@ export const uploadFile = async (file: File, token: string): Promise<string | nu
   formData.append("file", file); 
 
   try {
-    const response = await fetch("http://localhost:3000/api/v1/user/image", {
+    const response = await fetch("https://api.datto.id.vn/api/v1/user/image", {
       method: "POST",
       body: formData,
       headers: {

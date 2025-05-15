@@ -3,7 +3,7 @@ import Cookies from 'js-cookie';
 
 // Base URL cho tất cả các API request
 // Sử dụng import.meta.env thay vì process.env cho Vite
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api/v1/admin';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://api.datto.id.vn/api/v1/admin';
 
 // Hàm tiện ích để xử lý các request
 const handleResponse = async (response: Response) => {
