@@ -822,7 +822,7 @@ const UserController  = {
                 `;
                 await sendMail({ email: serviceUser.user.email, html: emailContent });
     
-                return res.redirect('http://localhost:8080/services/me');
+                return res.redirect('http://user.datto.id.vn/services/me');
             }
     
             if (type === 'BU') {
