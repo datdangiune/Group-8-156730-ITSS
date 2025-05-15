@@ -11,7 +11,7 @@ const Login = () => {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const response = await axios.post("http://api.datto.id.vn/api/auth/admin/login", { email, password });
+      const response = await axios.post("https://api.datto.id.vn/api/auth/admin/login", { email, password });
       const { token, role } = response.data;
 
       // Store token and role in localStorage
