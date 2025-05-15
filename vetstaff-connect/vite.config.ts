@@ -8,6 +8,7 @@ export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
     port: 8081,
+    allowedHosts: ['api.datto.id.vn', 'localhost'], // thêm hostname bạn muốn cho phép
   },
   plugins: [
     react(),
