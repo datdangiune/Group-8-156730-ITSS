@@ -1,7 +1,7 @@
 import axios from "axios";
 import { io } from "socket.io-client";
 
-const socket = io("http://localhost:3000");
+const socket = io("https://api.datto.id.vn");
 const API_BASE_URL = "https://api.datto.id.vn/api/v1";
 
 socket.on("connect", () => {
