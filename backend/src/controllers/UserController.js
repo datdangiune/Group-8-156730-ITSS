@@ -790,7 +790,7 @@ const UserController  = {
             }
     
             if (!verify.isSuccess) {
-                return res.redirect('http://localhost:8080');
+                return res.redirect('https://user.datto.id.vn/services/me');
             }
     
             if (type === 'SU') {
@@ -822,7 +822,7 @@ const UserController  = {
                 `;
                 await sendMail({ email: serviceUser.user.email, html: emailContent });
     
-                return res.redirect('http://localhost:8080/services/me');
+                return res.redirect('https://user.datto.id.vn/services/me');
             }
     
             if (type === 'BU') {
@@ -854,7 +854,7 @@ const UserController  = {
                 `;
                 await sendMail({ email: boardingUser.user.email, html: emailContent });
     
-                return res.redirect('http://localhost:8080/boardings/me');
+                return res.redirect('https://user.datto.id.vn/boardings/me');
             }
     
             return res.send('Loại đơn hàng không xác định');
