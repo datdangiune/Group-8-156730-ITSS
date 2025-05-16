@@ -301,11 +301,12 @@ const MyServices = () => {
           </span>
         </div>
         <div className="flex items-center text-sm text-muted-foreground">
-          <CreditCard className="h-4 w-4 mr-2" />
+          <PawPrint className="h-4 w-4 mr-2" />
           <span>Pet: {boarding.pet.name}</span>
         </div>
         <div className="flex items-center text-sm text-muted-foreground">
-          <span>Total: {boarding.total_price.toLocaleString('vi-VN')} VNĐ</span>
+          <CreditCard className="h-4 w-4 mr-2" />
+            <span>Total: {boarding.total_price.toLocaleString('vi-VN')} VNĐ</span>
         </div>
         {getBoardingPaymentStatusBadge(boarding.status_payment)}
       </CardContent>
