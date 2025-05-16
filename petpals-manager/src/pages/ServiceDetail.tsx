@@ -165,7 +165,7 @@ const ServiceDetail = () => {
                   <DollarSign className="h-5 w-5 mr-2" />
                   <h3 className="font-medium">Price</h3>
                 </div>
-                <p className="text-2xl font-semibold">${service.price}</p>
+                <p className="text-2xl font-semibold">{service.price.toLocaleString('vi-VN')} VNĐ</p>
                 <p className="text-sm text-gray-500">{service.type === 'boarding' ? 'per night' : 'per session'}</p>
               </div>
               
@@ -174,7 +174,7 @@ const ServiceDetail = () => {
                   <Clock className="h-5 w-5 mr-2" />
                   <h3 className="font-medium">Duration</h3>
                 </div>
-                <p className="text-2xl font-semibold">{service.duration}</p>
+                <p className="text-2xl font-semibold">{service.duration} minutes</p>
                 <p className="text-sm text-gray-500">Estimated time</p>
               </div>
             </div>

@@ -1,13 +1,16 @@
-
 import React, { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { PawPrint, Menu, X } from 'lucide-react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { PawPrint, Menu, X, ShoppingCart } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { PopoverContent, Popover, PopoverTrigger} from "@/components/ui/popover";
 import Cookies from 'js-cookie';
 import NotificationBell from './NotificationBell';
+import { fetchUserServices } from '@/service/service';
+import { fetchUserBoarding } from '@/service/boarding';
+import { getTokenFromCookies } from '@/service/auth';
+
 interface User {
   username: string;
   email: string;
@@ -18,6 +21,9 @@ const Header = () => {
   const location = useLocation();
   const [isOpen, setIsOpen] = useState(false);
   const [user, setUser] = useState<User | null>(null);
+  const [cartCount, setCartCount] = useState(0);
+  const navigate = useNavigate();
+
   useEffect(() => {
     const handleScroll = () => {
       const scrollPosition = window.scrollY;
@@ -37,6 +43,28 @@ const Header = () => {
   useEffect(() => {
     setIsMobileMenuOpen(false);
   }, [location]);
+  useEffect(() => {
+    // Cập nhật số lượng dịch vụ và boarding chưa thanh toán
+    const token = getTokenFromCookies();
+    async function fetchUnpaidCounts() {
+      if (!token) {
+        setCartCount(0);
+        return;
+      }
+      try {
+        const [services, boardings] = await Promise.all([
+          fetchUserServices(token),
+          fetchUserBoarding(token)
+        ]);
+        const unpaidServices = services.filter(s => s.status_payment === 'pending').length;
+        const unpaidBoardings = boardings.filter(b => b.status_payment === 'pending').length;
+        setCartCount(unpaidServices + unpaidBoardings);
+      } catch {
+        setCartCount(0);
+      }
+    }
+    fetchUnpaidCounts();
+  }, []);
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
@@ -90,6 +118,19 @@ const Header = () => {
             
           ))}
           <NotificationBell />
+          {/* Cart Icon */}
+          <button
+            className="relative ml-4"
+            onClick={() => navigate('/services/me')}
+            aria-label="Unpaid Services"
+          >
+            <ShoppingCart className="w-6 h-4" />
+            {cartCount > 0 && (
+              <span className="absolute -top-2 -right-2 bg-red-500 text-white text-[8px] rounded-full px-1.5 py-0.5">
+                {cartCount}
+              </span>
+            )}
+          </button>
         </nav>
         <Popover open={isOpen} onOpenChange={setIsOpen}>
           <PopoverTrigger asChild>
@@ -131,6 +172,19 @@ const Header = () => {
         {/* Mobile Menu Toggle */}
         <div className="md:hidden flex items-center space-x-4">
           <NotificationBell />
+          {/* Cart Icon for mobile */}
+          <button
+            className="relative"
+            onClick={() => navigate('/services/me')}
+            aria-label="Unpaid Services"
+          >
+            <ShoppingCart className="h-6 w-6" />
+            {cartCount > 0 && (
+              <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full px-1.5 py-0.5">
+                {cartCount}
+              </span>
+            )}
+          </button>
           <button
             onClick={toggleMobileMenu}
             className="flex items-center text-gray-600 dark:text-gray-300 focus:outline-none"

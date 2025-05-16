@@ -98,14 +98,14 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
           {service.duration && (
             <div className="flex items-center text-gray-600 dark:text-gray-400">
               <Clock className="h-4 w-4 mr-2 flex-shrink-0" />
-              <span>Duration: {service.duration} days</span>
+              <span>Duration: {service.duration} minutes</span>
             </div>
           )}
           
           {service.price !== undefined && (
             <div className="flex items-center text-gray-700 dark:text-gray-300 font-medium">
               <DollarSign className="h-4 w-4 mr-2 flex-shrink-0" />
-              <span>{service.price} VNĐ</span>
+              <span>{service.price.toLocaleString('vi-VN')} VNĐ</span>
             </div>
           )}
         </div>

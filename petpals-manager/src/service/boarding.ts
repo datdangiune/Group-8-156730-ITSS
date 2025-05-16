@@ -131,9 +131,9 @@ export interface UserBoarding {
     status: 'In Progress' | 'Completed' | 'Scheduled' | 'Cancelled';
   }
 
-  export const fetchUserBoarding = async (token: string, status: string): Promise<UserBoarding[]> => {
+  export const fetchUserBoarding = async (token: string): Promise<UserBoarding[]> => {
     try {
-      const response = await fetch(`https://api.datto.id.vn/api/v1/user/boarding?status=${status}`, {
+      const response = await fetch(`https://api.datto.id.vn/api/v1/user/boarding`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
