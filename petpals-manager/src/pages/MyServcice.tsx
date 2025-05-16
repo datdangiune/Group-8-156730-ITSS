@@ -20,13 +20,15 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Badge } from '@/components/ui/badge';
 import { ServiceType, ServiceStatusUser} from '@/types/service';
 import { cn } from '@/lib/utils';
-import { CalendarDays, Clock, CreditCard, Package, ShieldCheck, Sparkles, Stethoscope } from 'lucide-react';
+import { CalendarDays, Clock, CreditCard, Package, ShieldCheck, Sparkles,PawPrint  } from 'lucide-react';
 import { fetchUserServices, UserService, getPaymentUrl as getServicePaymentUrl } from "@/service/service";
 import { fetchUserBoarding, UserBoarding, getPaymentUrl as getBoardingPaymentUrl } from "@/service/boarding";
 import { getTokenFromCookies } from '@/service/auth';
 import { toast } from "@/components/ui/use-toast";
 
 const MyServices = () => {
+  const [serviceSearch, setServiceSearch] = useState('');
+  const [boardingSearch, setBoardingSearch] = useState('');
   const [search, setSearch] = useState('');
   const [serviceView, setServiceView] = useState<'grid' | 'table'>('grid');
   const [boardingView, setBoardingView] = useState<'grid' | 'table'>('grid');
@@ -147,20 +149,24 @@ const MyServices = () => {
       return 0;
     });
 
-  const filterBySearch = (arr: any[], search: string, isBoarding = false) => {
+  // Service search (by service name, description, pet name)
+  const filterServiceBySearch = (arr: UserService[], search: string) => {
     const searchTerm = search.toLowerCase();
-    return arr.filter(item => {
-      if (isBoarding) {
-        return (
-          item?.boarding?.name.toLowerCase().includes(searchTerm) ||
-          (item.boarding.details?.amenities?.join(' ') || '').toLowerCase().includes(searchTerm)
-        );
-      }
-      return (
-        item?.service?.name.toLowerCase().includes(searchTerm) ||
-        item.service.description.toLowerCase().includes(searchTerm)
-      );
-    });
+    return arr.filter(item =>
+      item?.service?.name.toLowerCase().includes(searchTerm) ||
+      item.service.description.toLowerCase().includes(searchTerm) ||
+      item.pet.name.toLowerCase().includes(searchTerm)
+    );
+  };
+
+  // Boarding search (by boarding name, amenities, pet name)
+  const filterBoardingBySearch = (arr: UserBoarding[], search: string) => {
+    const searchTerm = search.toLowerCase();
+    return arr.filter(item =>
+      item?.boarding?.name.toLowerCase().includes(searchTerm) ||
+      (item.boarding.details?.amenities?.join(' ') || '').toLowerCase().includes(searchTerm) ||
+      item.pet.name.toLowerCase().includes(searchTerm)
+    );
   };
 
   const renderServiceCard = (service: UserService) => (
@@ -195,6 +201,10 @@ const MyServices = () => {
         )}
         <div className="flex items-center text-sm text-muted-foreground">
           <CreditCard className="h-4 w-4 mr-2" />
+          <span>Price: {service.service.price.toLocaleString('vi-VN')} VNĐ</span>
+        </div>
+        <div className="flex items-center text-sm text-muted-foreground">
+          <PawPrint className="h-4 w-4 mr-2" />
           <span>Pet: {service.pet.name}</span>
         </div>
         {getPaymentStatusBadge(service.status_payment)}
@@ -222,6 +232,7 @@ const MyServices = () => {
           <TableHead>Name</TableHead>
           <TableHead>Type</TableHead>
           <TableHead>Pet</TableHead>
+          <TableHead>Price</TableHead>
           <TableHead>Date</TableHead>
           <TableHead>Time</TableHead>
           <TableHead>Status</TableHead>
@@ -239,6 +250,7 @@ const MyServices = () => {
             <TableCell className="font-medium">{service.service.name}</TableCell>
             <TableCell className="flex items-center">{getServiceTypeIcon(service.service.type)} {service.service.type}</TableCell>
             <TableCell>{service.pet.name}</TableCell>
+            <TableCell>{service.service.price}</TableCell>
             <TableCell>{service.date ? new Date(service.date).toLocaleDateString() : 'Not scheduled'}</TableCell>
             <TableCell>{service.hour || 'Not scheduled'}</TableCell>
             <TableCell>{getServiceStatusBadge(service.status)}</TableCell>
@@ -285,7 +297,7 @@ const MyServices = () => {
         <div className="flex items-center text-sm text-muted-foreground">
           <CalendarDays className="h-4 w-4 mr-2" />
           <span>
-            {boarding.start_date} - {boarding.end_date}
+            {boarding.start_date.slice(0, 10)} - {boarding.end_date.slice(0, 10)}
           </span>
         </div>
         <div className="flex items-center text-sm text-muted-foreground">
@@ -293,7 +305,7 @@ const MyServices = () => {
           <span>Pet: {boarding.pet.name}</span>
         </div>
         <div className="flex items-center text-sm text-muted-foreground">
-          <span>Total: {boarding.total_price}₫</span>
+          <span>Total: {boarding.total_price.toLocaleString('vi-VN')} VNĐ</span>
         </div>
         {getBoardingPaymentStatusBadge(boarding.status_payment)}
       </CardContent>
@@ -336,11 +348,11 @@ const MyServices = () => {
           >
             <TableCell className="font-medium">{boarding.boarding.name}</TableCell>
             <TableCell>{boarding.pet.name}</TableCell>
-            <TableCell>{boarding.start_date}</TableCell>
-            <TableCell>{boarding.end_date}</TableCell>
+            <TableCell>{boarding.start_date.slice(0, 10)}</TableCell>
+            <TableCell>{boarding.end_date.slice(0, 10)}</TableCell>
             <TableCell>{getBoardingStatusBadge(boarding.status)}</TableCell>
             <TableCell>{getBoardingPaymentStatusBadge(boarding.status_payment)}</TableCell>
-            <TableCell>{boarding.total_price}₫</TableCell>
+            <TableCell>{boarding.total_price.toLocaleString('vi-VN')} VNĐ</TableCell>
             <TableCell>
               {boarding.status === 'Scheduled' && boarding.status_payment === 'pending' && (
                 <Button
@@ -394,9 +406,9 @@ const MyServices = () => {
           <h1 className="text-2xl font-bold">My Services</h1>
           <Input
             type="search"
-            placeholder="Search services..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search by service, description, or pet name..."
+            value={serviceSearch}
+            onChange={(e) => setServiceSearch(e.target.value)}
           />
         </div>
         <Tabs defaultValue={serviceView} className="space-y-4">
@@ -406,11 +418,11 @@ const MyServices = () => {
           </TabsList>
           <TabsContent value="grid" className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {sortUnpaidFirst(filterBySearch(services, search)).map(service => renderServiceCard(service))}
+              {sortUnpaidFirst(filterServiceBySearch(services, serviceSearch)).map(service => renderServiceCard(service))}
             </div>
           </TabsContent>
           <TabsContent value="table" className="space-y-4">
-            {renderTableView(sortUnpaidFirst(filterBySearch(services, search)))}
+            {renderTableView(sortUnpaidFirst(filterServiceBySearch(services, serviceSearch)))}
           </TabsContent>
         </Tabs>
       </div>
@@ -420,9 +432,9 @@ const MyServices = () => {
           <h1 className="text-2xl font-bold">My Boarding</h1>
           <Input
             type="search"
-            placeholder="Search boarding..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search by boarding, amenities, or pet name..."
+            value={boardingSearch}
+            onChange={(e) => setBoardingSearch(e.target.value)}
           />
         </div>
         <Tabs defaultValue={boardingView} className="space-y-4">
@@ -432,11 +444,11 @@ const MyServices = () => {
           </TabsList>
           <TabsContent value="grid" className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {sortUnpaidFirst(filterBySearch(boardings, search, true)).map(boarding => renderBoardingCard(boarding))}
+              {sortUnpaidFirst(filterBoardingBySearch(boardings, boardingSearch)).map(boarding => renderBoardingCard(boarding))}
             </div>
           </TabsContent>
           <TabsContent value="table" className="space-y-4">
-            {renderBoardingTableView(sortUnpaidFirst(filterBySearch(boardings, search, true)))}
+            {renderBoardingTableView(sortUnpaidFirst(filterBoardingBySearch(boardings, boardingSearch)))}
           </TabsContent>
         </Tabs>
       </div>
