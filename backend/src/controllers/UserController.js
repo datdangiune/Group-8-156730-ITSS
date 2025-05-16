@@ -854,7 +854,7 @@ const UserController  = {
                 `;
                 await sendMail({ email: boardingUser.user.email, html: emailContent });
     
-                return res.redirect('https://user.datto.id.vn/boardings/me');
+                return res.redirect('https://user.datto.id.vn/services/me');
             }
     
             return res.send('Loại đơn hàng không xác định');
