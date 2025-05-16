@@ -78,9 +78,9 @@ const Footer = () => {
             &copy; {currentYear} PetPals. All rights reserved.
           </p>
           <div className="flex items-center mt-4 md:mt-0 text-gray-600 dark:text-gray-400 text-sm">
-            <span>Made with</span>
+            <span>Made by</span>
             <Heart className="h-4 w-4 mx-1 text-red-500 animate-pulse-soft" />
-            <span>for your furry friends</span>
+            <span>ThaiHa, ThanhDat and KhacTiep</span>
           </div>
         </div>
       </div>
