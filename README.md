@@ -52,7 +52,8 @@ npm start
 cd vào từng folder
 npm run dev
 Hệ thống sẽ hoạt động với backend và 3 frontend kết nối đồng bộ.
-**6. login**
+
+**6. Cách login account admin**
 "/login" vào link 
 vet@gmail.com
 123
